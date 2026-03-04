@@ -1,0 +1,166 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * APPLICATION SECURITY POLICIES
+     *
+     * Core Philosophy: 
+     * This ruleset enforces a strict User-Ownership model. Access is primarily controlled 
+     * by the hierarchical path structure and verified against the authenticated user's ID.
+     *
+     * Data Structure:
+     * 1. User Profiles: Stored at `/userProfiles/{userId}`.
+     * 2. User Data Tree: All project-related data is nested under `/users/{userId}/projects/{projectId}/...`.
+     *
+     * Key Security Decisions:
+     * - Authorization Independence: Sub-documents (like Requirements or CodeSnippets) denormalize 
+     *   'ownerId' and 'projectId' to allow performant, atomic security checks without cross-document lookups.
+     * - Immutability: Critical relationship fields (ownerId, projectId) are enforced as immutable 
+     *   during updates to prevent data hijacking or accidental orphaning.
+     * - Path-Based Authorization: The UID in the document path must always match the UID of 
+     *   the authenticated user for any data access.
+     */
+
+    // --- Global Helper Functions ---
+
+    /** @description Checks if the request is from an authenticated user. */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /** @description Checks if the authenticated user matches the provided ID. */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /** @description Checks if the user is the owner and the document exists (for updates/deletes). */
+    function isExistingOwner(userId) {
+      return resource != null && isOwner(userId);
+    }
+
+    // --- Collection Rules ---
+
+    /**
+     * @description Rules for user profile documents. Only the user can access their own profile.
+     * @path /userProfiles/{userId}
+     * @allow (create) User 'abc' creating /userProfiles/abc
+     * @deny (create) User 'abc' creating /userProfiles/xyz
+     * @principle Ownership and Self-Creation.
+     */
+    match /userProfiles/{userId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update, delete: if isExistingOwner(userId);
+    }
+
+    match /users/{userId} {
+      
+      /**
+       * @description Rules for individual projects. Scoped to the authenticated owner.
+       * @path /users/{userId}/projects/{projectId}
+       * @allow (update) Owner of the project modifying settings.
+       * @deny (list) User 'abc' trying to list projects for user 'xyz'.
+       * @principle Path-based ownership with relational field validation.
+       */
+      match /projects/{projectId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) 
+          && request.resource.data.ownerId == userId;
+        allow update: if isExistingOwner(userId) 
+          && request.resource.data.ownerId == resource.data.ownerId;
+        allow delete: if isExistingOwner(userId);
+
+        /**
+         * @description Rules for requirements generated for a project.
+         * @path /users/{userId}/projects/{projectId}/requirements/{requirementId}
+         * @allow (create) Owner adding a requirement with matching ownerId/projectId.
+         * @deny (create) Providing an ownerId that doesn't match the path.
+         * @principle Denormalization for Authorization Independence.
+         */
+        match /requirements/{requirementId} {
+          allow get, list: if isOwner(userId);
+          allow create: if isOwner(userId) 
+            && request.resource.data.ownerId == userId 
+            && request.resource.data.projectId == projectId;
+          allow update: if isExistingOwner(userId) 
+            && request.resource.data.ownerId == resource.data.ownerId 
+            && request.resource.data.projectId == resource.data.projectId;
+          allow delete: if isExistingOwner(userId);
+        }
+
+        /**
+         * @description Rules for architecture designs.
+         * @path /users/{userId}/projects/{projectId}/architectureDesigns/{architectureId}
+         * @allow (get) Owner viewing a design.
+         * @deny (update) Changing the associated projectId of a design.
+         * @principle Relational integrity and ownership.
+         */
+        match /architectureDesigns/{architectureId} {
+          allow get, list: if isOwner(userId);
+          allow create: if isOwner(userId) 
+            && request.resource.data.ownerId == userId 
+            && request.resource.data.projectId == projectId;
+          allow update: if isExistingOwner(userId) 
+            && request.resource.data.ownerId == resource.data.ownerId 
+            && request.resource.data.projectId == resource.data.projectId;
+          allow delete: if isExistingOwner(userId);
+        }
+
+        /**
+         * @description Rules for code snippets.
+         * @path /users/{userId}/projects/{projectId}/codeSnippets/{snippetId}
+         * @allow (list) Owner listing snippets for their project.
+         * @deny (delete) Deleting a snippet from another user's project path.
+         * @principle Ownership-based write protection.
+         */
+        match /codeSnippets/{snippetId} {
+          allow get, list: if isOwner(userId);
+          allow create: if isOwner(userId) 
+            && request.resource.data.ownerId == userId 
+            && request.resource.data.projectId == projectId;
+          allow update: if isExistingOwner(userId) 
+            && request.resource.data.ownerId == resource.data.ownerId 
+            && request.resource.data.projectId == resource.data.projectId;
+          allow delete: if isExistingOwner(userId);
+        }
+
+        /**
+         * @description Rules for test cases.
+         * @path /users/{userId}/projects/{projectId}/testCases/{testCaseId}
+         * @allow (create) Owner adding a test case.
+         * @deny (update) Trying to reassign a test case to a different project.
+         * @principle Relational integrity for sub-resources.
+         */
+        match /testCases/{testCaseId} {
+          allow get, list: if isOwner(userId);
+          allow create: if isOwner(userId) 
+            && request.resource.data.ownerId == userId 
+            && request.resource.data.projectId == projectId;
+          allow update: if isExistingOwner(userId) 
+            && request.resource.data.ownerId == resource.data.ownerId 
+            && request.resource.data.projectId == resource.data.projectId;
+          allow delete: if isExistingOwner(userId);
+        }
+
+        /**
+         * @description Rules for DevOps plans.
+         * @path /users/{userId}/projects/{projectId}/devopsPlans/{planId}
+         * @allow (update) Owner updating a deployment strategy.
+         * @deny (create) User 'abc' creating a plan under project '123' without proper ownerId field.
+         * @principle Denormalized ownership validation.
+         */
+        match /devopsPlans/{planId} {
+          allow get, list: if isOwner(userId);
+          allow create: if isOwner(userId) 
+            && request.resource.data.ownerId == userId 
+            && request.resource.data.projectId == projectId;
+          allow update: if isExistingOwner(userId) 
+            && request.resource.data.ownerId == resource.data.ownerId 
+            && request.resource.data.projectId == resource.data.projectId;
+          allow delete: if isExistingOwner(userId);
+        }
+      }
+    }
+  }
+}
