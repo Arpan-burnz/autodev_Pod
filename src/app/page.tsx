@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   Users, 
   Lightbulb, 
   Terminal, 
   ShieldCheck, 
   Rocket, 
-  ChevronRight, 
   Play, 
   RotateCcw, 
   CheckCircle2, 
@@ -16,17 +16,18 @@ import {
   LayoutDashboard,
   Box,
   Layers,
-  Search,
-  Settings
+  Settings,
+  LogOut,
+  Zap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AgentArtifact } from '@/components/AgentArtifact';
 import { useToast } from '@/hooks/use-toast';
+import { useUser, useAuth } from '@/firebase';
+import Link from 'next/link';
 
 // AI Flow imports
 import { generateProjectRequirements } from '@/ai/flows/ai-product-manager-requirements-generation';
@@ -47,6 +48,8 @@ interface ProjectState {
 }
 
 export default function AutoDevPodDashboard() {
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
   const { toast } = useToast();
   const [activeStage, setActiveStage] = useState<number>(0);
   const [project, setProject] = useState<ProjectState>({ idea: '' });
@@ -80,14 +83,12 @@ export default function AutoDevPodDashboard() {
 
     setIsProcessing(true);
     try {
-      // 1. PM STAGE
       setActiveStage(0);
       updateStatus(0, 'working');
       const pmResults = await generateProjectRequirements({ projectIdea: project.idea });
       setProject(prev => ({ ...prev, requirements: pmResults }));
       updateStatus(0, 'completed');
       
-      // 2. ARCHITECT STAGE
       setActiveStage(1);
       updateStatus(1, 'working');
       const archResults = await aiSystemArchitectDesignGeneration({ 
@@ -96,7 +97,6 @@ export default function AutoDevPodDashboard() {
       setProject(prev => ({ ...prev, architecture: archResults }));
       updateStatus(1, 'completed');
 
-      // 3. DEVELOPER STAGE
       setActiveStage(2);
       updateStatus(2, 'working');
       const devResults = await developerCodeGeneration({
@@ -108,7 +108,6 @@ export default function AutoDevPodDashboard() {
       setProject(prev => ({ ...prev, code: devResults }));
       updateStatus(2, 'completed');
 
-      // 4. QA STAGE
       setActiveStage(3);
       updateStatus(3, 'working');
       const qaResults = await aiQaTestGenerationAndExecution({
@@ -119,7 +118,6 @@ export default function AutoDevPodDashboard() {
       setProject(prev => ({ ...prev, qa: qaResults }));
       updateStatus(3, 'completed');
 
-      // 5. DEVOPS STAGE
       setActiveStage(4);
       updateStatus(4, 'working');
       const devopsResults = await aiDevOpsDeploymentSuggestions({
@@ -140,11 +138,41 @@ export default function AutoDevPodDashboard() {
     }
   };
 
-  const resetProject = () => {
-    setProject({ idea: '' });
-    setStatuses(['idle', 'idle', 'idle', 'idle', 'idle']);
-    setActiveStage(0);
+  const handleLogout = async () => {
+    await auth.signOut();
   };
+
+  if (isUserLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="animate-spin text-primary" size={40} />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background text-center">
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-accent/5 pointer-events-none" />
+        <div className="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center text-white shadow-2xl shadow-primary/30 mb-8 animate-pulse">
+          <Cpu size={40} />
+        </div>
+        <h1 className="text-5xl font-headline font-bold mb-6 tracking-tight max-w-2xl">
+          Your Personal <span className="text-primary">AI Development Pod</span> is Ready.
+        </h1>
+        <p className="text-xl text-muted-foreground mb-10 max-w-xl leading-relaxed">
+          From high-level requirements to deployment blueprints. Run a full engineering team on your browser.
+        </p>
+        <div className="flex gap-4">
+          <Link href="/auth">
+            <Button size="lg" className="h-14 px-10 text-lg font-bold">
+              Launch Workspace <Zap className="ml-2" size={18} />
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const progress = (statuses.filter(s => s === 'completed').length / stages.length) * 100;
 
@@ -164,17 +192,18 @@ export default function AutoDevPodDashboard() {
         <div className="flex items-center gap-4">
           <div className="hidden md:flex items-center gap-2 text-xs text-muted-foreground mr-4">
             <LayoutDashboard size={14} />
-            <span>Project Workspace</span>
+            <span className="truncate max-w-[150px]">{user.email}</span>
           </div>
-          <Button variant="ghost" size="icon" className="text-muted-foreground">
-            <Settings size={18} />
+          <Button variant="ghost" size="icon" className="text-muted-foreground" onClick={handleLogout}>
+            <LogOut size={18} />
           </Button>
-          <div className="w-8 h-8 rounded-full bg-secondary border border-white/10" />
+          <div className="w-8 h-8 rounded-full bg-secondary border border-white/10 overflow-hidden">
+             <img src={`https://picsum.photos/seed/${user.uid}/40/40`} alt="Avatar" />
+          </div>
         </div>
       </header>
 
       <main className="flex-1 p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-[1600px] mx-auto w-full">
-        {/* Left: Input & Pipeline Sidebar */}
         <div className="lg:col-span-3 space-y-6">
           <Card className="border-none shadow-2xl glass-panel">
             <CardContent className="p-5 space-y-4">
@@ -208,7 +237,11 @@ export default function AutoDevPodDashboard() {
                   variant="outline" 
                   size="icon" 
                   className="h-11 w-11 border-white/10"
-                  onClick={resetProject}
+                  onClick={() => {
+                    setProject({ idea: '' });
+                    setStatuses(['idle', 'idle', 'idle', 'idle', 'idle']);
+                    setActiveStage(0);
+                  }}
                   disabled={isProcessing}
                 >
                   <RotateCcw size={16} />
@@ -259,7 +292,6 @@ export default function AutoDevPodDashboard() {
           </div>
         </div>
 
-        {/* Right: Agent Outputs & Artifacts */}
         <div className="lg:col-span-9 space-y-6">
           {!project.idea && !isProcessing && (
             <div className="h-full flex flex-col items-center justify-center text-center p-12 space-y-6 opacity-40">
@@ -275,41 +307,11 @@ export default function AutoDevPodDashboard() {
             <Tabs defaultValue="requirements" className="w-full h-full flex flex-col">
               <div className="flex items-center justify-between mb-4 bg-card/30 p-1 rounded-xl border border-white/5">
                 <TabsList className="bg-transparent h-10 gap-2 p-1">
-                  <TabsTrigger 
-                    value="requirements" 
-                    className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary font-bold text-xs px-4 rounded-lg"
-                    disabled={!project.requirements && activeStage !== 0}
-                  >
-                    PM Artifacts
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="architecture" 
-                    className="data-[state=active]:bg-accent/20 data-[state=active]:text-accent font-bold text-xs px-4 rounded-lg"
-                    disabled={!project.architecture && activeStage !== 1}
-                  >
-                    Architecture
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="code" 
-                    className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary font-bold text-xs px-4 rounded-lg"
-                    disabled={!project.code && activeStage !== 2}
-                  >
-                    Source Code
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="qa" 
-                    className="data-[state=active]:bg-accent/20 data-[state=active]:text-accent font-bold text-xs px-4 rounded-lg"
-                    disabled={!project.qa && activeStage !== 3}
-                  >
-                    QA Report
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="devops" 
-                    className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary font-bold text-xs px-4 rounded-lg"
-                    disabled={!project.devops && activeStage !== 4}
-                  >
-                    Deployment
-                  </TabsTrigger>
+                  <TabsTrigger value="requirements" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary font-bold text-xs px-4 rounded-lg">PM Artifacts</TabsTrigger>
+                  <TabsTrigger value="architecture" className="data-[state=active]:bg-accent/20 data-[state=active]:text-accent font-bold text-xs px-4 rounded-lg" disabled={!project.architecture && activeStage !== 1}>Architecture</TabsTrigger>
+                  <TabsTrigger value="code" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary font-bold text-xs px-4 rounded-lg" disabled={!project.code && activeStage !== 2}>Source Code</TabsTrigger>
+                  <TabsTrigger value="qa" className="data-[state=active]:bg-accent/20 data-[state=active]:text-accent font-bold text-xs px-4 rounded-lg" disabled={!project.qa && activeStage !== 3}>QA Report</TabsTrigger>
+                  <TabsTrigger value="devops" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary font-bold text-xs px-4 rounded-lg" disabled={!project.devops && activeStage !== 4}>Deployment</TabsTrigger>
                 </TabsList>
                 
                 {isProcessing && (
@@ -324,96 +326,48 @@ export default function AutoDevPodDashboard() {
                 <TabsContent value="requirements" className="mt-0 h-full grid grid-cols-1 md:grid-cols-2 gap-4">
                   {project.requirements ? (
                     <>
-                      <AgentArtifact 
-                        title="Functional Requirements" 
-                        type="list" 
-                        content={project.requirements.requirements} 
-                        icon={<Users size={16} />}
-                      />
-                      <AgentArtifact 
-                        title="User Stories" 
-                        type="list" 
-                        content={project.requirements.userStories} 
-                        icon={<Lightbulb size={16} />}
-                      />
+                      <AgentArtifact title="Functional Requirements" type="list" content={project.requirements.requirements} icon={<Users size={16} />} />
+                      <AgentArtifact title="User Stories" type="list" content={project.requirements.userStories} icon={<Lightbulb size={16} />} />
                     </>
                   ) : activeStage === 0 && isProcessing && <SkeletonArtifact count={2} />}
                 </TabsContent>
 
-                <TabsContent value="architecture" className="mt-0 h-full grid grid-cols-1 gap-4">
+                <TabsContent value="architecture" className="mt-0 h-full">
                   {project.architecture ? (
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-full">
                       <div className="lg:col-span-2">
-                        <AgentArtifact 
-                          title="System Overview" 
-                          type="text" 
-                          content={project.architecture.systemArchitectureDescription} 
-                          icon={<Layers size={16} />}
-                        />
+                        <AgentArtifact title="System Overview" type="text" content={project.architecture.systemArchitectureDescription} icon={<Layers size={16} />} />
                       </div>
-                      <div className="space-y-4">
-                        <AgentArtifact 
-                          title="Database Schema" 
-                          type="code" 
-                          content={project.architecture.databaseSchema} 
-                        />
-                      </div>
+                      <AgentArtifact title="Database Schema" type="code" content={project.architecture.databaseSchema} />
                     </div>
                   ) : activeStage === 1 && isProcessing && <SkeletonArtifact count={1} />}
                 </TabsContent>
 
-                <TabsContent value="code" className="mt-0 h-full grid grid-cols-1 gap-4">
+                <TabsContent value="code" className="mt-0 h-full">
                   {project.code ? (
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-full">
                       <div className="lg:col-span-2">
-                        <AgentArtifact 
-                          title={project.code.suggestedFileName || 'generated-source.ts'} 
-                          type="code" 
-                          content={project.code.generatedCode} 
-                          icon={<Terminal size={16} />}
-                        />
+                        <AgentArtifact title={project.code.suggestedFileName || 'source.ts'} type="code" content={project.code.generatedCode} icon={<Terminal size={16} />} />
                       </div>
-                      <AgentArtifact 
-                        title="Implementation Details" 
-                        type="text" 
-                        content={project.code.codeExplanation} 
-                      />
+                      <AgentArtifact title="Implementation Details" type="text" content={project.code.codeExplanation} />
                     </div>
                   ) : activeStage === 2 && isProcessing && <SkeletonArtifact count={1} />}
                 </TabsContent>
 
-                <TabsContent value="qa" className="mt-0 h-full grid grid-cols-1 gap-4">
+                <TabsContent value="qa" className="mt-0 h-full">
                   {project.qa ? (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-full">
-                      <AgentArtifact 
-                        title="Identified Issues" 
-                        type="list" 
-                        content={project.qa.identifiedIssues.map((issue: any) => `${issue.severity.toUpperCase()}: ${issue.description}`)} 
-                        icon={<ShieldCheck size={16} />}
-                      />
-                      <AgentArtifact 
-                        title="Test Plan" 
-                        type="list" 
-                        content={project.qa.testPlan.map((test: any) => test.description)} 
-                      />
+                      <AgentArtifact title="Identified Issues" type="list" content={project.qa.identifiedIssues.map((i: any) => `${i.severity.toUpperCase()}: ${i.description}`)} icon={<ShieldCheck size={16} />} />
+                      <AgentArtifact title="Test Plan" type="list" content={project.qa.testPlan.map((t: any) => t.description)} />
                     </div>
                   ) : activeStage === 3 && isProcessing && <SkeletonArtifact count={2} />}
                 </TabsContent>
 
-                <TabsContent value="devops" className="mt-0 h-full grid grid-cols-1 gap-4">
+                <TabsContent value="devops" className="mt-0 h-full">
                   {project.devops ? (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-full">
-                      <AgentArtifact 
-                        title="Deployment Pipeline" 
-                        type="text" 
-                        content={project.devops.ciCdPipelineOutline} 
-                        icon={<Rocket size={16} />}
-                      />
-                      <AgentArtifact 
-                        title="Target Environments" 
-                        type="list" 
-                        content={project.devops.suggestedDeploymentStrategies} 
-                      />
+                      <AgentArtifact title="Deployment Pipeline" type="text" content={project.devops.ciCdPipelineOutline} icon={<Rocket size={16} />} />
+                      <AgentArtifact title="Target Environments" type="list" content={project.devops.suggestedDeploymentStrategies} />
                     </div>
                   ) : activeStage === 4 && isProcessing && <SkeletonArtifact count={2} />}
                 </TabsContent>
@@ -423,15 +377,10 @@ export default function AutoDevPodDashboard() {
         </div>
       </main>
 
-      {/* Footer Info */}
       <footer className="h-10 border-t border-white/5 bg-background flex items-center px-6 justify-between text-[10px] text-muted-foreground uppercase font-bold tracking-[0.2em]">
         <div className="flex gap-4">
           <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" /> AI Pod Online</span>
-          <span>Build v1.0.4</span>
-        </div>
-        <div className="flex gap-4">
-          <span>Latency: 24ms</span>
-          <span>Agents: 5 Active</span>
+          <span>Build v1.1.0</span>
         </div>
       </footer>
     </div>
@@ -447,7 +396,6 @@ function SkeletonArtifact({ count }: { count: number }) {
           <div className="space-y-2 flex-1">
             <div className="h-4 w-full bg-white/5 rounded-md" />
             <div className="h-4 w-5/6 bg-white/5 rounded-md" />
-            <div className="h-4 w-4/6 bg-white/5 rounded-md" />
           </div>
         </div>
       ))}
