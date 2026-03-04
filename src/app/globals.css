@@ -4,26 +4,26 @@
 
 @layer base {
   :root {
-    --background: 240 19% 15%;
-    --foreground: 0 0% 98%;
-    --card: 240 21% 18%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 21% 18%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 240 70% 63%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 240 20% 25%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 20% 25%;
-    --muted-foreground: 240 5% 70%;
-    --accent: 193 82% 64%;
-    --accent-foreground: 240 19% 15%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 20% 30%;
-    --input: 240 20% 30%;
-    --ring: 240 70% 63%;
-    --radius: 0.75rem;
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 3%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 3%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 63%;
+    --accent: 0 0% 100%;
+    --accent-foreground: 0 0% 0%;
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 0 0% 100%;
+    --radius: 0rem;
   }
 }
 
@@ -35,32 +35,28 @@
     @apply bg-background text-foreground font-body antialiased;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-headline;
+    @apply font-headline uppercase tracking-tighter;
   }
   code, pre {
     @apply font-code;
   }
 }
 
-.agent-card-glow {
-  position: relative;
-}
-
-.agent-card-glow::after {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  background: linear-gradient(45deg, hsl(var(--primary)), hsl(var(--accent)));
-  z-index: -1;
-  border-radius: inherit;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.agent-card-glow.active::after {
-  opacity: 0.5;
-}
-
 .glass-panel {
-  @apply bg-card/50 backdrop-blur-md border border-white/10;
+  @apply bg-card/50 backdrop-blur-md border border-white/5;
+}
+
+.mono-outline {
+  @apply border border-white/10 hover:border-white/40 transition-colors duration-300;
+}
+
+/* Custom scrollbar for professional look */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-background;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-white/20 hover:bg-white/40;
 }

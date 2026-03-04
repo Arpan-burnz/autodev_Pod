@@ -40,27 +40,18 @@ const developerCodePrompt = ai.definePrompt({
 Programming Language: {{{programmingLanguage}}}
 {{#if framework}}
 Framework: {{{framework}}}
+{{#if existingCode}}
+Existing Context: {{{existingCode}}}
+{{/if}}
 {{/if}}
 
----
-Requirements for the functionality:
+Requirements:
 {{{requirements}}}
 
----
-Approved System Architecture Details:
+Architecture:
 {{{architecture}}}
 
----
-{{#if existingCode}}
-Existing relevant code (consider this for integration/context, but do not necessarily modify it unless explicitly asked in requirements):
----
-\`\`\`
-{{{existingCode}}}
-\`\`\`
----
-{{/if}}
-
-Your response should only contain the generated code, a suggested filename, and a brief explanation of the code, following the specified output JSON schema. Ensure the code adheres to best practices for the given language/framework.`,
+Generate the appropriate source code and provide an explanation.`,
 });
 
 const developerCodeGenerationFlow = ai.defineFlow(
