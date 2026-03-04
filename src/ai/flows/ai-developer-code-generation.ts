@@ -54,9 +54,9 @@ Approved System Architecture Details:
 {{#if existingCode}}
 Existing relevant code (consider this for integration/context, but do not necessarily modify it unless explicitly asked in requirements):
 ---
-\x60\x60\x60
+\`\`\`
 {{{existingCode}}}
-\x60\x60\x60
+\`\`\`
 ---
 {{/if}}
 
