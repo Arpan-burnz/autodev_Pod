@@ -54,9 +54,9 @@ Approved System Architecture Details:
 {{#if existingCode}}
 Existing relevant code (consider this for integration/context, but do not necessarily modify it unless explicitly asked in requirements):
 ---
-\`\`\`
+\x60\x60\x60
 {{{existingCode}}}
-\`\`\`
+\x60\x60\x60
 ---
 {{/if}}
 
@@ -71,6 +71,9 @@ const developerCodeGenerationFlow = ai.defineFlow(
   },
   async (input) => {
     const { output } = await developerCodePrompt(input);
-    return output!;
+    if (!output) {
+      throw new Error('AI Developer failed to generate a valid response.');
+    }
+    return output;
   },
 );

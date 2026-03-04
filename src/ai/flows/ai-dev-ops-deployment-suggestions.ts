@@ -76,7 +76,10 @@ const aiDevOpsDeploymentSuggestionsFlow = ai.defineFlow(
     outputSchema: DevOpsDeploymentOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input, { model: 'googleai/gemini-1.5-flash-latest' });
-    return output!;
+    const { output } = await prompt(input);
+    if (!output) {
+      throw new Error('AI DevOps Agent failed to generate a valid response.');
+    }
+    return output;
   }
 );

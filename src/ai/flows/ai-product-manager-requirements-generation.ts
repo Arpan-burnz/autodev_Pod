@@ -55,6 +55,9 @@ const generateProjectRequirementsFlow = ai.defineFlow(
   },
   async (input) => {
     const { output } = await prompt(input);
-    return output!;
+    if (!output) {
+      throw new Error('AI Product Manager failed to generate a valid response.');
+    }
+    return output;
   }
 );
