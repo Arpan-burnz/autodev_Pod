@@ -1,0 +1,34 @@
+{
+  "placeholderImages": [
+    {
+      "id": "pm-agent",
+      "description": "AI Product Manager Avatar",
+      "imageUrl": "https://picsum.photos/seed/pm/200/200",
+      "imageHint": "AI manager avatar"
+    },
+    {
+      "id": "arch-agent",
+      "description": "AI System Architect Avatar",
+      "imageUrl": "https://picsum.photos/seed/arch/200/200",
+      "imageHint": "AI engineer blueprint"
+    },
+    {
+      "id": "dev-agent",
+      "description": "AI Developer Avatar",
+      "imageUrl": "https://picsum.photos/seed/dev/200/200",
+      "imageHint": "AI coding avatar"
+    },
+    {
+      "id": "qa-agent",
+      "description": "AI QA Avatar",
+      "imageUrl": "https://picsum.photos/seed/qa/200/200",
+      "imageHint": "AI test avatar"
+    },
+    {
+      "id": "devops-agent",
+      "description": "AI DevOps Avatar",
+      "imageUrl": "https://picsum.photos/seed/devops/200/200",
+      "imageHint": "AI cloud avatar"
+    }
+  ]
+}
