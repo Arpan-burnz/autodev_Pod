@@ -21,12 +21,6 @@ const DevOpsDeploymentOutputSchema = z.object({
 });
 export type DevOpsDeploymentOutput = z.infer<typeof DevOpsDeploymentOutputSchema>;
 
-export async function aiDevOpsDeploymentSuggestions(
-  input: DevOpsDeploymentInput
-): Promise<DevOpsDeploymentOutput> {
-  return aiDevOpsDeploymentSuggestionsFlow(input);
-}
-
 const prompt = ai.definePrompt({
   name: 'devOpsDeploymentPrompt',
   input: { schema: DevOpsDeploymentInputSchema },
@@ -42,17 +36,12 @@ Environments: {{#each targetEnvironments}}- {{{this}}}{{/each}}
 Provide strategies, a CI/CD outline, and step-by-step instructions.`,
 });
 
-const aiDevOpsDeploymentSuggestionsFlow = ai.defineFlow(
-  {
-    name: 'aiDevOpsDeploymentSuggestionsFlow',
-    inputSchema: DevOpsDeploymentInputSchema,
-    outputSchema: DevOpsDeploymentOutputSchema,
-  },
-  async (input) => {
-    const { output } = await prompt(input);
-    if (!output) {
-      throw new Error('AI DevOps Agent failed to generate a valid response.');
-    }
-    return output;
+export async function aiDevOpsDeploymentSuggestions(
+  input: DevOpsDeploymentInput
+): Promise<DevOpsDeploymentOutput> {
+  const { output } = await prompt(input);
+  if (!output) {
+    throw new Error('AI DevOps Agent failed to generate a valid response.');
   }
-);
+  return output;
+}

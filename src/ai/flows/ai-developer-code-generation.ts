@@ -26,44 +26,37 @@ const DeveloperCodeGenerationOutputSchema = z.object({
 });
 export type DeveloperCodeGenerationOutput = z.infer<typeof DeveloperCodeGenerationOutputSchema>;
 
-export async function developerCodeGeneration(input: DeveloperCodeGenerationInput): Promise<DeveloperCodeGenerationOutput> {
-  return developerCodeGenerationFlow(input);
-}
-
 const developerCodePrompt = ai.definePrompt({
   name: 'developerCodePrompt',
   input: { schema: DeveloperCodeGenerationInputSchema },
   output: { schema: DeveloperCodeGenerationOutputSchema },
-  prompt: `You are an expert software developer AI. Generate clean, optimized code for the following:
+  prompt: `You are an expert software developer AI. Your goal is to generate clean, professional, and optimized code based on the provided specifications.
 
+CONTEXT:
 Language: {{{programmingLanguage}}}
-Framework: {{#if framework}}{{{framework}}}{{else}}None{{/if}}
+Framework: {{#if framework}}{{{framework}}}{{else}}None specified{{/if}}
 
-Requirements:
+REQUIREMENTS:
 {{{requirements}}}
 
-Architecture:
+ARCHITECTURE:
 {{{architecture}}}
 
 {{#if existingCode}}
-Existing Context:
+EXISTING CONTEXT:
 {{{existingCode}}}
 {{/if}}
 
-Provide the full source code and a detailed explanation.`,
+INSTRUCTIONS:
+1. Provide the full source code for the required functionality.
+2. Ensure the code follows best practices for the chosen language and framework.
+3. Provide a clear, technical explanation of the implementation details.`,
 });
 
-const developerCodeGenerationFlow = ai.defineFlow(
-  {
-    name: 'developerCodeGenerationFlow',
-    inputSchema: DeveloperCodeGenerationInputSchema,
-    outputSchema: DeveloperCodeGenerationOutputSchema,
-  },
-  async (input) => {
-    const { output } = await developerCodePrompt(input);
-    if (!output) {
-      throw new Error('AI Developer failed to generate a valid response.');
-    }
-    return output;
-  },
-);
+export async function developerCodeGeneration(input: DeveloperCodeGenerationInput): Promise<DeveloperCodeGenerationOutput> {
+  const { output } = await developerCodePrompt(input);
+  if (!output) {
+    throw new Error('AI Developer failed to generate a valid response.');
+  }
+  return output;
+}
