@@ -6,19 +6,19 @@
   :root {
     --background: 0 0% 0%;
     --foreground: 0 0% 100%;
-    --card: 0 0% 3%;
+    --card: 0 0% 0%;
     --card-foreground: 0 0% 100%;
-    --popover: 0 0% 3%;
+    --popover: 0 0% 0%;
     --popover-foreground: 0 0% 100%;
     --primary: 0 0% 100%;
     --primary-foreground: 0 0% 0%;
-    --secondary: 0 0% 12%;
+    --secondary: 0 0% 10%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 0 0% 12%;
-    --muted-foreground: 0 0% 63%;
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 60%;
     --accent: 0 0% 100%;
     --accent-foreground: 0 0% 0%;
-    --destructive: 0 100% 50%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
     --border: 0 0% 15%;
     --input: 0 0% 15%;
@@ -32,7 +32,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-body antialiased;
+    @apply bg-background text-foreground font-body antialiased selection:bg-white selection:text-black;
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-headline uppercase tracking-tighter;
@@ -43,14 +43,13 @@
 }
 
 .glass-panel {
-  @apply bg-card/50 backdrop-blur-md border border-white/5;
+  @apply bg-black/50 backdrop-blur-md border border-white/10;
 }
 
 .mono-outline {
   @apply border border-white/10 hover:border-white/40 transition-colors duration-300;
 }
 
-/* Custom scrollbar for professional look */
 ::-webkit-scrollbar {
   width: 4px;
 }

@@ -1,7 +1,6 @@
 'use server';
 /**
- * @fileOverview An AI Developer agent flow that generates code for specific functionalities
- * based on provided requirements and architectural design.
+ * @fileOverview An AI Developer agent flow that generates code for specific functionalities.
  *
  * - developerCodeGeneration - A function that handles the code generation process.
  * - DeveloperCodeGenerationInput - The input type for the developerCodeGeneration function.
@@ -12,18 +11,18 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const DeveloperCodeGenerationInputSchema = z.object({
-  requirements: z.string().describe('Detailed functional requirements or user stories for the functionality.'),
-  architecture: z.string().describe('Description of the system architecture, including API endpoints, database models, or component interactions.'),
-  programmingLanguage: z.string().describe('The programming language for code generation (e.g., TypeScript, Python).'),
-  framework: z.string().optional().describe('The framework to use (e.g., Next.js, React, Express).'),
-  existingCode: z.string().optional().describe('Any existing relevant code snippet that the AI should consider or integrate with.'),
+  requirements: z.string().describe('Detailed functional requirements or user stories.'),
+  architecture: z.string().describe('System architecture description.'),
+  programmingLanguage: z.string().describe('The programming language for code generation.'),
+  framework: z.string().optional().describe('The framework to use.'),
+  existingCode: z.string().optional().describe('Existing relevant code snippet.'),
 });
 export type DeveloperCodeGenerationInput = z.infer<typeof DeveloperCodeGenerationInputSchema>;
 
 const DeveloperCodeGenerationOutputSchema = z.object({
-  generatedCode: z.string().describe('The actual generated code as a string.'),
-  suggestedFileName: z.string().describe('The suggested file name for the generated code, including extension.'),
-  codeExplanation: z.string().describe('A brief explanation of the generated code, its purpose, and how to use it.'),
+  generatedCode: z.string().describe('The generated code.'),
+  suggestedFileName: z.string().describe('Suggested file name with extension.'),
+  codeExplanation: z.string().describe('Explanation of the code.'),
 });
 export type DeveloperCodeGenerationOutput = z.infer<typeof DeveloperCodeGenerationOutputSchema>;
 
@@ -35,15 +34,10 @@ const developerCodePrompt = ai.definePrompt({
   name: 'developerCodePrompt',
   input: { schema: DeveloperCodeGenerationInputSchema },
   output: { schema: DeveloperCodeGenerationOutputSchema },
-  prompt: `You are an expert software developer AI. Your task is to generate clean, optimized, and well-documented code for a specific functionality based on provided requirements and architectural design.
+  prompt: `You are an expert software developer AI. Generate clean, optimized code for the following:
 
-Programming Language: {{{programmingLanguage}}}
-{{#if framework}}
-Framework: {{{framework}}}
-{{#if existingCode}}
-Existing Context: {{{existingCode}}}
-{{/if}}
-{{/if}}
+Language: {{{programmingLanguage}}}
+Framework: {{#if framework}}{{{framework}}}{{else}}None{{/if}}
 
 Requirements:
 {{{requirements}}}
@@ -51,7 +45,12 @@ Requirements:
 Architecture:
 {{{architecture}}}
 
-Generate the appropriate source code and provide an explanation.`,
+{{#if existingCode}}
+Existing Context:
+{{{existingCode}}}
+{{/if}}
+
+Provide the full source code and a detailed explanation.`,
 });
 
 const developerCodeGenerationFlow = ai.defineFlow(
