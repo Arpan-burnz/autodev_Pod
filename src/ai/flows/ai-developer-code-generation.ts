@@ -46,7 +46,8 @@ EXISTING CONTEXT:
 INSTRUCTIONS:
 1. Provide the full source code for the required functionality.
 2. Ensure the code follows best practices for the chosen language and framework.
-3. Provide a clear, technical explanation of the implementation details.`,
+3. Provide a clear, technical explanation of the implementation details.
+4. Return the source code as a single plain text block.`,
 });
 
 export async function developerCodeGeneration(input: DeveloperCodeGenerationInput): Promise<DeveloperCodeGenerationOutput> {
