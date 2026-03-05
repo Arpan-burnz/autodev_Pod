@@ -33,7 +33,7 @@ const prompt = ai.definePrompt({
     "Provide strategies, a CI/CD outline, and step-by-step instructions.",
 });
 
-async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 5000): Promise<T> {
+async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 10000): Promise<T> {
   try {
     return await fn();
   } catch (error: any) {

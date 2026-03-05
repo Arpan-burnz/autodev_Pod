@@ -28,7 +28,7 @@ const aiSystemArchitectPrompt = ai.definePrompt({
     "Provide a detailed architecture description, database schema, and API designs. Also provide a specific prompt for an image generator.",
 });
 
-async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 5000): Promise<T> {
+async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 10000): Promise<T> {
   try {
     return await fn();
   } catch (error: any) {

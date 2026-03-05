@@ -91,7 +91,7 @@ export default function AutoDevPodDashboard() {
       const pmResults = await generateProjectRequirements({ projectIdea: project.idea });
       setProject(prev => ({ ...prev, requirements: pmResults }));
       updateStatus(0, 'completed');
-      await delay(2000); // Increased cooldown to prevent quota burst
+      await delay(5000); // Increased cooldown for quota
       
       // 2. Architect
       setActiveStage(1);
@@ -101,7 +101,7 @@ export default function AutoDevPodDashboard() {
       });
       setProject(prev => ({ ...prev, architecture: archResults }));
       updateStatus(1, 'completed');
-      await delay(2000);
+      await delay(5000);
 
       // 3. Developer
       setActiveStage(2);
@@ -114,7 +114,7 @@ export default function AutoDevPodDashboard() {
       });
       setProject(prev => ({ ...prev, code: devResults }));
       updateStatus(2, 'completed');
-      await delay(2000);
+      await delay(5000);
 
       // 4. QA
       setActiveStage(3);
@@ -126,7 +126,7 @@ export default function AutoDevPodDashboard() {
       });
       setProject(prev => ({ ...prev, qa: qaResults }));
       updateStatus(3, 'completed');
-      await delay(2000);
+      await delay(5000);
 
       // 5. DevOps
       setActiveStage(4);

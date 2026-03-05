@@ -41,7 +41,7 @@ const prompt = ai.definePrompt({
     "Focus on thoroughness and provide actionable recommendations.",
 });
 
-async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 5000): Promise<T> {
+async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 10000): Promise<T> {
   try {
     return await fn();
   } catch (error: any) {
