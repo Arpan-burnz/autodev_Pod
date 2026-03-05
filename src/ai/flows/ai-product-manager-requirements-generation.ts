@@ -34,7 +34,7 @@ const prompt = ai.definePrompt({
     "Ensure the output is comprehensive, clear, and structured correctly.",
 });
 
-async function withRetry<T>(fn: () => Promise<T>, retries = 2, delay = 5000): Promise<T> {
+async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 10000): Promise<T> {
   try {
     return await fn();
   } catch (error: any) {

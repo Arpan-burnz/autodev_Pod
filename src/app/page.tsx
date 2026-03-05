@@ -19,7 +19,8 @@ import {
   Code,
   FileText,
   Activity,
-  Zap
+  Zap,
+  AlertCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -28,6 +29,7 @@ import { AgentArtifact } from '@/components/AgentArtifact';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useAuth } from '@/firebase';
 import Link from 'next/link';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 // AI Flow imports
 import { generateProjectRequirements } from '@/ai/flows/ai-product-manager-requirements-generation';
@@ -54,6 +56,7 @@ export default function AutoDevPodDashboard() {
   const [activeStage, setActiveStage] = useState<number>(0);
   const [project, setProject] = useState<ProjectState>({ idea: '' });
   const [isProcessing, setIsProcessing] = useState(false);
+  const [quotaError, setQuotaError] = useState(false);
   
   const [statuses, setStatuses] = useState<AgentStatus[]>([
     'idle', 'idle', 'idle', 'idle', 'idle'
@@ -84,6 +87,7 @@ export default function AutoDevPodDashboard() {
     }
 
     setIsProcessing(true);
+    setQuotaError(false);
     try {
       // 1. PM
       setActiveStage(0);
@@ -143,11 +147,20 @@ export default function AutoDevPodDashboard() {
     } catch (error: any) {
       console.error(error);
       const isQuota = error.message?.includes('429') || error.message?.includes('RESOURCE_EXHAUSTED');
-      toast({ 
-        title: isQuota ? "QUOTA LIMIT" : "PROCESS INTERRUPTED", 
-        description: isQuota ? "System is temporarily rate-limited. Throttling requests..." : "Agent pipeline encountered an error.", 
-        variant: "destructive" 
-      });
+      if (isQuota) {
+        setQuotaError(true);
+        toast({ 
+          title: "QUOTA LIMIT EXCEEDED", 
+          description: "Free tier rate limits hit. Please wait a minute or add a custom API key.", 
+          variant: "destructive" 
+        });
+      } else {
+        toast({ 
+          title: "PROCESS INTERRUPTED", 
+          description: "Agent pipeline encountered an error.", 
+          variant: "destructive" 
+        });
+      }
       updateStatus(activeStage, 'error');
     } finally {
       setIsProcessing(false);
@@ -215,6 +228,20 @@ export default function AutoDevPodDashboard() {
         </div>
       </header>
 
+      {quotaError && (
+        <div className="px-10 pt-10">
+          <Alert variant="destructive" className="rounded-none border-black/10 bg-white shadow-md">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle className="text-[10px] font-bold tracking-[0.2em] uppercase">System Quota Alert</AlertTitle>
+            <AlertDescription className="text-[9px] uppercase tracking-wider font-medium mt-1">
+              Gemini API Free Tier limits reached. To fix this, create a new API key at 
+              <a href="https://aistudio.google.com/app/apikey" target="_blank" className="underline mx-1 font-bold">Google AI Studio</a> 
+              and add it to your <strong>.env</strong> file as <strong>GOOGLE_GENAI_API_KEY</strong>.
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
+
       <main className="flex-1 p-10 grid grid-cols-1 lg:grid-cols-12 gap-10 max-w-[2200px] mx-auto w-full">
         <div className="lg:col-span-3 space-y-10">
           <div className="space-y-6 bg-white p-8 border border-black/5 shadow-sm">
@@ -250,6 +277,7 @@ export default function AutoDevPodDashboard() {
                   setProject({ idea: '' });
                   setStatuses(['idle', 'idle', 'idle', 'idle', 'idle']);
                   setActiveStage(0);
+                  setQuotaError(false);
                 }}
                 disabled={isProcessing}
               >
@@ -276,7 +304,7 @@ export default function AutoDevPodDashboard() {
                     </div>
                     <span className="text-[10px] font-bold tracking-wider uppercase">{stage.name}</span>
                   </div>
-                  <span className={`text-[8px] font-bold tracking-tighter uppercase px-2 py-1 bg-black/5 ${statuses[idx] === 'working' ? 'animate-pulse bg-black text-white' : ''}`}>
+                  <span className={`text-[8px] font-bold tracking-tighter uppercase px-2 py-1 bg-black/5 ${statuses[idx] === 'working' ? 'animate-pulse bg-black text-white' : ''} ${statuses[idx] === 'error' ? 'text-red-600 bg-red-50' : ''}`}>
                     {statuses[idx]}
                   </span>
                 </div>

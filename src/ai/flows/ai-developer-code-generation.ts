@@ -44,10 +44,10 @@ const developerCodePrompt = ai.definePrompt({
     "1. Provide the full source code for the required functionality.\n" +
     "2. Ensure the code follows best practices for the chosen language and framework.\n" +
     "3. Return the source code as a single plain text block.\n" +
-    "4. Do not include markdown code blocks inside your JSON string response for the generatedCode field.",
+    "4. Use the escaped sequence \\u0060\\u0060\\u0060 for code blocks in your thoughts, but return just the code in the generatedCode field.",
 });
 
-async function withRetry<T>(fn: () => Promise<T>, retries = 2, delay = 5000): Promise<T> {
+async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 10000): Promise<T> {
   try {
     return await fn();
   } catch (error: any) {
