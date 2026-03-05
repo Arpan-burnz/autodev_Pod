@@ -26,28 +26,23 @@ const developerCodePrompt = ai.definePrompt({
   name: 'developerCodePrompt',
   input: { schema: DeveloperCodeGenerationInputSchema },
   output: { schema: DeveloperCodeGenerationOutputSchema },
-  prompt: `You are an expert software developer AI. Generate clean, professional, and optimized code.
-
-CONTEXT:
-Language: {{{programmingLanguage}}}
-Framework: {{#if framework}}{{{framework}}}{{else}}None specified{{/if}}
-
-REQUIREMENTS:
-{{{requirements}}}
-
-ARCHITECTURE:
-{{{architecture}}}
-
-{{#if existingCode}}
-EXISTING CONTEXT:
-{{{existingCode}}}
-{{/if}}
-
-INSTRUCTIONS:
-1. Provide the full source code for the required functionality.
-2. Ensure the code follows best practices for the chosen language and framework.
-3. Return the source code as a single plain text block.
-4. Do not include markdown code blocks inside your JSON string response for the generatedCode field.`,
+  prompt: "You are an expert software developer AI. Generate clean, professional, and optimized code.\n\n" +
+    "CONTEXT:\n" +
+    "Language: {{{programmingLanguage}}}\n" +
+    "Framework: {{#if framework}}{{{framework}}}{{else}}None specified{{/if}}\n\n" +
+    "REQUIREMENTS:\n" +
+    "{{{requirements}}}\n\n" +
+    "ARCHITECTURE:\n" +
+    "{{{architecture}}}\n\n" +
+    "{{#if existingCode}}\n" +
+    "EXISTING CONTEXT:\n" +
+    "{{{existingCode}}}\n" +
+    "{{/if}}\n\n" +
+    "INSTRUCTIONS:\n" +
+    "1. Provide the full source code for the required functionality.\n" +
+    "2. Ensure the code follows best practices for the chosen language and framework.\n" +
+    "3. Return the source code as a single plain text block.\n" +
+    "4. Do not include markdown code blocks inside your JSON string response for the generatedCode field.",
 });
 
 export async function developerCodeGeneration(input: DeveloperCodeGenerationInput): Promise<DeveloperCodeGenerationOutput> {
