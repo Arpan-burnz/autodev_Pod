@@ -28,20 +28,34 @@ const aiSystemArchitectPrompt = ai.definePrompt({
     "Provide a detailed architecture description, database schema, and API designs. Also provide a specific prompt for an image generator.",
 });
 
-export async function aiSystemArchitectDesignGeneration(input: AISystemArchitectInput): Promise<AISystemArchitectOutput & { diagramUrl?: string }> {
-  const { output } = await aiSystemArchitectPrompt(input);
-  if (!output) {
-    throw new Error('Failed to generate system architecture design.');
-  }
-
+async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 2000): Promise<T> {
   try {
-    const { media } = await ai.generate({
-      model: 'googleai/imagen-4.0-fast-generate-001',
-      prompt: `A professional technical system architecture diagram. Minimalist black and white style. High resolution schematic for: ${output.diagramPrompt}`,
-    });
-    return { ...output, diagramUrl: media?.url };
-  } catch (error) {
-    console.warn('Diagram generation failed', error);
-    return output;
+    return await fn();
+  } catch (error: any) {
+    if (retries > 0 && error.message?.includes('429')) {
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return withRetry(fn, retries - 1, delay * 2);
+    }
+    throw error;
   }
+}
+
+export async function aiSystemArchitectDesignGeneration(input: AISystemArchitectInput): Promise<AISystemArchitectOutput & { diagramUrl?: string }> {
+  return withRetry(async () => {
+    const { output } = await aiSystemArchitectPrompt(input);
+    if (!output) {
+      throw new Error('Failed to generate system architecture design.');
+    }
+
+    try {
+      const { media } = await ai.generate({
+        model: 'googleai/imagen-4.0-fast-generate-001',
+        prompt: `A professional technical system architecture diagram. Minimalist black and white style. High resolution schematic for: ${output.diagramPrompt}`,
+      });
+      return { ...output, diagramUrl: media?.url };
+    } catch (error) {
+      console.warn('Diagram generation failed', error);
+      return output;
+    }
+  });
 }

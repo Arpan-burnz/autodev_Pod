@@ -36,7 +36,9 @@ const developerCodePrompt = ai.definePrompt({
     "{{{architecture}}}\n\n" +
     "{{#if existingCode}}\n" +
     "EXISTING CONTEXT:\n" +
+    "SOURCE_START\n" +
     "{{{existingCode}}}\n" +
+    "SOURCE_END\n" +
     "{{/if}}\n\n" +
     "INSTRUCTIONS:\n" +
     "1. Provide the full source code for the required functionality.\n" +
@@ -45,10 +47,24 @@ const developerCodePrompt = ai.definePrompt({
     "4. Do not include markdown code blocks inside your JSON string response for the generatedCode field.",
 });
 
-export async function developerCodeGeneration(input: DeveloperCodeGenerationInput): Promise<DeveloperCodeGenerationOutput> {
-  const { output } = await developerCodePrompt(input);
-  if (!output) {
-    throw new Error('AI Developer failed to generate a valid response.');
+async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 2000): Promise<T> {
+  try {
+    return await fn();
+  } catch (error: any) {
+    if (retries > 0 && error.message?.includes('429')) {
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return withRetry(fn, retries - 1, delay * 2);
+    }
+    throw error;
   }
-  return output;
+}
+
+export async function developerCodeGeneration(input: DeveloperCodeGenerationInput): Promise<DeveloperCodeGenerationOutput> {
+  return withRetry(async () => {
+    const { output } = await developerCodePrompt(input);
+    if (!output) {
+      throw new Error('AI Developer failed to generate a valid response.');
+    }
+    return output;
+  });
 }

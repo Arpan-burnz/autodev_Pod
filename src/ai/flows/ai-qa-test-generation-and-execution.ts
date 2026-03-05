@@ -41,10 +41,24 @@ const prompt = ai.definePrompt({
     "Focus on thoroughness and provide actionable recommendations.",
 });
 
-export async function aiQaTestGenerationAndExecution(input: AiQaTestGenerationAndExecutionInput): Promise<AiQaTestGenerationAndExecutionOutput> {
-  const { output } = await prompt(input);
-  if (!output) {
-    throw new Error('AI QA Agent failed to generate a valid response.');
+async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 2000): Promise<T> {
+  try {
+    return await fn();
+  } catch (error: any) {
+    if (retries > 0 && error.message?.includes('429')) {
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return withRetry(fn, retries - 1, delay * 2);
+    }
+    throw error;
   }
-  return output;
+}
+
+export async function aiQaTestGenerationAndExecution(input: AiQaTestGenerationAndExecutionInput): Promise<AiQaTestGenerationAndExecutionOutput> {
+  return withRetry(async () => {
+    const { output } = await prompt(input);
+    if (!output) {
+      throw new Error('AI QA Agent failed to generate a valid response.');
+    }
+    return output;
+  });
 }

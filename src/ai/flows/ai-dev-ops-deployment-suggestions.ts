@@ -25,23 +25,34 @@ const prompt = ai.definePrompt({
   name: 'devOpsDeploymentPrompt',
   input: { schema: DevOpsDeploymentInputSchema },
   output: { schema: DevOpsDeploymentOutputSchema },
-  prompt: `You are an expert DevOps engineer. Suggest deployment strategies for:
-
-Project: {{{projectDescription}}}
-Tech: {{#each technologiesUsed}}- {{{this}}}{{/each}}
-Environments: {{#each targetEnvironments}}- {{{this}}}{{/each}}
-
-{{#if codeSummary}}Summary: {{{codeSummary}}}{{/if}}
-
-Provide strategies, a CI/CD outline, and step-by-step instructions.`,
+  prompt: "You are an expert DevOps engineer. Suggest deployment strategies for:\n\n" +
+    "Project: {{{projectDescription}}}\n" +
+    "Tech: {{#each technologiesUsed}}- {{{this}}}{{/each}}\n" +
+    "Environments: {{#each targetEnvironments}}- {{{this}}}{{/each}}\n\n" +
+    "{{#if codeSummary}}Summary: {{{codeSummary}}}{{/if}}\n\n" +
+    "Provide strategies, a CI/CD outline, and step-by-step instructions.",
 });
+
+async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 2000): Promise<T> {
+  try {
+    return await fn();
+  } catch (error: any) {
+    if (retries > 0 && error.message?.includes('429')) {
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return withRetry(fn, retries - 1, delay * 2);
+    }
+    throw error;
+  }
+}
 
 export async function aiDevOpsDeploymentSuggestions(
   input: DevOpsDeploymentInput
 ): Promise<DevOpsDeploymentOutput> {
-  const { output } = await prompt(input);
-  if (!output) {
-    throw new Error('AI DevOps Agent failed to generate a valid response.');
-  }
-  return output;
+  return withRetry(async () => {
+    const { output } = await prompt(input);
+    if (!output) {
+      throw new Error('AI DevOps Agent failed to generate a valid response.');
+    }
+    return output;
+  });
 }

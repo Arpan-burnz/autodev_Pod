@@ -34,10 +34,24 @@ const prompt = ai.definePrompt({
     "Ensure the output is comprehensive, clear, and structured correctly.",
 });
 
-export async function generateProjectRequirements(input: GenerateProjectRequirementsInput): Promise<GenerateProjectRequirementsOutput> {
-  const { output } = await prompt(input);
-  if (!output) {
-    throw new Error('AI Product Manager failed to generate a valid response.');
+async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 2000): Promise<T> {
+  try {
+    return await fn();
+  } catch (error: any) {
+    if (retries > 0 && error.message?.includes('429')) {
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return withRetry(fn, retries - 1, delay * 2);
+    }
+    throw error;
   }
-  return output;
+}
+
+export async function generateProjectRequirements(input: GenerateProjectRequirementsInput): Promise<GenerateProjectRequirementsOutput> {
+  return withRetry(async () => {
+    const { output } = await prompt(input);
+    if (!output) {
+      throw new Error('AI Product Manager failed to generate a valid response.');
+    }
+    return output;
+  });
 }

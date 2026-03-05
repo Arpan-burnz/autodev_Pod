@@ -75,6 +75,8 @@ export default function AutoDevPodDashboard() {
     });
   };
 
+  const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
   const handleStartPipeline = async () => {
     if (!project.idea) {
       toast({ title: "IDEA REQUIRED", description: "Please enter a project concept to begin.", variant: "destructive" });
@@ -83,12 +85,15 @@ export default function AutoDevPodDashboard() {
 
     setIsProcessing(true);
     try {
+      // 1. PM
       setActiveStage(0);
       updateStatus(0, 'working');
       const pmResults = await generateProjectRequirements({ projectIdea: project.idea });
       setProject(prev => ({ ...prev, requirements: pmResults }));
       updateStatus(0, 'completed');
+      await delay(1000); // Small cooldown between agents
       
+      // 2. Architect
       setActiveStage(1);
       updateStatus(1, 'working');
       const archResults = await aiSystemArchitectDesignGeneration({ 
@@ -96,7 +101,9 @@ export default function AutoDevPodDashboard() {
       });
       setProject(prev => ({ ...prev, architecture: archResults }));
       updateStatus(1, 'completed');
+      await delay(1000);
 
+      // 3. Developer
       setActiveStage(2);
       updateStatus(2, 'working');
       const devResults = await developerCodeGeneration({
@@ -107,7 +114,9 @@ export default function AutoDevPodDashboard() {
       });
       setProject(prev => ({ ...prev, code: devResults }));
       updateStatus(2, 'completed');
+      await delay(1000);
 
+      // 4. QA
       setActiveStage(3);
       updateStatus(3, 'working');
       const qaResults = await aiQaTestGenerationAndExecution({
@@ -117,7 +126,9 @@ export default function AutoDevPodDashboard() {
       });
       setProject(prev => ({ ...prev, qa: qaResults }));
       updateStatus(3, 'completed');
+      await delay(1000);
 
+      // 5. DevOps
       setActiveStage(4);
       updateStatus(4, 'working');
       const devopsResults = await aiDevOpsDeploymentSuggestions({
@@ -129,9 +140,14 @@ export default function AutoDevPodDashboard() {
       setProject(prev => ({ ...prev, devops: devopsResults }));
       updateStatus(4, 'completed');
 
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toast({ title: "PROCESS INTERRUPTED", description: "The agent pipeline encountered an error.", variant: "destructive" });
+      const isQuota = error.message?.includes('429');
+      toast({ 
+        title: isQuota ? "QUOTA EXCEEDED" : "PROCESS INTERRUPTED", 
+        description: isQuota ? "Too many requests. Please wait a moment and retry." : "The agent pipeline encountered an error.", 
+        variant: "destructive" 
+      });
       updateStatus(activeStage, 'error');
     } finally {
       setIsProcessing(false);
