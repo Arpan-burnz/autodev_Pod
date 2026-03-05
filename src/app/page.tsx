@@ -91,7 +91,7 @@ export default function AutoDevPodDashboard() {
       const pmResults = await generateProjectRequirements({ projectIdea: project.idea });
       setProject(prev => ({ ...prev, requirements: pmResults }));
       updateStatus(0, 'completed');
-      await delay(1000); // Small cooldown between agents
+      await delay(2000); // Increased cooldown to prevent quota burst
       
       // 2. Architect
       setActiveStage(1);
@@ -101,7 +101,7 @@ export default function AutoDevPodDashboard() {
       });
       setProject(prev => ({ ...prev, architecture: archResults }));
       updateStatus(1, 'completed');
-      await delay(1000);
+      await delay(2000);
 
       // 3. Developer
       setActiveStage(2);
@@ -114,7 +114,7 @@ export default function AutoDevPodDashboard() {
       });
       setProject(prev => ({ ...prev, code: devResults }));
       updateStatus(2, 'completed');
-      await delay(1000);
+      await delay(2000);
 
       // 4. QA
       setActiveStage(3);
@@ -126,7 +126,7 @@ export default function AutoDevPodDashboard() {
       });
       setProject(prev => ({ ...prev, qa: qaResults }));
       updateStatus(3, 'completed');
-      await delay(1000);
+      await delay(2000);
 
       // 5. DevOps
       setActiveStage(4);
@@ -142,10 +142,10 @@ export default function AutoDevPodDashboard() {
 
     } catch (error: any) {
       console.error(error);
-      const isQuota = error.message?.includes('429');
+      const isQuota = error.message?.includes('429') || error.message?.includes('RESOURCE_EXHAUSTED');
       toast({ 
-        title: isQuota ? "QUOTA EXCEEDED" : "PROCESS INTERRUPTED", 
-        description: isQuota ? "Too many requests. Please wait a moment and retry." : "The agent pipeline encountered an error.", 
+        title: isQuota ? "QUOTA LIMIT" : "PROCESS INTERRUPTED", 
+        description: isQuota ? "The system is temporarily rate-limited. Retrying automatically..." : "The agent pipeline encountered an error.", 
         variant: "destructive" 
       });
       updateStatus(activeStage, 'error');

@@ -41,11 +41,14 @@ const prompt = ai.definePrompt({
     "Focus on thoroughness and provide actionable recommendations.",
 });
 
-async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 2000): Promise<T> {
+async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 5000): Promise<T> {
   try {
     return await fn();
   } catch (error: any) {
-    if (retries > 0 && error.message?.includes('429')) {
+    const errorMessage = error.message || '';
+    const isRateLimit = errorMessage.includes('429') || errorMessage.includes('RESOURCE_EXHAUSTED');
+    
+    if (retries > 0 && isRateLimit) {
       await new Promise(resolve => setTimeout(resolve, delay));
       return withRetry(fn, retries - 1, delay * 2);
     }
