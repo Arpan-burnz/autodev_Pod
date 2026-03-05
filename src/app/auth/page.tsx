@@ -3,13 +3,13 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/firebase';
-import { initiateEmailSignIn, initiateEmailSignUp } from '@/firebase/non-blocking-login';
+import { initiateEmailSignIn, initiateEmailSignUp, initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
-import { Cpu, Loader2, ArrowLeft } from 'lucide-react';
+import { Cpu, Loader2, ArrowLeft, Ghost } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AuthPage() {
@@ -23,7 +23,6 @@ export default function AuthPage() {
     e.preventDefault();
     setIsLoading(true);
     initiateEmailSignIn(auth, email, password);
-    // Redirection is handled by the auth state listener in the provider/layout
   };
 
   const handleSignUp = (e: React.FormEvent) => {
@@ -32,69 +31,82 @@ export default function AuthPage() {
     initiateEmailSignUp(auth, email, password);
   };
 
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background relative overflow-hidden">
-      {/* Decorative Background Elements */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent/10 rounded-full blur-[120px] pointer-events-none" />
+  const handleGuestLogin = () => {
+    setIsLoading(true);
+    initiateAnonymousSignIn(auth);
+  };
 
-      <Link href="/" className="absolute top-8 left-8 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-        <ArrowLeft size={16} />
-        Back to Home
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-black relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-full h-full scanline opacity-20 pointer-events-none" />
+      
+      <Link href="/" className="absolute top-8 left-8 flex items-center gap-2 text-[10px] font-bold tracking-[0.3em] text-white/40 hover:text-white transition-colors uppercase">
+        <ArrowLeft size={14} />
+        Exit System
       </Link>
 
-      <div className="w-full max-w-md space-y-8 relative">
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary text-white shadow-xl shadow-primary/20 mb-4">
+      <div className="w-full max-w-md space-y-12 relative">
+        <div className="text-center space-y-6">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-white text-black shadow-[0_0_40px_rgba(255,255,255,0.2)]">
             <Cpu size={32} />
           </div>
-          <h1 className="text-3xl font-headline font-bold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            AutoDev Pod
-          </h1>
-          <p className="text-muted-foreground">The future of software development starts here.</p>
+          <div className="space-y-2">
+            <h1 className="text-4xl font-headline font-bold tracking-tighter text-white">
+              ACCESS_PROTOCOL
+            </h1>
+            <p className="text-[10px] text-white/40 font-bold tracking-[0.4em] uppercase">Security Clearance Required</p>
+          </div>
         </div>
 
         <Tabs defaultValue="login" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6 h-12 bg-card/50 backdrop-blur-xl border border-white/5">
-            <TabsTrigger value="login" className="font-bold">Login</TabsTrigger>
-            <TabsTrigger value="signup" className="font-bold">Sign Up</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 mb-8 h-12 bg-white/5 border border-white/10 rounded-none p-1">
+            <TabsTrigger value="login" className="font-bold text-[10px] uppercase tracking-widest rounded-none data-[state=active]:bg-white data-[state=active]:text-black">Login</TabsTrigger>
+            <TabsTrigger value="signup" className="font-bold text-[10px] uppercase tracking-widest rounded-none data-[state=active]:bg-white data-[state=active]:text-black">Sign Up</TabsTrigger>
           </TabsList>
           
           <TabsContent value="login">
-            <Card className="border-white/5 bg-card/50 backdrop-blur-xl shadow-2xl">
+            <Card className="border-white/10 bg-white/[0.02] rounded-none shadow-2xl">
               <form onSubmit={handleLogin}>
-                <CardHeader>
-                  <CardTitle className="font-headline">Welcome Back</CardTitle>
-                  <CardDescription>Enter your credentials to access your development pod.</CardDescription>
+                <CardHeader className="border-b border-white/10 pb-6 px-8 pt-8">
+                  <CardTitle className="text-sm font-headline font-bold uppercase tracking-widest">Operator Credentials</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email Address</Label>
+                <CardContent className="space-y-6 p-8">
+                  <div className="space-y-3">
+                    <Label htmlFor="email" className="text-[10px] font-bold tracking-widest uppercase text-white/40">Identifier</Label>
                     <Input 
                       id="email" 
                       type="email" 
-                      placeholder="name@example.com" 
+                      placeholder="EMAIL@SYSTEM.COM" 
                       required 
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="bg-background/50"
+                      className="bg-white/5 border-white/10 rounded-none h-12 text-xs font-code focus:border-white/40 transition-all"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
+                  <div className="space-y-3">
+                    <Label htmlFor="password" title="password" className="text-[10px] font-bold tracking-widest uppercase text-white/40">Access Key</Label>
                     <Input 
                       id="password" 
                       type="password" 
                       required 
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="bg-background/50"
+                      className="bg-white/5 border-white/10 rounded-none h-12 text-xs font-code focus:border-white/40 transition-all"
                     />
                   </div>
                 </CardContent>
-                <CardFooter>
-                  <Button type="submit" className="w-full h-11 font-bold" disabled={isLoading}>
-                    {isLoading ? <Loader2 className="animate-spin mr-2" size={18} /> : "Login to Workspace"}
+                <CardFooter className="flex flex-col gap-4 p-8 pt-0">
+                  <Button type="submit" className="w-full h-12 font-bold rounded-none bg-white text-black hover:bg-white/90 text-xs tracking-widest uppercase" disabled={isLoading}>
+                    {isLoading ? <Loader2 className="animate-spin mr-2" size={16} /> : "Initialize Session"}
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    className="w-full h-12 text-[10px] font-bold tracking-widest uppercase text-white/40 hover:text-white hover:bg-white/5"
+                    onClick={handleGuestLogin}
+                    disabled={isLoading}
+                  >
+                    <Ghost size={14} className="mr-2" /> Guest Access (Anonymous)
                   </Button>
                 </CardFooter>
               </form>
@@ -102,40 +114,39 @@ export default function AuthPage() {
           </TabsContent>
 
           <TabsContent value="signup">
-            <Card className="border-white/5 bg-card/50 backdrop-blur-xl shadow-2xl">
+            <Card className="border-white/10 bg-white/[0.02] rounded-none shadow-2xl">
               <form onSubmit={handleSignUp}>
-                <CardHeader>
-                  <CardTitle className="font-headline">Create Account</CardTitle>
-                  <CardDescription>Join the elite circle of AI-driven developers.</CardDescription>
+                <CardHeader className="border-b border-white/10 pb-6 px-8 pt-8">
+                  <CardTitle className="text-sm font-headline font-bold uppercase tracking-widest">Enlist Operator</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email Address</Label>
+                <CardContent className="space-y-6 p-8">
+                  <div className="space-y-3">
+                    <Label htmlFor="signup-email" className="text-[10px] font-bold tracking-widest uppercase text-white/40">Identifier</Label>
                     <Input 
                       id="signup-email" 
                       type="email" 
-                      placeholder="name@example.com" 
+                      placeholder="EMAIL@SYSTEM.COM" 
                       required 
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="bg-background/50"
+                      className="bg-white/5 border-white/10 rounded-none h-12 text-xs font-code focus:border-white/40 transition-all"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
+                  <div className="space-y-3">
+                    <Label htmlFor="signup-password" title="signup-password" className="text-[10px] font-bold tracking-widest uppercase text-white/40">Access Key</Label>
                     <Input 
                       id="signup-password" 
                       type="password" 
                       required 
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="bg-background/50"
+                      className="bg-white/5 border-white/10 rounded-none h-12 text-xs font-code focus:border-white/40 transition-all"
                     />
                   </div>
                 </CardContent>
-                <CardFooter>
-                  <Button type="submit" className="w-full h-11 font-bold" disabled={isLoading}>
-                    {isLoading ? <Loader2 className="animate-spin mr-2" size={18} /> : "Create Workspace"}
+                <CardFooter className="p-8 pt-0">
+                  <Button type="submit" className="w-full h-12 font-bold rounded-none bg-white text-black hover:bg-white/90 text-xs tracking-widest uppercase" disabled={isLoading}>
+                    {isLoading ? <Loader2 className="animate-spin mr-2" size={16} /> : "Create Clearance"}
                   </Button>
                 </CardFooter>
               </form>
@@ -143,8 +154,8 @@ export default function AuthPage() {
           </TabsContent>
         </Tabs>
         
-        <p className="text-center text-xs text-muted-foreground opacity-60">
-          By continuing, you agree to our Terms of Service and Privacy Policy.
+        <p className="text-center text-[8px] text-white/20 tracking-[0.5em] uppercase font-bold">
+          TERMINAL_ENCRYPTION_ACTIVE_V4.0
         </p>
       </div>
     </div>

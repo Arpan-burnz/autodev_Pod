@@ -12,10 +12,10 @@
     --popover-foreground: 0 0% 100%;
     --primary: 0 0% 100%;
     --primary-foreground: 0 0% 0%;
-    --secondary: 0 0% 10%;
+    --secondary: 0 0% 8%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 0 0% 10%;
-    --muted-foreground: 0 0% 60%;
+    --muted: 0 0% 8%;
+    --muted-foreground: 0 0% 50%;
     --accent: 0 0% 100%;
     --accent-foreground: 0 0% 0%;
     --destructive: 0 84% 60%;
@@ -35,7 +35,7 @@
     @apply bg-background text-foreground font-body antialiased selection:bg-white selection:text-black;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-headline uppercase tracking-tighter;
+    @apply font-headline uppercase tracking-tighter font-bold;
   }
   code, pre {
     @apply font-code;

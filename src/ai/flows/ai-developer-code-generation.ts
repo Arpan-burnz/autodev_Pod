@@ -1,10 +1,6 @@
 'use server';
 /**
  * @fileOverview An AI Developer agent flow that generates code for specific functionalities.
- *
- * - developerCodeGeneration - A function that handles the code generation process.
- * - DeveloperCodeGenerationInput - The input type for the developerCodeGeneration function.
- * - DeveloperCodeGenerationOutput - The return type for the developerCodeGeneration function.
  */
 
 import { ai } from '@/ai/genkit';
