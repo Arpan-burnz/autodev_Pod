@@ -13,13 +13,13 @@ interface AgentArtifactProps {
 
 export function AgentArtifact({ title, type, content, icon }: AgentArtifactProps) {
   return (
-    <Card className="h-full border border-white/10 bg-white/[0.02] rounded-none overflow-hidden flex flex-col">
-      <CardHeader className="shrink-0 pb-4 border-b border-white/10 flex flex-row items-center justify-between space-y-0 px-6">
+    <Card className="h-full border border-black/5 bg-white rounded-none overflow-hidden flex flex-col shadow-sm hover:shadow-md transition-shadow duration-300">
+      <CardHeader className="shrink-0 pb-4 border-b border-black/5 flex flex-row items-center justify-between space-y-0 px-6 bg-background/50">
         <div className="flex items-center gap-3">
-          {icon && <span className="text-white opacity-40">{icon}</span>}
-          <CardTitle className="text-[10px] font-headline font-bold uppercase tracking-[0.3em] leading-none">{title}</CardTitle>
+          {icon && <span className="text-black opacity-30">{icon}</span>}
+          <CardTitle className="text-[9px] font-headline font-bold uppercase tracking-[0.4em] leading-none text-black/70">{title}</CardTitle>
         </div>
-        <Badge variant="outline" className="text-[8px] uppercase tracking-[0.2em] rounded-none border-white/20 bg-transparent text-white/60">
+        <Badge variant="outline" className="text-[7px] uppercase tracking-[0.2em] rounded-none border-black/10 bg-white text-black/40 font-bold">
           {type}
         </Badge>
       </CardHeader>
@@ -27,34 +27,34 @@ export function AgentArtifact({ title, type, content, icon }: AgentArtifactProps
         <ScrollArea className="h-full">
           <div className="p-6">
             {type === 'image' && content && (
-              <div className="relative aspect-video w-full border border-white/10 bg-black overflow-hidden group">
+              <div className="relative aspect-video w-full border border-black/5 bg-background overflow-hidden group shadow-inner">
                 <Image 
                   src={content} 
                   alt={title} 
                   fill 
-                  className="object-contain transition-transform duration-500 group-hover:scale-105"
+                  className="object-contain transition-transform duration-700 group-hover:scale-105"
                   data-ai-hint="technical diagram"
                 />
               </div>
             )}
             {type === 'code' && (
-              <pre className="p-5 bg-white/[0.03] text-xs overflow-x-auto font-code leading-relaxed border border-white/5 selection:bg-white selection:text-black">
-                <code className="text-white/80 whitespace-pre-wrap">{content}</code>
+              <pre className="p-5 bg-background text-[11px] overflow-x-auto font-code leading-relaxed border border-black/5 selection:bg-black selection:text-white shadow-inner">
+                <code className="text-black/80 whitespace-pre-wrap">{content}</code>
               </pre>
             )}
             {type === 'text' && (
-              <div className="space-y-4 text-white/60 text-xs tracking-wide leading-relaxed font-medium uppercase whitespace-pre-wrap">
+              <div className="space-y-4 text-black/60 text-[11px] tracking-wide leading-relaxed font-medium uppercase whitespace-pre-wrap">
                 {content}
               </div>
             )}
             {type === 'list' && Array.isArray(content) && (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {content.map((item, idx) => (
-                  <div key={idx} className="flex gap-4 p-4 border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] transition-colors">
-                    <span className="text-[10px] font-code font-bold opacity-20">
+                  <div key={idx} className="flex gap-4 p-4 border border-black/5 bg-background/30 hover:bg-background transition-colors group">
+                    <span className="text-[9px] font-code font-bold opacity-10 group-hover:opacity-30 transition-opacity">
                       {(idx + 1).toString().padStart(2, '0')}
                     </span>
-                    <p className="text-[11px] text-white/70 leading-tight tracking-wide font-medium uppercase">
+                    <p className="text-[11px] text-black/70 leading-relaxed tracking-wide font-medium uppercase">
                       {typeof item === 'string' ? item : JSON.stringify(item)}
                     </p>
                   </div>
@@ -62,8 +62,8 @@ export function AgentArtifact({ title, type, content, icon }: AgentArtifactProps
               </div>
             )}
             {type === 'json' && (
-              <pre className="p-5 bg-white/[0.03] text-xs font-code border border-white/5 overflow-x-auto">
-                <code className="text-white/80">{JSON.stringify(content, null, 2)}</code>
+              <pre className="p-5 bg-background text-[11px] font-code border border-black/5 overflow-x-auto shadow-inner">
+                <code className="text-black/80">{JSON.stringify(content, null, 2)}</code>
               </pre>
             )}
           </div>
