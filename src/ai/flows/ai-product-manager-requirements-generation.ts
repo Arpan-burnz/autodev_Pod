@@ -34,7 +34,7 @@ const prompt = ai.definePrompt({
     "Ensure the output is comprehensive, clear, and structured correctly.",
 });
 
-async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 10000): Promise<T> {
+async function withRetry<T>(fn: () => Promise<T>, retries = 2, delay = 5000): Promise<T> {
   try {
     return await fn();
   } catch (error: any) {
@@ -42,7 +42,6 @@ async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 10000): P
     const isRateLimit = errorMessage.includes('429') || errorMessage.includes('RESOURCE_EXHAUSTED');
     
     if (retries > 0 && isRateLimit) {
-      // Exponential backoff
       await new Promise(resolve => setTimeout(resolve, delay));
       return withRetry(fn, retries - 1, delay * 2);
     }

@@ -47,7 +47,7 @@ const developerCodePrompt = ai.definePrompt({
     "4. Do not include markdown code blocks inside your JSON string response for the generatedCode field.",
 });
 
-async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 10000): Promise<T> {
+async function withRetry<T>(fn: () => Promise<T>, retries = 2, delay = 5000): Promise<T> {
   try {
     return await fn();
   } catch (error: any) {
