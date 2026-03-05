@@ -12,15 +12,16 @@ import {
   CheckCircle2, 
   Loader2,
   Cpu,
-  LayoutDashboard,
   Box,
   Layers,
   LogOut,
-  Zap,
-  ChevronRight
+  ChevronRight,
+  Code,
+  FileText,
+  Activity,
+  Zap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AgentArtifact } from '@/components/AgentArtifact';
@@ -59,11 +60,11 @@ export default function AutoDevPodDashboard() {
   ]);
 
   const stages = [
-    { name: 'Product Manager', icon: <Users size={18} /> },
-    { name: 'System Architect', icon: <Layers size={18} /> },
-    { name: 'Developer', icon: <Terminal size={18} /> },
-    { name: 'Quality Assurance', icon: <ShieldCheck size={18} /> },
-    { name: 'DevOps', icon: <Rocket size={18} /> }
+    { name: 'Product Manager', icon: <Users size={16} /> },
+    { name: 'System Architect', icon: <Layers size={16} /> },
+    { name: 'Developer', icon: <Terminal size={16} /> },
+    { name: 'Quality Assurance', icon: <ShieldCheck size={16} /> },
+    { name: 'DevOps', icon: <Rocket size={16} /> }
   ];
 
   const updateStatus = (index: number, status: AgentStatus) => {
@@ -144,7 +145,7 @@ export default function AutoDevPodDashboard() {
   if (isUserLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
-        <Loader2 className="animate-spin text-white" size={40} />
+        <Loader2 className="animate-spin text-white/20" size={32} />
       </div>
     );
   }
@@ -152,19 +153,20 @@ export default function AutoDevPodDashboard() {
   if (!user) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-black text-center selection:bg-white selection:text-black">
-        <div className="w-16 h-16 bg-white flex items-center justify-center text-black mb-12">
-          <Cpu size={32} />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.05),transparent)] pointer-events-none" />
+        <div className="w-20 h-20 border border-white/20 flex items-center justify-center text-white mb-16 relative z-10 shadow-[0_0_50px_rgba(255,255,255,0.05)]">
+          <Cpu size={36} />
         </div>
-        <h1 className="text-6xl md:text-8xl font-headline font-bold mb-8 tracking-tighter leading-none">
-          AI DRIVEN<br />DEVELOPMENT.
+        <h1 className="text-6xl md:text-9xl font-headline font-bold mb-10 tracking-tighter leading-none relative z-10">
+          AUTO_DEV<br /><span className="text-white/20">SYSTEMS.</span>
         </h1>
-        <p className="text-lg text-white/50 mb-12 max-w-xl leading-tight uppercase tracking-widest font-medium">
-          Automated multi-agent engineering workflows.
+        <p className="text-[10px] text-white/30 mb-16 max-w-xl leading-tight uppercase tracking-[1em] font-bold relative z-10">
+          Autonomous multi-agent engineering workflows
         </p>
-        <div className="flex gap-4">
+        <div className="relative z-10">
           <Link href="/auth">
-            <Button size="lg" className="h-14 px-12 text-lg font-bold rounded-none hover:bg-white/90 transition-all">
-              ENTER SYSTEM <ChevronRight className="ml-2" size={20} />
+            <Button size="lg" className="h-16 px-16 text-[12px] font-bold rounded-none bg-white text-black hover:bg-white/90 transition-all uppercase tracking-[0.4em]">
+              Initialize Core <ChevronRight className="ml-2" size={16} />
             </Button>
           </Link>
         </div>
@@ -175,63 +177,63 @@ export default function AutoDevPodDashboard() {
   const progress = (statuses.filter(s => s === 'completed').length / stages.length) * 100;
 
   return (
-    <div className="min-h-screen flex flex-col bg-black text-white selection:bg-white selection:text-black">
-      {/* Header */}
-      <header className="h-16 border-b border-white/10 bg-black flex items-center justify-between px-6 sticky top-0 z-50">
-        <div className="flex items-center gap-4">
-          <div className="w-8 h-8 bg-white flex items-center justify-center text-black">
-            <Cpu size={18} />
+    <div className="min-h-screen flex flex-col bg-black text-white selection:bg-white selection:text-black font-body">
+      <header className="h-20 border-b border-white/10 bg-black flex items-center justify-between px-10 sticky top-0 z-50">
+        <div className="flex items-center gap-6">
+          <div className="w-10 h-10 border border-white/20 flex items-center justify-center text-white shadow-[0_0_20px_rgba(255,255,255,0.05)]">
+            <Cpu size={20} />
           </div>
-          <h1 className="text-xl font-headline font-bold tracking-tighter">
-            AUTODEV POD
-          </h1>
+          <div className="flex flex-col">
+            <h1 className="text-xl font-headline font-bold tracking-tighter">AUTODEV_POD</h1>
+            <span className="text-[8px] font-bold tracking-[0.4em] text-white/20 uppercase">Core Management Interface</span>
+          </div>
         </div>
         
-        <div className="flex items-center gap-6">
-          <div className="hidden md:flex items-center gap-3 text-[10px] font-bold tracking-widest text-white/40 uppercase">
-            <span className="truncate max-w-[200px]">{user.email}</span>
-            <div className="w-1 h-1 rounded-full bg-white/20" />
-            <span>OPERATOR_01</span>
+        <div className="flex items-center gap-8">
+          <div className="hidden md:flex flex-col items-end gap-1">
+            <span className="text-[10px] font-bold tracking-widest text-white/40 uppercase truncate max-w-[200px]">{user.email}</span>
+            <span className="text-[7px] font-bold tracking-[0.3em] text-white/20 uppercase">Operator Verified</span>
           </div>
-          <Button variant="ghost" size="icon" className="hover:bg-white/10 rounded-none h-8 w-8" onClick={handleLogout}>
+          <Button variant="ghost" size="icon" className="hover:bg-white/10 rounded-none h-10 w-10 border border-white/5" onClick={handleLogout}>
             <LogOut size={16} />
           </Button>
         </div>
       </header>
 
-      <main className="flex-1 p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 max-w-[1800px] mx-auto w-full">
-        <div className="lg:col-span-3 space-y-8">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] flex items-center gap-2">
-                PROJECT_INPUT
-              </label>
-              {isProcessing && <Loader2 size={12} className="animate-spin text-white/40" />}
+      <main className="flex-1 p-10 grid grid-cols-1 lg:grid-cols-12 gap-10 max-w-[2000px] mx-auto w-full">
+        <div className="lg:col-span-3 space-y-10">
+          <div className="space-y-6">
+            <label className="text-[10px] font-bold text-white/30 uppercase tracking-[0.4em] flex items-center gap-3">
+              <Zap size={10} className="text-white" /> Deployment_Input
+            </label>
+            <div className="relative">
+              <textarea
+                placeholder="DEFINE_PROJECT_PARAMETERS..."
+                className="w-full h-48 bg-white/[0.03] border border-white/10 rounded-none p-6 text-[11px] font-code focus:border-white/40 outline-none resize-none transition-all placeholder:text-white/10 leading-relaxed uppercase"
+                value={project.idea}
+                onChange={(e) => setProject(prev => ({ ...prev, idea: e.target.value }))}
+                disabled={isProcessing}
+              />
+              <div className="absolute bottom-4 right-4 flex items-center gap-2 opacity-20">
+                <span className="text-[8px] font-bold tracking-widest">UTF-8</span>
+              </div>
             </div>
-            <textarea
-              placeholder="DEFINE PROJECT CONCEPT..."
-              className="w-full h-40 bg-white/5 border border-white/10 rounded-none p-4 text-xs font-code focus:border-white/40 outline-none resize-none transition-all placeholder:text-white/20"
-              value={project.idea}
-              onChange={(e) => setProject(prev => ({ ...prev, idea: e.target.value }))}
-              disabled={isProcessing}
-            />
             
-            <div className="flex gap-2">
+            <div className="flex flex-col gap-3">
               <Button 
-                className="flex-1 font-bold h-12 rounded-none bg-white text-black hover:bg-white/90"
+                className="w-full font-bold h-14 rounded-none bg-white text-black hover:bg-white/90 text-[11px] tracking-[0.3em] uppercase group"
                 onClick={handleStartPipeline}
                 disabled={isProcessing || !project.idea}
               >
                 {isProcessing ? (
-                  <><Loader2 className="mr-2 animate-spin" size={18} /> PROCESSING</>
+                  <><Loader2 className="mr-3 animate-spin" size={16} /> Executing_Pipeline</>
                 ) : (
-                  <><Play className="mr-2 fill-current" size={14} /> DEPLOY_PIPELINE</>
+                  <><Play className="mr-3 fill-current" size={14} /> Boot_Agents</>
                 )}
               </Button>
               <Button 
                 variant="outline" 
-                size="icon" 
-                className="h-12 w-12 border-white/10 rounded-none hover:bg-white/10"
+                className="h-14 w-full border-white/10 rounded-none hover:bg-white hover:text-black text-[11px] tracking-[0.3em] uppercase transition-all"
                 onClick={() => {
                   setProject({ idea: '' });
                   setStatuses(['idle', 'idle', 'idle', 'idle', 'idle']);
@@ -239,115 +241,142 @@ export default function AutoDevPodDashboard() {
                 }}
                 disabled={isProcessing}
               >
-                <RotateCcw size={16} />
+                <RotateCcw size={14} className="mr-3" /> Reset_System
               </Button>
             </div>
           </div>
 
-          <div className="space-y-4">
-            <h3 className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">AGENT_WORKFLOW</h3>
-            <div className="space-y-1">
+          <div className="space-y-6">
+            <h3 className="text-[10px] font-bold text-white/30 uppercase tracking-[0.4em]">Node_Workflow</h3>
+            <div className="space-y-2">
               {stages.map((stage, idx) => (
                 <div 
                   key={idx}
-                  className={`p-4 transition-all duration-300 flex items-center justify-between border-l-2 ${
+                  className={`p-5 transition-all duration-500 flex items-center justify-between border ${
                     activeStage === idx 
-                      ? 'bg-white/10 border-white' 
-                      : 'border-transparent opacity-40'
-                  } ${statuses[idx] === 'completed' ? 'opacity-100 border-white/40' : ''}`}
+                      ? 'bg-white/10 border-white shadow-[0_0_20px_rgba(255,255,255,0.05)]' 
+                      : 'border-white/5 opacity-30'
+                  } ${statuses[idx] === 'completed' ? 'opacity-100 border-white/20' : ''}`}
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-5 h-5 flex items-center justify-center">
+                    <div className={`w-6 h-6 flex items-center justify-center ${activeStage === idx ? 'text-white' : 'text-white/50'}`}>
                       {statuses[idx] === 'completed' ? <CheckCircle2 size={16} /> : stage.icon}
                     </div>
-                    <span className="text-xs font-bold tracking-tight uppercase">{stage.name}</span>
+                    <span className="text-[10px] font-bold tracking-wider uppercase">{stage.name}</span>
                   </div>
-                  <span className="text-[9px] font-bold tracking-tighter opacity-40">
+                  <span className={`text-[8px] font-bold tracking-tighter ${statuses[idx] === 'working' ? 'animate-pulse' : ''}`}>
                     {statuses[idx].toUpperCase()}
                   </span>
                 </div>
               ))}
             </div>
             
-            <div className="pt-4 border-t border-white/10">
-              <div className="flex justify-between text-[9px] font-bold text-white/40 mb-2 uppercase tracking-widest">
-                <span>SYSTEM_PROGRESS</span>
+            <div className="pt-6 border-t border-white/10">
+              <div className="flex justify-between text-[9px] font-bold text-white/40 mb-3 uppercase tracking-[0.3em]">
+                <span>Pipeline_Load</span>
                 <span>{Math.round(progress)}%</span>
               </div>
-              <Progress value={progress} className="h-0.5 bg-white/5" />
+              <Progress value={progress} className="h-1 rounded-none bg-white/5" />
             </div>
           </div>
         </div>
 
-        <div className="lg:col-span-9 space-y-8 min-h-[700px]">
+        <div className="lg:col-span-9 flex flex-col min-h-[800px]">
           {!project.idea && !isProcessing && (
-            <div className="h-full flex flex-col items-center justify-center text-center p-12 space-y-8">
-              <Box size={60} className="text-white/10" />
-              <div className="max-w-md">
-                <h2 className="text-2xl font-headline font-bold mb-3 tracking-tighter uppercase">Awaiting System Definition.</h2>
-                <p className="text-white/40 text-xs tracking-widest leading-relaxed uppercase">Enter project requirements in the sidebar to initialize agent deployment.</p>
+            <div className="flex-1 flex flex-col items-center justify-center text-center p-20 space-y-10 border border-white/5 bg-white/[0.01]">
+              <div className="relative">
+                <Box size={80} className="text-white/5" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Activity size={24} className="text-white/20 animate-pulse" />
+                </div>
+              </div>
+              <div className="max-w-md space-y-4">
+                <h2 className="text-3xl font-headline font-bold tracking-tighter uppercase">System_Standby</h2>
+                <p className="text-white/30 text-[10px] tracking-[0.3em] leading-relaxed uppercase font-bold">Input requirements to initialize the autonomous development pod.</p>
               </div>
             </div>
           )}
 
           {(project.requirements || isProcessing) && (
-            <Tabs defaultValue="requirements" className="w-full h-full flex flex-col">
-              <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
-                <TabsList className="bg-transparent h-auto gap-8 p-0">
-                  <TabsTrigger value="requirements" className="data-[state=active]:text-white text-white/40 font-bold text-[10px] uppercase tracking-[0.2em] p-0 bg-transparent rounded-none data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-white pb-2">PRODUCT_ARTIFACTS</TabsTrigger>
-                  <TabsTrigger value="architecture" className="data-[state=active]:text-white text-white/40 font-bold text-[10px] uppercase tracking-[0.2em] p-0 bg-transparent rounded-none data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-white pb-2" disabled={!project.architecture && activeStage !== 1}>ARCHITECTURE_SCHEMA</TabsTrigger>
-                  <TabsTrigger value="code" className="data-[state=active]:text-white text-white/40 font-bold text-[10px] uppercase tracking-[0.2em] p-0 bg-transparent rounded-none data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-white pb-2" disabled={!project.code && activeStage !== 2}>SOURCE_REPOSITORY</TabsTrigger>
-                  <TabsTrigger value="qa" className="data-[state=active]:text-white text-white/40 font-bold text-[10px] uppercase tracking-[0.2em] p-0 bg-transparent rounded-none data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-white pb-2" disabled={!project.qa && activeStage !== 3}>QUALITY_REPORT</TabsTrigger>
-                  <TabsTrigger value="devops" className="data-[state=active]:text-white text-white/40 font-bold text-[10px] uppercase tracking-[0.2em] p-0 bg-transparent rounded-none data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-white pb-2" disabled={!project.devops && activeStage !== 4}>DEPLOYMENT_PLAN</TabsTrigger>
+            <Tabs defaultValue="requirements" className="flex-1 flex flex-col">
+              <div className="flex items-center justify-between mb-10 pb-6 border-b border-white/10">
+                <TabsList className="bg-transparent h-auto gap-12 p-0 flex-wrap">
+                  <TabsTrigger value="requirements" className="data-[state=active]:text-white text-white/20 font-bold text-[10px] uppercase tracking-[0.3em] p-0 bg-transparent rounded-none data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-white pb-3 transition-all">01_Product</TabsTrigger>
+                  <TabsTrigger value="architecture" className="data-[state=active]:text-white text-white/20 font-bold text-[10px] uppercase tracking-[0.3em] p-0 bg-transparent rounded-none data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-white pb-3 transition-all" disabled={!project.architecture && activeStage !== 1}>02_Architecture</TabsTrigger>
+                  <TabsTrigger value="code" className="data-[state=active]:text-white text-white/20 font-bold text-[10px] uppercase tracking-[0.3em] p-0 bg-transparent rounded-none data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-white pb-3 transition-all" disabled={!project.code && activeStage !== 2}>03_Repository</TabsTrigger>
+                  <TabsTrigger value="qa" className="data-[state=active]:text-white text-white/20 font-bold text-[10px] uppercase tracking-[0.3em] p-0 bg-transparent rounded-none data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-white pb-3 transition-all" disabled={!project.qa && activeStage !== 3}>04_Quality</TabsTrigger>
+                  <TabsTrigger value="devops" className="data-[state=active]:text-white text-white/20 font-bold text-[10px] uppercase tracking-[0.3em] p-0 bg-transparent rounded-none data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-white pb-3 transition-all" disabled={!project.devops && activeStage !== 4}>05_DevOps</TabsTrigger>
                 </TabsList>
               </div>
 
-              <div className="flex-1 min-h-[600px]">
-                <TabsContent value="requirements" className="mt-0 h-full grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="flex-1 min-h-[700px]">
+                <TabsContent value="requirements" className="mt-0 h-full grid grid-cols-1 md:grid-cols-2 gap-8">
                   {project.requirements ? (
                     <>
-                      <AgentArtifact title="Functional Requirements" type="list" content={project.requirements.requirements} icon={<Users size={16} />} />
-                      <AgentArtifact title="User Stories" type="list" content={project.requirements.userStories} icon={<Lightbulb size={16} />} />
+                      <AgentArtifact title="Feature Specifications" type="list" content={project.requirements.featureSpecifications.map((f: any) => `${f.name}: ${f.description}`)} icon={<FileText size={16} />} />
+                      <div className="space-y-8">
+                        <AgentArtifact title="User Stories" type="list" content={project.requirements.userStories} icon={<Lightbulb size={16} />} />
+                        <AgentArtifact title="Functional Constraints" type="list" content={project.requirements.requirements} icon={<ShieldCheck size={16} />} />
+                      </div>
                     </>
                   ) : activeStage === 0 && isProcessing && <SkeletonArtifact count={2} />}
                 </TabsContent>
 
                 <TabsContent value="architecture" className="mt-0 h-full">
                   {project.architecture ? (
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
-                      <div className="lg:col-span-2">
-                        <AgentArtifact title="System Overview" type="text" content={project.architecture.systemArchitectureDescription} icon={<Layers size={16} />} />
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">
+                      <div className="lg:col-span-8 flex flex-col gap-8">
+                        <AgentArtifact title="Architecture Visualization" type="image" content={project.architecture.diagramUrl} icon={<Layers size={16} />} />
+                        <AgentArtifact title="System Overview" type="text" content={project.architecture.systemArchitectureDescription} />
                       </div>
-                      <AgentArtifact title="Database Schema" type="code" content={project.architecture.databaseSchema} />
+                      <div className="lg:col-span-4 flex flex-col gap-8">
+                        <AgentArtifact title="Data Schema" type="code" content={project.architecture.databaseSchema} />
+                        <AgentArtifact title="API Interfaces" type="text" content={project.architecture.apiDesigns} />
+                      </div>
                     </div>
                   ) : activeStage === 1 && isProcessing && <SkeletonArtifact count={1} />}
                 </TabsContent>
 
                 <TabsContent value="code" className="mt-0 h-full">
                   {project.code ? (
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
-                      <div className="lg:col-span-2">
-                        <AgentArtifact title={project.code.suggestedFileName || 'SOURCE.TS'} type="code" content={project.code.generatedCode} icon={<Terminal size={16} />} />
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">
+                      <div className="lg:col-span-8">
+                        <AgentArtifact title={project.code.suggestedFileName || 'MODULE_01.TS'} type="code" content={project.code.generatedCode} icon={<Code size={16} />} />
                       </div>
-                      <AgentArtifact title="Implementation Details" type="text" content={project.code.codeExplanation} />
+                      <div className="lg:col-span-4">
+                        <AgentArtifact title="Documentation" type="text" content={project.code.codeExplanation} />
+                      </div>
                     </div>
                   ) : activeStage === 2 && isProcessing && <SkeletonArtifact count={1} />}
                 </TabsContent>
 
                 <TabsContent value="qa" className="mt-0 h-full">
                   {project.qa ? (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
-                      <AgentArtifact title="Identified Issues" type="list" content={project.qa.identifiedIssues.map((i: any) => `${i.severity.toUpperCase()}: ${i.description}`)} icon={<ShieldCheck size={16} />} />
-                      <AgentArtifact title="Test Plan" type="list" content={project.qa.testPlan.map((t: any) => t.description)} />
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">
+                      <div className="lg:col-span-4 space-y-8">
+                        <AgentArtifact title="Overall Assessment" type="text" content={project.qa.overallAssessment} icon={<Activity size={16} />} />
+                        <AgentArtifact title="Code Review" type="text" content={project.qa.codeReviewSummary} />
+                      </div>
+                      <div className="lg:col-span-4">
+                        <AgentArtifact title="Security & Vulnerabilities" type="list" content={project.qa.identifiedIssues.map((i: any) => `[${i.severity.toUpperCase()}] ${i.description}`)} />
+                      </div>
+                      <div className="lg:col-span-4">
+                        <AgentArtifact title="Test Suite" type="list" content={project.qa.testPlan.map((t: any) => `${t.type.toUpperCase()}: ${t.description}`)} />
+                      </div>
                     </div>
-                  ) : activeStage === 3 && isProcessing && <SkeletonArtifact count={2} />}
+                  ) : activeStage === 3 && isProcessing && <SkeletonArtifact count={3} />}
                 </TabsContent>
 
                 <TabsContent value="devops" className="mt-0 h-full">
                   {project.devops ? (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
-                      <AgentArtifact title="Deployment Pipeline" type="text" content={project.devops.ciCdPipelineOutline} icon={<Rocket size={16} />} />
-                      <AgentArtifact title="Target Environments" type="list" content={project.devops.suggestedDeploymentStrategies} />
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">
+                      <div className="lg:col-span-7 space-y-8">
+                        <AgentArtifact title="CI/CD Pipeline" type="text" content={project.devops.ciCdPipelineOutline} icon={<Rocket size={16} />} />
+                        <AgentArtifact title="Deployment Instructions" type="text" content={project.devops.stepByStepInstructions} />
+                      </div>
+                      <div className="lg:col-span-5">
+                        <AgentArtifact title="Target Environments" type="list" content={project.devops.suggestedDeploymentStrategies} />
+                      </div>
                     </div>
                   ) : activeStage === 4 && isProcessing && <SkeletonArtifact count={2} />}
                 </TabsContent>
@@ -357,13 +386,13 @@ export default function AutoDevPodDashboard() {
         </div>
       </main>
 
-      <footer className="h-12 border-t border-white/10 bg-black flex items-center px-8 justify-between text-[8px] text-white/20 uppercase font-bold tracking-[0.4em]">
-        <div className="flex gap-8">
-          <span className="flex items-center gap-2"><div className="w-1 h-1 bg-white animate-pulse" /> SYSTEM_ONLINE</span>
-          <span>CORE_V1.2.0</span>
-          <span>TERMINAL_ID: 8821-X</span>
+      <footer className="h-16 border-t border-white/10 bg-black flex items-center px-10 justify-between text-[9px] text-white/20 uppercase font-bold tracking-[0.5em]">
+        <div className="flex gap-12">
+          <span className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-white animate-pulse" /> Status: Operational</span>
+          <span>Version: 4.2.0_Secure</span>
+          <span>Terminal_ID: AD-772-B</span>
         </div>
-        <span>© 2024 AUTODEV_SYSTEMS</span>
+        <span>© 2024 AUTODEV_SYSTEMS_GLOBAL</span>
       </footer>
     </div>
   );
@@ -373,12 +402,12 @@ function SkeletonArtifact({ count }: { count: number }) {
   return (
     <>
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="h-full border border-white/10 bg-white/[0.02] animate-pulse flex flex-col p-8 space-y-6">
+        <div key={i} className="h-full border border-white/10 bg-white/[0.02] animate-pulse flex flex-col p-10 space-y-8">
           <div className="h-4 w-1/4 bg-white/5" />
-          <div className="space-y-3 flex-1">
-            <div className="h-3 w-full bg-white/5" />
-            <div className="h-3 w-5/6 bg-white/5" />
-            <div className="h-3 w-4/6 bg-white/5" />
+          <div className="space-y-4 flex-1">
+            <div className="h-4 w-full bg-white/5" />
+            <div className="h-4 w-11/12 bg-white/5" />
+            <div className="h-4 w-4/6 bg-white/5" />
           </div>
         </div>
       ))}

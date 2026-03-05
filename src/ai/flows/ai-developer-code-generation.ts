@@ -26,7 +26,7 @@ const developerCodePrompt = ai.definePrompt({
   name: 'developerCodePrompt',
   input: { schema: DeveloperCodeGenerationInputSchema },
   output: { schema: DeveloperCodeGenerationOutputSchema },
-  prompt: `You are an expert software developer AI. Your goal is to generate clean, professional, and optimized code based on the provided specifications.
+  prompt: `You are an expert software developer AI. Generate clean, professional, and optimized code.
 
 CONTEXT:
 Language: {{{programmingLanguage}}}
@@ -46,8 +46,8 @@ EXISTING CONTEXT:
 INSTRUCTIONS:
 1. Provide the full source code for the required functionality.
 2. Ensure the code follows best practices for the chosen language and framework.
-3. Provide a clear, technical explanation of the implementation details.
-4. Return the source code as a single plain text block.`,
+3. Return the source code as a single plain text block.
+4. Do not include markdown code blocks inside your JSON string response for the generatedCode field.`,
 });
 
 export async function developerCodeGeneration(input: DeveloperCodeGenerationInput): Promise<DeveloperCodeGenerationOutput> {
