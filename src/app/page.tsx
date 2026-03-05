@@ -157,7 +157,7 @@ export default function AutoDevPodDashboard() {
         <div className="w-20 h-20 border border-white/20 flex items-center justify-center text-white mb-16 relative z-10 shadow-[0_0_50px_rgba(255,255,255,0.05)]">
           <Cpu size={36} />
         </div>
-        <h1 className="text-6xl md:text-9xl font-headline font-bold mb-10 tracking-tighter leading-none relative z-10">
+        <h1 className="text-6xl md:text-9xl font-headline font-bold mb-10 tracking-tighter leading-none relative z-10 text-white">
           AUTO_DEV<br /><span className="text-white/20">SYSTEMS.</span>
         </h1>
         <p className="text-[10px] text-white/30 mb-16 max-w-xl leading-tight uppercase tracking-[1em] font-bold relative z-10">
