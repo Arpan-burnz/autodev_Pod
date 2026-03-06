@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -18,11 +17,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Cpu, Loader2, ArrowLeft, Ghost, Zap, ShieldCheck, Github, Chrome } from 'lucide-react';
 import Link from 'next/link';
+import { useToast } from '@/hooks/use-toast';
 
 export default function AuthPage() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -33,31 +34,57 @@ export default function AuthPage() {
     }
   }, [user, isUserLoading, router]);
 
+  const handleAuthError = (error: any) => {
+    console.error("Auth Error:", error);
+    let message = "An unexpected error occurred during authentication.";
+    
+    if (error.code === 'auth/operation-not-allowed') {
+      message = "This sign-in method is not enabled in the Firebase Console.";
+    } else if (error.code === 'auth/popup-blocked') {
+      message = "The sign-in popup was blocked by your browser.";
+    } else if (error.code === 'auth/popup-closed-by-user') {
+      message = "The sign-in window was closed before completion.";
+    } else if (error.message) {
+      message = error.message;
+    }
+
+    toast({
+      title: "AUTH_FAILURE",
+      description: message,
+      variant: "destructive"
+    });
+    setIsLoading(false);
+  };
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    initiateEmailSignIn(auth, email, password);
+    initiateEmailSignIn(auth, email, password).catch(handleAuthError);
   };
 
   const handleSignUp = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    initiateEmailSignUp(auth, email, password);
+    initiateEmailSignUp(auth, email, password).catch(handleAuthError);
   };
 
   const handleGuestLogin = () => {
     setIsLoading(true);
-    initiateAnonymousSignIn(auth);
+    initiateAnonymousSignIn(auth).catch(handleAuthError);
   };
 
   const handleGoogleLogin = () => {
     setIsLoading(true);
-    initiateGoogleSignIn(auth);
+    initiateGoogleSignIn(auth)
+      .then(() => setIsLoading(false))
+      .catch(handleAuthError);
   };
 
   const handleGithubLogin = () => {
     setIsLoading(true);
-    initiateGithubSignIn(auth);
+    initiateGithubSignIn(auth)
+      .then(() => setIsLoading(false))
+      .catch(handleAuthError);
   };
 
   if (isUserLoading) {
