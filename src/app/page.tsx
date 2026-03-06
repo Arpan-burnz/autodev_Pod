@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -24,14 +25,18 @@ import {
   Download,
   ClipboardCheck,
   FileSearch,
-  Timer
+  Timer,
+  History as HistoryIcon,
+  Trash2,
+  ExternalLink
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AgentArtifact } from '@/components/AgentArtifact';
 import { useToast } from '@/hooks/use-toast';
-import { useUser, useAuth } from '@/firebase';
+import { useUser, useAuth, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
+import { collection, doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import Link from 'next/link';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -47,6 +52,7 @@ import { aiDevOpsDeploymentSuggestions } from '@/ai/flows/ai-dev-ops-deployment-
 type AgentStatus = 'idle' | 'working' | 'completed' | 'error';
 
 interface ProjectState {
+  id?: string;
   idea: string;
   requirements?: any;
   architecture?: any;
@@ -58,6 +64,7 @@ interface ProjectState {
 export default function AutoDevPodDashboard() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
+  const db = useFirestore();
   const { toast } = useToast();
   const [activeStage, setActiveStage] = useState<number>(0);
   const [project, setProject] = useState<ProjectState>({ idea: '' });
@@ -68,6 +75,14 @@ export default function AutoDevPodDashboard() {
   const [statuses, setStatuses] = useState<AgentStatus[]>([
     'idle', 'idle', 'idle', 'idle', 'idle'
   ]);
+
+  // History Fetching
+  const projectsQuery = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return collection(db, 'users', user.uid, 'projects');
+  }, [db, user]);
+
+  const { data: projects, isLoading: isProjectsLoading } = useCollection<ProjectState>(projectsQuery);
 
   const stages = [
     { name: 'Product Manager', icon: <Users size={16} />, tab: 'requirements' },
@@ -101,16 +116,35 @@ export default function AutoDevPodDashboard() {
       return;
     }
 
+    if (!user || !db) return;
+
     setIsProcessing(true);
     setQuotaError(false);
     setSelectedTab('requirements');
     
+    // Create new project document
+    const projectRef = doc(collection(db, 'users', user.uid, 'projects'));
+    const projectId = projectRef.id;
+    setProject(prev => ({ ...prev, id: projectId }));
+
+    const initialData = {
+      id: projectId,
+      ownerId: user.uid,
+      idea: project.idea,
+      status: 'working',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+
     try {
+      await setDoc(projectRef, initialData);
+
       // 1. PM
       setActiveStage(0);
       updateStatus(0, 'working');
       const pmResults = await generateProjectRequirements({ projectIdea: project.idea });
       setProject(prev => ({ ...prev, requirements: pmResults }));
+      updateDocumentNonBlocking(projectRef, { requirements: pmResults, updatedAt: serverTimestamp() });
       updateStatus(0, 'completed');
       await delay(5000); 
       
@@ -122,6 +156,7 @@ export default function AutoDevPodDashboard() {
         projectRequirements: JSON.stringify(pmResults) 
       });
       setProject(prev => ({ ...prev, architecture: archResults }));
+      updateDocumentNonBlocking(projectRef, { architecture: archResults, updatedAt: serverTimestamp() });
       updateStatus(1, 'completed');
       await delay(5000);
 
@@ -136,6 +171,7 @@ export default function AutoDevPodDashboard() {
         framework: 'Next.js'
       });
       setProject(prev => ({ ...prev, code: devResults }));
+      updateDocumentNonBlocking(projectRef, { code: devResults, updatedAt: serverTimestamp() });
       updateStatus(2, 'completed');
       await delay(5000);
 
@@ -149,6 +185,7 @@ export default function AutoDevPodDashboard() {
         architecture: archResults.systemArchitectureDescription
       });
       setProject(prev => ({ ...prev, qa: qaResults }));
+      updateDocumentNonBlocking(projectRef, { qa: qaResults, updatedAt: serverTimestamp() });
       updateStatus(3, 'completed');
       await delay(5000);
 
@@ -163,6 +200,7 @@ export default function AutoDevPodDashboard() {
         codeSummary: devResults.codeExplanation
       });
       setProject(prev => ({ ...prev, devops: devopsResults }));
+      updateDocumentNonBlocking(projectRef, { devops: devopsResults, status: 'completed', updatedAt: serverTimestamp() });
       updateStatus(4, 'completed');
 
       toast({
@@ -183,9 +221,45 @@ export default function AutoDevPodDashboard() {
         });
       }
       updateStatus(activeStage, 'error');
+      updateDocumentNonBlocking(projectRef, { status: 'error', updatedAt: serverTimestamp() });
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handleLoadProject = (proj: ProjectState) => {
+    setProject(proj);
+    const newStatuses: AgentStatus[] = [
+      proj.requirements ? 'completed' : 'idle',
+      proj.architecture ? 'completed' : 'idle',
+      proj.code ? 'completed' : 'idle',
+      proj.qa ? 'completed' : 'idle',
+      proj.devops ? 'completed' : 'idle',
+    ];
+    setStatuses(newStatuses);
+    setSelectedTab(proj.requirements ? 'requirements' : 'summary');
+    setQuotaError(false);
+    
+    const lastCompleted = newStatuses.lastIndexOf('completed');
+    setActiveStage(lastCompleted >= 0 ? lastCompleted : 0);
+  };
+
+  const handleDeleteProject = (projId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user || !db) return;
+    const projectRef = doc(db, 'users', user.uid, 'projects', projId);
+    deleteDocumentNonBlocking(projectRef);
+    if (project.id === projId) {
+      handleClearBuffer();
+    }
+  };
+
+  const handleClearBuffer = () => {
+    setProject({ idea: '' });
+    setStatuses(['idle', 'idle', 'idle', 'idle', 'idle']);
+    setActiveStage(0);
+    setQuotaError(false);
+    setSelectedTab('requirements');
   };
 
   const handleDownloadReport = () => {
@@ -336,6 +410,7 @@ Generated by AutoDev Pod Systems v4.0
       )}
 
       <main className="flex-1 p-10 grid grid-cols-1 lg:grid-cols-12 gap-10 max-w-[2200px] mx-auto w-full">
+        {/* Left Column: Input & Monitors */}
         <div className="lg:col-span-3 space-y-10">
           <div className="space-y-6 bg-white p-8 border border-black shadow-sm">
             <label className="text-[10px] font-bold text-black/30 uppercase tracking-[0.4em] flex items-center gap-3">
@@ -376,13 +451,7 @@ Generated by AutoDev Pod Systems v4.0
               <Button 
                 variant="outline" 
                 className="h-14 w-full border-black rounded-none hover:bg-black hover:text-white text-[11px] tracking-[0.3em] uppercase transition-all"
-                onClick={() => {
-                  setProject({ idea: '' });
-                  setStatuses(['idle', 'idle', 'idle', 'idle', 'idle']);
-                  setActiveStage(0);
-                  setQuotaError(false);
-                  setSelectedTab('requirements');
-                }}
+                onClick={handleClearBuffer}
                 disabled={isProcessing}
               >
                 <RotateCcw size={14} className="mr-3" /> Clear_Buffer
@@ -440,8 +509,60 @@ Generated by AutoDev Pod Systems v4.0
               <Progress value={progress} className="h-1 rounded-none bg-black/10" />
             </div>
           </div>
+
+          {/* History Section */}
+          <div className="space-y-6">
+            <h3 className="text-[10px] font-bold text-black/30 uppercase tracking-[0.4em] ml-2 flex items-center gap-2">
+              <HistoryIcon size={12} /> Previous_Archive
+            </h3>
+            <ScrollArea className="h-[400px] border border-black/10 bg-white shadow-sm p-4">
+              {isProjectsLoading ? (
+                <div className="flex items-center justify-center p-8">
+                  <Loader2 size={16} className="animate-spin text-black/20" />
+                </div>
+              ) : projects && projects.length > 0 ? (
+                <div className="space-y-3">
+                  {projects.map((proj) => (
+                    <div 
+                      key={proj.id}
+                      onClick={() => handleLoadProject(proj)}
+                      className={`p-4 border group cursor-pointer transition-all hover:border-black ${project.id === proj.id ? 'border-black bg-black/5' : 'border-black/5 bg-[#F9F9F9]'}`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[8px] font-bold tracking-widest text-black/40 uppercase">
+                          {proj.updatedAt && (proj.updatedAt as any).toDate ? (proj.updatedAt as any).toDate().toLocaleDateString() : 'NO_DATE'}
+                        </span>
+                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button 
+                            onClick={(e) => handleDeleteProject(proj.id, e)}
+                            className="p-1 hover:text-destructive transition-colors"
+                          >
+                            <Trash2 size={10} />
+                          </button>
+                          <ExternalLink size={10} className="text-black/30" />
+                        </div>
+                      </div>
+                      <p className="text-[10px] font-bold uppercase line-clamp-2 text-black leading-tight">
+                        {proj.idea}
+                      </p>
+                      <div className="mt-2 flex items-center gap-2">
+                        <span className={`text-[7px] font-bold px-1.5 py-0.5 uppercase ${proj.status === 'completed' ? 'bg-black text-white' : 'bg-black/5 text-black/40'}`}>
+                          {proj.status}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-10">
+                  <p className="text-[8px] font-bold text-black/20 uppercase tracking-[0.2em]">Archive_Empty</p>
+                </div>
+              )}
+            </ScrollArea>
+          </div>
         </div>
 
+        {/* Right Column: Artifacts */}
         <div className="lg:col-span-9 flex flex-col min-h-[800px]">
           {!project.idea && !isProcessing && (
             <div className="flex-1 flex flex-col items-center justify-center text-center p-20 space-y-10 border border-black/10 bg-white shadow-sm">
@@ -564,7 +685,7 @@ Generated by AutoDev Pod Systems v4.0
                 </TabsContent>
 
                 <TabsContent value="summary" className="mt-0 h-full">
-                  {isPipelineComplete ? (
+                  {isPipelineComplete || (project.requirements && project.architecture && project.code && project.qa && project.devops) ? (
                     <div className="bg-white border border-black shadow-sm h-full flex flex-col">
                       <div className="p-10 border-b border-black/10 flex items-center justify-between bg-black/5">
                         <div className="space-y-1">

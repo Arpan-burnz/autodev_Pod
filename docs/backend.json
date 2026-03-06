@@ -5,7 +5,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "UserProfile",
       "type": "object",
-      "description": "Represents a user's profile information within the AutoDev Pod application, linked to an external authentication system. This entity stores application-specific user data, not authentication credentials.",
+      "description": "Represents a user's profile information within the AutoDev Pod application.",
       "properties": {
         "id": {
           "type": "string",
@@ -13,34 +13,18 @@
         },
         "externalUserId": {
           "type": "string",
-          "description": "Unique identifier for the user from the external authentication system. (Relationship: ExternalAuthSystem 1:1 UserProfile)"
+          "description": "Unique identifier from the auth system."
         },
         "username": {
           "type": "string",
-          "description": "Display name chosen by the user within the application."
+          "description": "Display name."
         },
         "email": {
           "type": "string",
-          "description": "Email address of the user, potentially retrieved from the external authentication system.",
           "format": "email"
-        },
-        "preferredTheme": {
-          "type": "string",
-          "description": "User's preferred UI theme setting for the application (e.g., 'dark', 'light')."
-        },
-        "avatarUrl": {
-          "type": "string",
-          "description": "URL to the user's profile avatar image.",
-          "format": "uri"
         },
         "createdAt": {
           "type": "string",
-          "description": "Timestamp when the user profile was initially created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp when the user profile was last updated.",
           "format": "date-time"
         }
       },
@@ -51,6 +35,26 @@
         "email",
         "createdAt"
       ]
+    },
+    "Project": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Project",
+      "type": "object",
+      "description": "Represents an AI-powered development pod execution.",
+      "properties": {
+        "id": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "idea": { "type": "string" },
+        "status": { "type": "string", "enum": ["idle", "working", "completed", "error"] },
+        "requirements": { "type": "object" },
+        "architecture": { "type": "object" },
+        "code": { "type": "object" },
+        "qa": { "type": "object" },
+        "devops": { "type": "object" },
+        "createdAt": { "type": "object" },
+        "updatedAt": { "type": "object" }
+      },
+      "required": ["id", "ownerId", "idea", "status", "createdAt"]
     }
   },
   "auth": {
@@ -70,11 +74,11 @@
           "schema": {
             "$ref": "#/backend/entities/UserProfile"
           },
-          "description": "Stores user profile information. The `userId` in the path corresponds to `request.auth.uid` (and `externalUserId` in the document), making it privately owned by the authenticated user.",
+          "description": "Stores user profile information.",
           "params": [
             {
               "name": "userId",
-              "description": "The unique identifier of the user, matching `request.auth.uid`."
+              "description": "Matching request.auth.uid."
             }
           ]
         }
@@ -86,20 +90,20 @@
           "schema": {
             "$ref": "#/backend/entities/Project"
           },
-          "description": "Represents an AI-powered development pod owned by a specific user. Includes `ownerId` (matching `userId` from the path) and a `status` field for explicit state modeling. This path ensures projects are scoped to the authenticated user.",
+          "description": "Represents an AI-powered development pod owned by a specific user.",
           "params": [
             {
               "name": "userId",
-              "description": "The unique identifier of the user who owns this project, matching `request.auth.uid`."
+              "description": "Owner UID."
             },
             {
               "name": "projectId",
-              "description": "The unique identifier for the project."
+              "description": "Project UID."
             }
           ]
         }
       }
     ],
-    "reasoning": "The Firestore data structure is designed with a strong emphasis on Authorization Independence and Query Accessibility Patterns (QAPs) to ensure security, scalability, and debuggability."
+    "reasoning": "Standard hierarchical structure for user-owned projects."
   }
 }
