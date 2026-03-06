@@ -1,15 +1,22 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth, useUser } from '@/firebase';
-import { initiateEmailSignIn, initiateEmailSignUp, initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
+import { 
+  initiateEmailSignIn, 
+  initiateEmailSignUp, 
+  initiateAnonymousSignIn,
+  initiateGoogleSignIn,
+  initiateGithubSignIn
+} from '@/firebase/non-blocking-login';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
-import { Cpu, Loader2, ArrowLeft, Ghost, Zap, ShieldCheck } from 'lucide-react';
+import { Cpu, Loader2, ArrowLeft, Ghost, Zap, ShieldCheck, Github, Chrome } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AuthPage() {
@@ -41,6 +48,16 @@ export default function AuthPage() {
   const handleGuestLogin = () => {
     setIsLoading(true);
     initiateAnonymousSignIn(auth);
+  };
+
+  const handleGoogleLogin = () => {
+    setIsLoading(true);
+    initiateGoogleSignIn(auth);
+  };
+
+  const handleGithubLogin = () => {
+    setIsLoading(true);
+    initiateGithubSignIn(auth);
   };
 
   if (isUserLoading) {
@@ -132,19 +149,42 @@ export default function AuthPage() {
               </div>
             </div>
 
+            <div className="grid grid-cols-2 gap-4">
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="w-full h-14 text-[10px] font-bold tracking-[0.2em] uppercase border-black/10 rounded-none hover:bg-black hover:text-white transition-all group bg-white shadow-sm"
+                onClick={handleGoogleLogin}
+                disabled={isLoading}
+              >
+                <Chrome size={16} className="mr-3 opacity-30 group-hover:opacity-100" /> 
+                GOOGLE
+              </Button>
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="w-full h-14 text-[10px] font-bold tracking-[0.2em] uppercase border-black/10 rounded-none hover:bg-black hover:text-white transition-all group bg-white shadow-sm"
+                onClick={handleGithubLogin}
+                disabled={isLoading}
+              >
+                <Github size={16} className="mr-3 opacity-30 group-hover:opacity-100" /> 
+                GITHUB
+              </Button>
+            </div>
+
             <Button 
               type="button" 
-              variant="outline" 
-              className="w-full h-14 text-[10px] font-bold tracking-[0.3em] uppercase border-black/10 rounded-none hover:bg-black hover:text-white transition-all group bg-white shadow-sm"
+              variant="ghost" 
+              className="w-full h-14 text-[10px] font-bold tracking-[0.3em] uppercase border-transparent rounded-none hover:bg-black/5 transition-all group"
               onClick={handleGuestLogin}
               disabled={isLoading}
             >
-              <Ghost size={16} className="mr-3 opacity-30 group-hover:opacity-100" /> 
+              <Ghost size={16} className="mr-3 opacity-30" /> 
               INITIALIZE_GUEST_ACCESS
             </Button>
           </TabsContent>
 
-          <TabsContent value="signup">
+          <TabsContent value="signup" className="space-y-6">
             <Card className="border-black/5 bg-white rounded-none shadow-xl">
               <form onSubmit={handleSignUp}>
                 <CardHeader className="border-b border-black/5 pb-8 px-10 pt-10">
@@ -185,6 +225,38 @@ export default function AuthPage() {
                 </CardFooter>
               </form>
             </Card>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-black/5" />
+              </div>
+              <div className="relative flex justify-center text-[8px] uppercase tracking-[0.5em]">
+                <span className="bg-background px-4 text-black/20 font-bold">QUICK_REG</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="w-full h-14 text-[10px] font-bold tracking-[0.2em] uppercase border-black/10 rounded-none hover:bg-black hover:text-white transition-all group bg-white shadow-sm"
+                onClick={handleGoogleLogin}
+                disabled={isLoading}
+              >
+                <Chrome size={16} className="mr-3 opacity-30 group-hover:opacity-100" /> 
+                GOOGLE
+              </Button>
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="w-full h-14 text-[10px] font-bold tracking-[0.2em] uppercase border-black/10 rounded-none hover:bg-black hover:text-white transition-all group bg-white shadow-sm"
+                onClick={handleGithubLogin}
+                disabled={isLoading}
+              >
+                <Github size={16} className="mr-3 opacity-30 group-hover:opacity-100" /> 
+                GITHUB
+              </Button>
+            </div>
           </TabsContent>
         </Tabs>
         
