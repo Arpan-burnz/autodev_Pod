@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
-import { Cpu, Loader2, ArrowLeft, Ghost, Zap, ShieldCheck, Github, Chrome, AlertCircle } from 'lucide-react';
+import { Cpu, Loader2, ArrowLeft, Ghost, Zap, ShieldCheck, Github, Chrome, AlertCircle, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 
@@ -38,21 +38,26 @@ export default function AuthPage() {
   const handleAuthError = (error: any) => {
     console.error("Auth Error:", error);
     let message = "An unexpected error occurred during authentication.";
+    let title = "AUTH_FAILURE";
     
+    // Specific handling for common Firebase Auth errors
     if (error.code === 'auth/operation-not-allowed') {
-      message = "This sign-in method is not enabled in the Firebase Console.";
+      message = "This sign-in method is not enabled in the Firebase Console (Authentication > Sign-in method).";
     } else if (error.code === 'auth/popup-blocked') {
       message = "The sign-in popup was blocked by your browser. Please allow popups for this site.";
     } else if (error.code === 'auth/popup-closed-by-user') {
-      message = "The authentication window was closed. Please ensure your domain is added to 'Authorized Domains' in the Firebase Console.";
+      title = "POPUP_CLOSED";
+      message = "The authentication window was closed before completion. This usually happens if your domain is not added to 'Authorized Domains' in the Firebase Console (Authentication > Settings).";
     } else if (error.code === 'auth/cancelled-by-user') {
       message = "Authentication was cancelled.";
+    } else if (error.code === 'auth/network-request-failed') {
+      message = "Network error. Please check your connection.";
     } else if (error.message) {
       message = error.message;
     }
 
     toast({
-      title: "AUTH_FAILURE",
+      title: title,
       description: message,
       variant: "destructive"
     });
