@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
-import { Cpu, Loader2, ArrowLeft, Ghost, Zap, ShieldCheck, Github, Chrome, AlertCircle, ExternalLink, Info } from 'lucide-react';
+import { Cpu, Loader2, ArrowLeft, Ghost, Zap, ShieldCheck, Github, Chrome, Info } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -135,7 +135,7 @@ export default function AuthPage() {
               <p>Still facing issues? Please ensure:</p>
               <ul className="list-disc pl-4 space-y-1">
                 <li>Ad-blockers are disabled for this site.</li>
-                <li>Firebase Console > Auth > Settings > Authorized Domains contains <strong>{typeof window !== 'undefined' ? window.location.hostname : 'this domain'}</strong></li>
+                <li>Firebase Console &gt; Auth &gt; Settings &gt; Authorized Domains contains <strong>{typeof window !== 'undefined' ? window.location.hostname : 'this domain'}</strong></li>
                 <li>Allow 5-10 mins for Firebase settings to propagate.</li>
               </ul>
               <Button 
