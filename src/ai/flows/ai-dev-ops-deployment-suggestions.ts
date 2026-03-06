@@ -38,9 +38,13 @@ async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 10000): P
     return await fn();
   } catch (error: any) {
     const errorMessage = error.message || '';
-    const isRateLimit = errorMessage.includes('429') || errorMessage.includes('RESOURCE_EXHAUSTED');
+    const isRetryable = 
+      errorMessage.includes('429') || 
+      errorMessage.includes('RESOURCE_EXHAUSTED') ||
+      errorMessage.includes('503') ||
+      errorMessage.includes('UNAVAILABLE');
     
-    if (retries > 0 && isRateLimit) {
+    if (retries > 0 && isRetryable) {
       await new Promise(resolve => setTimeout(resolve, delay));
       return withRetry(fn, retries - 1, delay * 2);
     }
