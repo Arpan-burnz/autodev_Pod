@@ -43,7 +43,7 @@ async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 10000): P
       await new Promise(resolve => setTimeout(resolve, delay));
       return withRetry(fn, retries - 1, delay * 2);
     }
-    throw error;
+    throw new Error(errorMessage || 'AI System Architect encountered a system error.');
   }
 }
 
@@ -61,7 +61,6 @@ export async function aiSystemArchitectDesignGeneration(input: AISystemArchitect
       });
       return { ...output, diagramUrl: media?.url };
     } catch (error) {
-      console.warn('Diagram generation failed', error);
       return output;
     }
   });

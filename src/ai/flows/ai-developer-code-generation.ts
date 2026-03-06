@@ -44,7 +44,7 @@ const developerCodePrompt = ai.definePrompt({
     "1. Provide the full source code for the required functionality.\n" +
     "2. Ensure the code follows best practices for the chosen language and framework.\n" +
     "3. Return the source code as a single plain text block.\n" +
-    "4. Use code block markers appropriately in your thoughts, but return just the raw code string in the generatedCode field.",
+    "4. Do not include Markdown code blocks within the generatedCode field, just the raw text.",
 });
 
 async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 10000): Promise<T> {
@@ -62,7 +62,7 @@ async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 10000): P
       await new Promise(resolve => setTimeout(resolve, delay));
       return withRetry(fn, retries - 1, delay * 2);
     }
-    throw error;
+    throw new Error(errorMessage || 'AI Developer encountered a system error.');
   }
 }
 
