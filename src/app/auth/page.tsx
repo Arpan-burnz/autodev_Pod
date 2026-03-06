@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -15,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
-import { Cpu, Loader2, ArrowLeft, Ghost, Zap, ShieldCheck, Github, Chrome } from 'lucide-react';
+import { Cpu, Loader2, ArrowLeft, Ghost, Zap, ShieldCheck, Github, Chrome, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 
@@ -41,9 +42,11 @@ export default function AuthPage() {
     if (error.code === 'auth/operation-not-allowed') {
       message = "This sign-in method is not enabled in the Firebase Console.";
     } else if (error.code === 'auth/popup-blocked') {
-      message = "The sign-in popup was blocked by your browser.";
+      message = "The sign-in popup was blocked by your browser. Please allow popups for this site.";
     } else if (error.code === 'auth/popup-closed-by-user') {
-      message = "The sign-in window was closed before completion.";
+      message = "The authentication window was closed. Please ensure your domain is added to 'Authorized Domains' in the Firebase Console.";
+    } else if (error.code === 'auth/cancelled-by-user') {
+      message = "Authentication was cancelled.";
     } else if (error.message) {
       message = error.message;
     }
@@ -58,32 +61,41 @@ export default function AuthPage() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLoading) return;
     setIsLoading(true);
     initiateEmailSignIn(auth, email, password).catch(handleAuthError);
   };
 
   const handleSignUp = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLoading) return;
     setIsLoading(true);
     initiateEmailSignUp(auth, email, password).catch(handleAuthError);
   };
 
   const handleGuestLogin = () => {
+    if (isLoading) return;
     setIsLoading(true);
     initiateAnonymousSignIn(auth).catch(handleAuthError);
   };
 
   const handleGoogleLogin = () => {
+    if (isLoading) return;
     setIsLoading(true);
     initiateGoogleSignIn(auth)
-      .then(() => setIsLoading(false))
+      .then(() => {
+        // Success handled by useEffect redirect
+      })
       .catch(handleAuthError);
   };
 
   const handleGithubLogin = () => {
+    if (isLoading) return;
     setIsLoading(true);
     initiateGithubSignIn(auth)
-      .then(() => setIsLoading(false))
+      .then(() => {
+        // Success handled by useEffect redirect
+      })
       .catch(handleAuthError);
   };
 
