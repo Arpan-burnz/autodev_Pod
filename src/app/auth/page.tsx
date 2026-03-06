@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -16,9 +15,10 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
-import { Cpu, Loader2, ArrowLeft, Ghost, Zap, ShieldCheck, Github, Chrome, AlertCircle, ExternalLink } from 'lucide-react';
+import { Cpu, Loader2, ArrowLeft, Ghost, Zap, ShieldCheck, Github, Chrome, AlertCircle, ExternalLink, Info } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function AuthPage() {
   const { user, isUserLoading } = useUser();
@@ -28,6 +28,7 @@ export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showDomainHelp, setShowDomainHelp] = useState(false);
 
   useEffect(() => {
     if (user && !isUserLoading) {
@@ -40,14 +41,14 @@ export default function AuthPage() {
     let message = "An unexpected error occurred during authentication.";
     let title = "AUTH_FAILURE";
     
-    // Specific handling for common Firebase Auth errors
     if (error.code === 'auth/operation-not-allowed') {
       message = "This sign-in method is not enabled in the Firebase Console (Authentication > Sign-in method).";
     } else if (error.code === 'auth/popup-blocked') {
       message = "The sign-in popup was blocked by your browser. Please allow popups for this site.";
     } else if (error.code === 'auth/popup-closed-by-user') {
       title = "POPUP_CLOSED";
-      message = "The authentication window was closed before completion. This usually happens if your domain is not added to 'Authorized Domains' in the Firebase Console (Authentication > Settings).";
+      message = "The authentication window was closed before completion. This usually happens if your domain is not authorized in the Firebase Console or if an ad-blocker is active.";
+      setShowDomainHelp(true);
     } else if (error.code === 'auth/cancelled-by-user') {
       message = "Authentication was cancelled.";
     } else if (error.code === 'auth/network-request-failed') {
@@ -87,21 +88,13 @@ export default function AuthPage() {
   const handleGoogleLogin = () => {
     if (isLoading) return;
     setIsLoading(true);
-    initiateGoogleSignIn(auth)
-      .then(() => {
-        // Success handled by useEffect redirect
-      })
-      .catch(handleAuthError);
+    initiateGoogleSignIn(auth).catch(handleAuthError);
   };
 
   const handleGithubLogin = () => {
     if (isLoading) return;
     setIsLoading(true);
-    initiateGithubSignIn(auth)
-      .then(() => {
-        // Success handled by useEffect redirect
-      })
-      .catch(handleAuthError);
+    initiateGithubSignIn(auth).catch(handleAuthError);
   };
 
   if (isUserLoading) {
@@ -133,6 +126,28 @@ export default function AuthPage() {
             <p className="text-[9px] text-black/30 font-bold tracking-[0.6em] uppercase">Security Protocol v4.0</p>
           </div>
         </div>
+
+        {showDomainHelp && (
+          <Alert className="rounded-none border-black bg-white shadow-xl animate-in fade-in slide-in-from-top-4 duration-500">
+            <Info className="h-4 w-4" />
+            <AlertTitle className="text-[10px] font-bold tracking-[0.2em] uppercase">Auth Troubleshooting</AlertTitle>
+            <AlertDescription className="text-[9px] uppercase tracking-wider font-medium mt-2 space-y-2">
+              <p>Still facing issues? Please ensure:</p>
+              <ul className="list-disc pl-4 space-y-1">
+                <li>Ad-blockers are disabled for this site.</li>
+                <li>Firebase Console > Auth > Settings > Authorized Domains contains <strong>{typeof window !== 'undefined' ? window.location.hostname : 'this domain'}</strong></li>
+                <li>Allow 5-10 mins for Firebase settings to propagate.</li>
+              </ul>
+              <Button 
+                variant="link" 
+                className="p-0 h-auto text-[9px] font-bold tracking-widest text-black/40 hover:text-black uppercase mt-2"
+                onClick={() => setShowDomainHelp(false)}
+              >
+                CLOSE_NOTICE
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
 
         <Tabs defaultValue="login" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-10 h-14 bg-black/5 border border-black/5 rounded-none p-1">

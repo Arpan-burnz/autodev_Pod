@@ -27,12 +27,15 @@ export function initiateEmailSignIn(authInstance: Auth, email: string, password:
 /** Initiate Google sign-in. */
 export function initiateGoogleSignIn(authInstance: Auth) {
   const provider = new GoogleAuthProvider();
-  // We return the promise so the UI can handle loading/error states
+  // Forcing the account selection prompt can help prevent popups closing unexpectedly
+  // when multiple accounts are signed in or if there is a session conflict.
+  provider.setCustomParameters({ prompt: 'select_account' });
   return signInWithPopup(authInstance, provider);
 }
 
 /** Initiate GitHub sign-in. */
 export function initiateGithubSignIn(authInstance: Auth) {
   const provider = new GithubAuthProvider();
+  // Standard popup sign-in
   return signInWithPopup(authInstance, provider);
 }
