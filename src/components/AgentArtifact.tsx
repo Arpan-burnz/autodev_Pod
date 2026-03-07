@@ -1,9 +1,10 @@
+'use client';
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clipboard, Check } from 'lucide-react';
+import { Clipboard, Check, Download } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 
@@ -34,6 +35,46 @@ export function AgentArtifact({ title, type, content, icon }: AgentArtifactProps
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleDownload = () => {
+    let textToDownload = '';
+    let fileName = title.toLowerCase().replace(/[^a-z0-9]/g, '-');
+    let extension = 'txt';
+
+    if (type === 'list') {
+      textToDownload = Array.isArray(content) ? content.join('\n') : JSON.stringify(content, null, 2);
+    } else if (type === 'json') {
+      textToDownload = JSON.stringify(content, null, 2);
+      extension = 'json';
+    } else if (type === 'code') {
+      textToDownload = content;
+      extension = title.includes('.') ? title.split('.').pop()! : 'ts';
+    } else if (type === 'image') {
+      // Handle image download via data URL
+      const link = document.createElement('a');
+      link.href = content;
+      link.download = `${fileName}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast({ title: "DOWNLOAD_INITIATED", description: `Image artifact ${fileName}.png saved.` });
+      return;
+    } else {
+      textToDownload = content;
+    }
+
+    const blob = new Blob([textToDownload], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${fileName}.${extension}`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast({ title: "DOWNLOAD_COMPLETE", description: `${fileName}.${extension} saved successfully.` });
+  };
+
   return (
     <Card className="h-full border border-border bg-card rounded-none overflow-hidden flex flex-col shadow-sm hover:shadow-md transition-shadow duration-300">
       <CardHeader className="shrink-0 pb-4 border-b border-border flex flex-row items-center justify-between space-y-0 px-6 bg-background/50">
@@ -41,18 +82,28 @@ export function AgentArtifact({ title, type, content, icon }: AgentArtifactProps
           {icon && <span className="text-primary opacity-50">{icon}</span>}
           <CardTitle className="text-[9px] font-headline font-bold uppercase tracking-[0.4em] leading-none text-foreground/70">{title}</CardTitle>
         </div>
-        <div className="flex items-center gap-3">
-          {(type === 'code' || type === 'text' || type === 'list') && (
+        <div className="flex items-center gap-2">
+          {type !== 'image' && (
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-6 w-6 rounded-none hover:bg-foreground/5"
+              className="h-7 w-7 rounded-none hover:bg-foreground/5 border border-transparent hover:border-border"
               onClick={handleCopy}
+              title="Copy to clipboard"
             >
-              {copied ? <Check size={12} className="text-primary" /> : <Clipboard size={12} className="text-foreground/30" />}
+              {copied ? <Check size={14} className="text-primary" /> : <Clipboard size={14} className="text-foreground/30" />}
             </Button>
           )}
-          <Badge variant="outline" className="text-[7px] uppercase tracking-[0.2em] rounded-none border-border bg-card text-foreground/40 font-bold">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-7 w-7 rounded-none hover:bg-foreground/5 border border-transparent hover:border-border"
+            onClick={handleDownload}
+            title="Download artifact"
+          >
+            <Download size={14} className="text-foreground/30" />
+          </Button>
+          <Badge variant="outline" className="text-[7px] uppercase tracking-[0.2em] rounded-none border-border bg-card text-foreground/40 font-bold ml-1">
             {type}
           </Badge>
         </div>
