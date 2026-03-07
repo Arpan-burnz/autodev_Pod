@@ -68,7 +68,8 @@ interface ProjectState {
   requirements?: any;
   architecture?: any;
   code?: {
-    files: Array<{ fileName: string; content: string }>;
+    files?: Array<{ fileName: string; content: string }>;
+    content?: string;
     codeExplanation: string;
   };
   qa?: any;
@@ -127,22 +128,21 @@ export default function AutoDevPodDashboard() {
     }
   }, [isPipelineComplete]);
 
-  // Resilient code extraction logic
+  // Robust code extraction logic
   const getCodeContent = (codeArtifact: any) => {
     if (!codeArtifact) return '';
     if (typeof codeArtifact === 'string') return codeArtifact;
-    if (codeArtifact.files && Array.isArray(codeArtifact.files) && codeArtifact.files.length > 0) {
-      return codeArtifact.files[0].content || '';
+    if (codeArtifact?.files && Array.isArray(codeArtifact.files) && codeArtifact.files.length > 0) {
+      return codeArtifact.files[0]?.content || '';
     }
-    // Deep fallback if the structure is unexpected but contains code
-    if (codeArtifact.content) return codeArtifact.content;
+    if (codeArtifact?.content) return codeArtifact.content;
     return '';
   };
 
   const getCodeFileName = (codeArtifact: any) => {
     if (!codeArtifact) return 'SOURCE_CODE.TS';
-    if (codeArtifact.files && Array.isArray(codeArtifact.files) && codeArtifact.files.length > 0) {
-      return codeArtifact.files[0].fileName || 'main.ts';
+    if (codeArtifact?.files && Array.isArray(codeArtifact.files) && codeArtifact.files.length > 0) {
+      return codeArtifact.files[0]?.fileName || 'main.ts';
     }
     return 'main.ts';
   };
@@ -156,7 +156,7 @@ export default function AutoDevPodDashboard() {
     if (!user || !db) return;
 
     setIsProcessing(true);
-    setQuotaError(false);
+    setQuotaError(false); // Reset error state on new run
     
     let projectId = project.id;
     let projectRef;
@@ -283,18 +283,19 @@ export default function AutoDevPodDashboard() {
       }
 
       toast({
-        title: "PIPELINE RECOVERY COMPLETE",
+        title: "PIPELINE COMPLETE",
         description: "All agents have finished generating required artifacts.",
       });
 
     } catch (error: any) {
-      const isQuota = error.message?.includes('429') || error.message?.includes('RESOURCE_EXHAUSTED');
+      const errorMessage = error.message || '';
+      const isQuota = errorMessage.includes('429') || errorMessage.includes('RESOURCE_EXHAUSTED');
       if (isQuota) {
         setQuotaError(true);
       } else {
         toast({ 
           title: "PROCESS INTERRUPTED", 
-          description: error.message || "Agent pipeline encountered an error.", 
+          description: errorMessage || "Agent pipeline encountered an error.", 
           variant: "destructive" 
         });
       }
