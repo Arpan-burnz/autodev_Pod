@@ -13,10 +13,10 @@ import {
 } from '@/firebase/non-blocking-login';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
-import { Cpu, Loader2, ArrowLeft, Ghost, Zap, ShieldCheck, Github, Chrome, Info, AlertTriangle } from 'lucide-react';
+import { Cpu, Loader2, ArrowLeft, Ghost, Zap, ShieldCheck, Github, Chrome, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -33,21 +33,21 @@ export default function AuthPage() {
   const [showDomainHelp, setShowDomainHelp] = useState(false);
   const [currentHostname, setCurrentHostname] = useState('');
 
-  // Get hostname for troubleshooting
+  // Get hostname for troubleshooting safely after mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setCurrentHostname(window.location.hostname);
     }
   }, []);
 
-  // Handle successful login redirect - ensure we only push once
+  // Handle successful login redirect
   useEffect(() => {
-    if (user && !isUserLoading) {
+    if (user && !isUserLoading && !isRedirectChecking) {
       router.push('/');
     }
-  }, [user, isUserLoading, router]);
+  }, [user, isUserLoading, isRedirectChecking, router]);
 
-  // Check for redirect results (errors or success) on mount
+  // Check for redirect results on mount
   useEffect(() => {
     const checkRedirect = async () => {
       if (!auth) return;
@@ -56,7 +56,6 @@ export default function AuthPage() {
         const result = await getRedirectResult(auth);
         if (result) {
           console.log("Redirect sign-in successful:", result.user.email);
-          // router.push('/') is handled by the 'user' effect above
         }
       } catch (error: any) {
         handleAuthError(error);
@@ -79,9 +78,9 @@ export default function AuthPage() {
       title = "DOMAIN_NOT_AUTHORIZED";
       message = `This domain (${window.location.hostname}) is not authorized for Firebase Authentication.`;
       setShowDomainHelp(true);
-    } else if (error.code === 'auth/popup-blocked') {
-      title = "POPUP_BLOCKED";
-      message = "Your browser blocked the authentication popup. Please allow popups for this site or try again.";
+    } else if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {
+      title = "POPUP_ERROR";
+      message = "The authentication window was blocked or closed. We have switched to Redirect mode for better reliability.";
     } else if (error.code === 'auth/cancelled-by-user') {
       message = "Authentication was cancelled.";
     } else if (error.code === 'auth/network-request-failed') {
@@ -121,23 +120,15 @@ export default function AuthPage() {
   const handleGoogleLogin = () => {
     if (isLoading) return;
     setIsLoading(true);
-    initiateGoogleSignIn(auth)
-      .then(() => {
-        setIsLoading(false);
-        // router.push('/') handled by effect
-      })
-      .catch(handleAuthError);
+    // initiateGoogleSignIn now uses Redirect, so it won't return a promise result here
+    initiateGoogleSignIn(auth).catch(handleAuthError);
   };
 
   const handleGithubLogin = () => {
     if (isLoading) return;
     setIsLoading(true);
-    initiateGithubSignIn(auth)
-      .then(() => {
-        setIsLoading(false);
-        // router.push('/') handled by effect
-      })
-      .catch(handleAuthError);
+    // initiateGithubSignIn now uses Redirect
+    initiateGithubSignIn(auth).catch(handleAuthError);
   };
 
   if (isUserLoading || isRedirectChecking) {
@@ -174,17 +165,16 @@ export default function AuthPage() {
         {showDomainHelp && (
           <Alert className="rounded-none border-black bg-white shadow-xl animate-in fade-in slide-in-from-top-4 duration-500">
             <AlertTriangle className="h-4 w-4 text-destructive" />
-            <AlertTitle className="text-[10px] font-bold tracking-[0.2em] uppercase">Auth Troubleshooting</AlertTitle>
+            <AlertTitle className="text-[10px] font-bold tracking-[0.2em] uppercase">Authorized Domain Required</AlertTitle>
             <AlertDescription className="text-[9px] uppercase tracking-wider font-medium mt-2 space-y-3">
-              <p>Authentication was successful but your browser may be blocking essential storage or session cookies. Common causes:</p>
+              <p>Firebase requires this domain to be explicitly authorized in the console:</p>
               <div className="p-3 bg-muted border border-border space-y-2">
-                <p className="font-bold">1. THIRD_PARTY_COOKIES</p>
-                <p>Ensure your browser is NOT blocking third-party cookies. This is common in Incognito mode or with high privacy settings.</p>
+                <p className="font-bold">1. COPY_DOMAIN</p>
+                <code className="block bg-black text-white p-2 text-[10px] font-code break-all">{currentHostname}</code>
               </div>
               <div className="p-3 bg-muted border border-border space-y-2">
-                <p className="font-bold">2. AUTHORIZED_DOMAINS</p>
-                <p>Confirm this domain is in your Firebase Console:</p>
-                <code className="block bg-black text-white p-2 text-[10px] font-code break-all">{currentHostname}</code>
+                <p className="font-bold">2. ADD_TO_FIREBASE</p>
+                <p>Go to Authentication &gt; Settings &gt; Authorized Domains and add the value above.</p>
               </div>
               <Button 
                 variant="link" 
