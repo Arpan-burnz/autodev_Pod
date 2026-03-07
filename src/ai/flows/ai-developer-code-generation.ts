@@ -1,6 +1,7 @@
 'use server';
 /**
  * @fileOverview An AI Developer agent flow that generates code for specific functionalities.
+ * Now supports generating multiple files (e.g., components, pages, utilities).
  */
 
 import { ai } from '@/ai/genkit';
@@ -18,9 +19,11 @@ const DeveloperCodeGenerationInputSchema = z.object({
 export type DeveloperCodeGenerationInput = z.infer<typeof DeveloperCodeGenerationInputSchema>;
 
 const DeveloperCodeGenerationOutputSchema = z.object({
-  generatedCode: z.string().describe('The generated code.'),
-  suggestedFileName: z.string().describe('Suggested file name with extension.'),
-  codeExplanation: z.string().describe('Explanation of the code.'),
+  files: z.array(z.object({
+    fileName: z.string().describe('Suggested file name with extension (e.g., page.tsx, button.tsx).'),
+    content: z.string().describe('The full source code for this specific file.'),
+  })).describe('A collection of generated source files.'),
+  codeExplanation: z.string().describe('High-level explanation of the implementation strategy.'),
 });
 export type DeveloperCodeGenerationOutput = z.infer<typeof DeveloperCodeGenerationOutputSchema>;
 
@@ -43,10 +46,10 @@ const developerCodePrompt = ai.definePrompt({
     "SOURCE_END\n" +
     "{{/if}}\n\n" +
     "INSTRUCTIONS:\n" +
-    "1. Provide the full source code for the required functionality.\n" +
-    "2. Ensure the code follows best practices for the chosen language and framework.\n" +
-    "3. Return the source code as a single plain text block.\n" +
-    "4. Do not include Markdown code blocks within the generatedCode field, just the raw text.",
+    "1. Decompose the requirements into a logical file structure.\n" +
+    "2. Provide the full source code for EACH required file (e.g., main page, reusable components, styles, or types).\n" +
+    "3. Ensure the code follows best practices for the chosen language and framework.\n" +
+    "4. Return an array of files, each with a clear fileName and its full content.",
 });
 
 async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 2000): Promise<T> {
