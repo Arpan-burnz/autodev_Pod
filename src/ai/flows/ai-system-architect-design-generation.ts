@@ -25,9 +25,18 @@ const aiSystemArchitectPrompt = ai.definePrompt({
   name: 'aiSystemArchitectPrompt',
   input: { schema: AISystemArchitectInputSchema },
   output: { schema: AISystemArchitectOutputSchema },
-  prompt: "You are an experienced AI System Architect. Design a comprehensive system architecture based on requirements.\n\n" +
-    "Project Requirements: {{{projectRequirements}}}\n\n" +
-    "Provide a detailed architecture description, database schema, and API designs. Also provide a specific prompt for an image generator.",
+  prompt: `You are an expert Enterprise System Architect. Your goal is to design a scalable, secure, and robust system based on project requirements.
+
+PROJECT CONTEXT:
+{{{projectRequirements}}}
+
+TECHNICAL DESIGN REQUIREMENTS:
+1. ARCHITECTURE DESCRIPTION: Define the system pattern (Microservices, Monolithic, Serverless, etc.). Describe the flow of data, security layers (AuthN/AuthZ), and integration points.
+2. DATABASE SCHEMA: Provide a detailed schema. Use SQL DDL or NoSQL modeling as appropriate. Define entities, relationships (1:1, 1:N, N:M), indexes, and constraints.
+3. API DESIGNS: Specify RESTful or GraphQL endpoints. For each, include the path, method, purpose, expected request payload, and response structure.
+4. DIAGRAM PROMPT: Create a highly detailed prompt for an image generator (Gemini) to create a professional architecture diagram. Focus on nodes, arrows, and technical labeling.
+
+Ensure the architecture is forward-thinking and optimizes for the requirements provided.`,
 });
 
 async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 2000): Promise<T> {

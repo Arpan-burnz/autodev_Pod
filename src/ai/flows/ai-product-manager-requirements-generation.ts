@@ -27,13 +27,17 @@ const prompt = ai.definePrompt({
   name: 'generateProjectRequirementsPrompt',
   input: { schema: GenerateProjectRequirementsInputSchema },
   output: { schema: GenerateProjectRequirementsOutputSchema },
-  prompt: "You are an expert AI Product Manager. Your task is to take a high-level project idea and break it down into detailed requirements, user stories, and feature specifications.\n\n" +
-    "Project Idea: {{{projectIdea}}}\n\n" +
-    "Based on the project idea, generate the following:\n\n" +
-    "1. Requirements: List all essential functional and non-functional requirements.\n" +
-    "2. User Stories: Create user stories in the format 'As a [type of user], I want [some goal] so that [some reason]'.\n" +
-    "3. Feature Specifications: Provide a list of key features with a name and a detailed description for each.\n\n" +
-    "Ensure the output is comprehensive, clear, and structured correctly.",
+  prompt: `You are an expert AI Product Manager specializing in Technical Product Management. Your task is to transform a project idea into a rigorous, detailed set of requirements.
+
+PROJECT CONCEPT:
+{{{projectIdea}}}
+
+OUTPUT GUIDELINES:
+1. REQUIREMENTS: Provide a mix of Functional (features) and Non-Functional requirements (scalability, security, performance, accessibility). Be specific about edge cases.
+2. USER STORIES: Use the standard format: "As a [user type], I want [goal] so that [benefit]". Include acceptance criteria if possible.
+3. FEATURE SPECIFICATIONS: For each major feature, provide a name and a deep-dive description that includes UX considerations and technical dependencies.
+
+Ensure the output is highly structured, logical, and provides a solid foundation for architectural design.`,
 });
 
 async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 2000): Promise<T> {
