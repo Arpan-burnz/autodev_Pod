@@ -6,6 +6,8 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
+const maxDuration = 60;
+
 const DevOpsDeploymentInputSchema = z.object({
   projectDescription: z.string().describe('Project description.'),
   technologiesUsed: z.array(z.string()).describe('Technologies used.'),
@@ -33,7 +35,7 @@ const prompt = ai.definePrompt({
     "Provide strategies, a CI/CD outline, and step-by-step instructions.",
 });
 
-async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 10000): Promise<T> {
+async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 2000): Promise<T> {
   try {
     return await fn();
   } catch (error: any) {

@@ -6,6 +6,8 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
+const maxDuration = 60;
+
 const DeveloperCodeGenerationInputSchema = z.object({
   requirements: z.string().describe('Detailed functional requirements or user stories.'),
   architecture: z.string().describe('System architecture description.'),
@@ -47,7 +49,7 @@ const developerCodePrompt = ai.definePrompt({
     "4. Do not include Markdown code blocks within the generatedCode field, just the raw text.",
 });
 
-async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 10000): Promise<T> {
+async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 2000): Promise<T> {
   try {
     return await fn();
   } catch (error: any) {

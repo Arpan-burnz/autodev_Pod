@@ -6,6 +6,8 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
+const maxDuration = 60;
+
 const AiQaTestGenerationAndExecutionInputSchema = z.object({
   code: z.string().describe('The generated source code to be reviewed and tested.'),
   requirements: z.string().optional().describe('The original project requirements for context.'),
@@ -41,7 +43,7 @@ const prompt = ai.definePrompt({
     "Focus on thoroughness and provide actionable recommendations.",
 });
 
-async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 10000): Promise<T> {
+async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 2000): Promise<T> {
   try {
     return await fn();
   } catch (error: any) {

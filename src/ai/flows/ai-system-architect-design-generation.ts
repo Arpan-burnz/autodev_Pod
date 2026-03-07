@@ -6,6 +6,8 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
+const maxDuration = 60;
+
 const AISystemArchitectInputSchema = z.object({
   projectRequirements: z.string().describe('Detailed project requirements, user stories, and feature specifications.'),
 });
@@ -28,7 +30,7 @@ const aiSystemArchitectPrompt = ai.definePrompt({
     "Provide a detailed architecture description, database schema, and API designs. Also provide a specific prompt for an image generator.",
 });
 
-async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 10000): Promise<T> {
+async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 2000): Promise<T> {
   try {
     return await fn();
   } catch (error: any) {
@@ -59,7 +61,7 @@ export async function aiSystemArchitectDesignGeneration(input: AISystemArchitect
       const { media } = await ai.generate({
         model: 'googleai/gemini-2.5-flash-image',
         prompt: [
-          { text: `Create a professional technical system architecture blueprint. The style should be clean, high-resolution, and minimalist using a professional slate and blue color palette. Schematic detail for: ${output.diagramPrompt}` }
+          { text: `Create a professional technical system architecture blueprint based on the following instructions: ${output.diagramPrompt}. The style should be clean, high-resolution, and minimalist using a professional slate and blue color palette.` }
         ],
         config: {
           responseModalities: ['TEXT', 'IMAGE'],
@@ -67,8 +69,7 @@ export async function aiSystemArchitectDesignGeneration(input: AISystemArchitect
       });
       return { ...output, diagramUrl: media?.url };
     } catch (error) {
-      // Fallback if image generation fails
-      console.error('Visual drafting failed:', error);
+      // Fail gracefully if image generation fails, returning just the text artifacts
       return output;
     }
   });
