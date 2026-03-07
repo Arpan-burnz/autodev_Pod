@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -132,86 +133,135 @@ export default function AutoDevPodDashboard() {
 
     setIsProcessing(true);
     setQuotaError(false);
-    setSelectedTab('requirements');
     
-    const projectRef = doc(collection(db, 'users', user.uid, 'projects'));
-    const projectId = projectRef.id;
-    setProject(prev => ({ ...prev, id: projectId }));
+    let projectId = project.id;
+    let projectRef;
 
-    const initialData = {
-      id: projectId,
-      ownerId: user.uid,
-      idea: project.idea,
-      status: 'working',
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    };
+    if (!projectId) {
+      projectRef = doc(collection(db, 'users', user.uid, 'projects'));
+      projectId = projectRef.id;
+      setProject(prev => ({ ...prev, id: projectId }));
+
+      const initialData = {
+        id: projectId,
+        ownerId: user.uid,
+        idea: project.idea,
+        status: 'working',
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      };
+      
+      try {
+        await setDoc(projectRef, initialData);
+      } catch (e) {
+        console.error("Initial doc creation failed", e);
+      }
+    } else {
+      projectRef = doc(db, 'users', user.uid, 'projects', projectId);
+      updateDocumentNonBlocking(projectRef, { status: 'working', updatedAt: serverTimestamp() });
+    }
 
     try {
-      await setDoc(projectRef, initialData);
+      // Helper to track local current state across stages
+      let currentRequirements = project.requirements;
+      let currentArchitecture = project.architecture;
+      let currentCode = project.code;
+      let currentQa = project.qa;
+      let currentDevops = project.devops;
 
+      // STAGE 0: PRODUCT MANAGER
       setActiveStage(0);
-      updateStatus(0, 'working');
-      const pmResults = await generateProjectRequirements({ projectIdea: project.idea });
-      setProject(prev => ({ ...prev, requirements: pmResults }));
-      updateDocumentNonBlocking(projectRef, { requirements: pmResults, updatedAt: serverTimestamp() });
-      updateStatus(0, 'completed');
-      await delay(1000); 
-      
+      if (!currentRequirements) {
+        setSelectedTab('requirements');
+        updateStatus(0, 'working');
+        const results = await generateProjectRequirements({ projectIdea: project.idea });
+        currentRequirements = results;
+        setProject(prev => ({ ...prev, requirements: results }));
+        updateDocumentNonBlocking(projectRef, { requirements: results, updatedAt: serverTimestamp() });
+        updateStatus(0, 'completed');
+        await delay(1000);
+      } else {
+        updateStatus(0, 'completed');
+      }
+
+      // STAGE 1: SYSTEM ARCHITECT
       setActiveStage(1);
-      setSelectedTab('architecture');
-      updateStatus(1, 'working');
-      const archResults = await aiSystemArchitectDesignGeneration({ 
-        projectRequirements: JSON.stringify(pmResults) 
-      });
-      setProject(prev => ({ ...prev, architecture: archResults }));
-      updateDocumentNonBlocking(projectRef, { architecture: archResults, updatedAt: serverTimestamp() });
-      updateStatus(1, 'completed');
-      await delay(1000);
+      if (!currentArchitecture) {
+        setSelectedTab('architecture');
+        updateStatus(1, 'working');
+        const results = await aiSystemArchitectDesignGeneration({ 
+          projectRequirements: JSON.stringify(currentRequirements) 
+        });
+        currentArchitecture = results;
+        setProject(prev => ({ ...prev, architecture: results }));
+        updateDocumentNonBlocking(projectRef, { architecture: results, updatedAt: serverTimestamp() });
+        updateStatus(1, 'completed');
+        await delay(1000);
+      } else {
+        updateStatus(1, 'completed');
+      }
 
+      // STAGE 2: DEVELOPER
       setActiveStage(2);
-      setSelectedTab('code');
-      updateStatus(2, 'working');
-      const devResults = await developerCodeGeneration({
-        requirements: JSON.stringify(pmResults.userStories),
-        architecture: archResults.systemArchitectureDescription,
-        programmingLanguage: 'TypeScript',
-        framework: 'Next.js'
-      });
-      setProject(prev => ({ ...prev, code: devResults }));
-      updateDocumentNonBlocking(projectRef, { code: devResults, updatedAt: serverTimestamp() });
-      updateStatus(2, 'completed');
-      await delay(1000);
+      if (!currentCode) {
+        setSelectedTab('code');
+        updateStatus(2, 'working');
+        const results = await developerCodeGeneration({
+          requirements: JSON.stringify(currentRequirements.userStories),
+          architecture: currentArchitecture.systemArchitectureDescription,
+          programmingLanguage: 'TypeScript',
+          framework: 'Next.js'
+        });
+        currentCode = results;
+        setProject(prev => ({ ...prev, code: results }));
+        updateDocumentNonBlocking(projectRef, { code: results, updatedAt: serverTimestamp() });
+        updateStatus(2, 'completed');
+        await delay(1000);
+      } else {
+        updateStatus(2, 'completed');
+      }
 
+      // STAGE 3: QA
       setActiveStage(3);
-      setSelectedTab('qa');
-      updateStatus(3, 'working');
-      const qaResults = await aiQaTestGenerationAndExecution({
-        code: devResults.generatedCode,
-        requirements: JSON.stringify(pmResults.requirements),
-        architecture: archResults.systemArchitectureDescription
-      });
-      setProject(prev => ({ ...prev, qa: qaResults }));
-      updateDocumentNonBlocking(projectRef, { qa: qaResults, updatedAt: serverTimestamp() });
-      updateStatus(3, 'completed');
-      await delay(1000);
+      if (!currentQa) {
+        setSelectedTab('qa');
+        updateStatus(3, 'working');
+        const results = await aiQaTestGenerationAndExecution({
+          code: currentCode.generatedCode,
+          requirements: JSON.stringify(currentRequirements.requirements),
+          architecture: currentArchitecture.systemArchitectureDescription
+        });
+        currentQa = results;
+        setProject(prev => ({ ...prev, qa: results }));
+        updateDocumentNonBlocking(projectRef, { qa: results, updatedAt: serverTimestamp() });
+        updateStatus(3, 'completed');
+        await delay(1000);
+      } else {
+        updateStatus(3, 'completed');
+      }
 
+      // STAGE 4: DEVOPS
       setActiveStage(4);
-      setSelectedTab('devops');
-      updateStatus(4, 'working');
-      const devopsResults = await aiDevOpsDeploymentSuggestions({
-        projectDescription: project.idea,
-        technologiesUsed: ['Next.js', 'TypeScript', 'TailwindCSS'],
-        targetEnvironments: ['Vercel', 'AWS Amplify'],
-        codeSummary: devResults.codeExplanation
-      });
-      setProject(prev => ({ ...prev, devops: devopsResults }));
-      updateDocumentNonBlocking(projectRef, { devops: devopsResults, status: 'completed', updatedAt: serverTimestamp() });
-      updateStatus(4, 'completed');
+      if (!currentDevops) {
+        setSelectedTab('devops');
+        updateStatus(4, 'working');
+        const results = await aiDevOpsDeploymentSuggestions({
+          projectDescription: project.idea,
+          technologiesUsed: ['Next.js', 'TypeScript', 'TailwindCSS'],
+          targetEnvironments: ['Vercel', 'AWS Amplify'],
+          codeSummary: currentCode.codeExplanation
+        });
+        currentDevops = results;
+        setProject(prev => ({ ...prev, devops: results, status: 'completed' }));
+        updateDocumentNonBlocking(projectRef, { devops: results, status: 'completed', updatedAt: serverTimestamp() });
+        updateStatus(4, 'completed');
+      } else {
+        updateStatus(4, 'completed');
+      }
 
       toast({
-        title: "PIPELINE COMPLETE",
-        description: "All agents have delivered their artifacts.",
+        title: "PIPELINE RECOVERY COMPLETE",
+        description: "All agents have finished generating required artifacts.",
       });
 
     } catch (error: any) {
@@ -244,11 +294,19 @@ export default function AutoDevPodDashboard() {
       proj.devops ? 'completed' : 'idle',
     ];
     setStatuses(newStatuses);
-    setSelectedTab(proj.requirements ? 'requirements' : 'summary');
+    
+    // Find the first stage that isn't completed to resume
+    const firstIncomplete = newStatuses.findIndex(s => s === 'idle');
+    const resumeAt = firstIncomplete === -1 ? 4 : firstIncomplete;
+    
+    setActiveStage(resumeAt);
+    setSelectedTab(stages[resumeAt].tab);
     setQuotaError(false);
     
-    const lastCompleted = newStatuses.lastIndexOf('completed');
-    setActiveStage(lastCompleted >= 0 ? lastCompleted : 0);
+    toast({
+      title: "PROJECT ARCHIVE LOADED",
+      description: `Resumed session for ${proj.idea.substring(0, 20)}...`
+    });
   };
 
   const confirmDelete = () => {
@@ -445,11 +503,11 @@ Generated by AutoDev Pod Systems v4.0
                 {isProcessing ? (
                   <><Loader2 className="mr-3 animate-spin" size={16} /> Working...</>
                 ) : (
-                  <><Play className="mr-3 fill-current" size={14} /> Execute_Pipeline</>
+                  <><Play className="mr-3 fill-current" size={14} /> {project.id ? 'Continue_Pipeline' : 'Execute_Pipeline'}</>
                 )}
               </Button>
 
-              {isPipelineComplete && (
+              {(isPipelineComplete || project.devops) && (
                 <Button 
                   className="w-full font-bold h-14 rounded-none bg-card text-foreground border border-primary hover:bg-primary hover:text-primary-foreground text-[10px] tracking-[0.1em] uppercase flex items-center justify-center shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98]"
                   onClick={handleDownloadReport}
