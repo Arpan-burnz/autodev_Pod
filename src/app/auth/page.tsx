@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth, useUser } from '@/firebase';
-import { getRedirectResult } from 'firebase/auth';
 import { 
   initiateEmailSignIn, 
   initiateEmailSignUp, 
@@ -27,48 +26,25 @@ export default function AuthPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [isRedirectChecking, setIsRedirectChecking] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showDomainHelp, setShowDomainHelp] = useState(false);
   const [currentHostname, setCurrentHostname] = useState('');
 
-  // Get hostname for troubleshooting safely after mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setCurrentHostname(window.location.hostname);
     }
   }, []);
 
-  // Handle successful login redirect
   useEffect(() => {
-    if (user && !isUserLoading && !isRedirectChecking) {
+    if (user && !isUserLoading) {
       router.push('/');
     }
-  }, [user, isUserLoading, isRedirectChecking, router]);
-
-  // Check for redirect results on mount
-  useEffect(() => {
-    const checkRedirect = async () => {
-      if (!auth) return;
-      
-      try {
-        const result = await getRedirectResult(auth);
-        if (result) {
-          console.log("Redirect sign-in successful:", result.user.email);
-        }
-      } catch (error: any) {
-        handleAuthError(error);
-      } finally {
-        setIsRedirectChecking(false);
-      }
-    };
-    
-    checkRedirect();
-  }, [auth]);
+  }, [user, isUserLoading, router]);
 
   const handleAuthError = (error: any) => {
-    console.error("Auth Error Details:", error);
+    console.error("Auth Error:", error);
     let message = "An unexpected error occurred during authentication.";
     let title = "AUTH_FAILURE";
     
@@ -78,13 +54,11 @@ export default function AuthPage() {
       title = "DOMAIN_NOT_AUTHORIZED";
       message = `This domain (${window.location.hostname}) is not authorized for Firebase Authentication.`;
       setShowDomainHelp(true);
-    } else if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {
-      title = "POPUP_ERROR";
-      message = "The authentication window was blocked or closed. We have switched to Redirect mode for better reliability.";
-    } else if (error.code === 'auth/cancelled-by-user') {
-      message = "Authentication was cancelled.";
-    } else if (error.code === 'auth/network-request-failed') {
-      message = "Network error. Please check your connection.";
+    } else if (error.code === 'auth/popup-blocked') {
+      title = "POPUP_BLOCKED";
+      message = "The authentication window was blocked by your browser. Please allow popups for this site.";
+    } else if (error.code === 'auth/popup-closed-by-user') {
+      message = "Authentication window was closed before completion.";
     } else if (error.message) {
       message = error.message;
     }
@@ -120,18 +94,20 @@ export default function AuthPage() {
   const handleGoogleLogin = () => {
     if (isLoading) return;
     setIsLoading(true);
-    // initiateGoogleSignIn now uses Redirect, so it won't return a promise result here
-    initiateGoogleSignIn(auth).catch(handleAuthError);
+    initiateGoogleSignIn(auth)
+      .then(() => router.push('/'))
+      .catch(handleAuthError);
   };
 
   const handleGithubLogin = () => {
     if (isLoading) return;
     setIsLoading(true);
-    // initiateGithubSignIn now uses Redirect
-    initiateGithubSignIn(auth).catch(handleAuthError);
+    initiateGithubSignIn(auth)
+      .then(() => router.push('/'))
+      .catch(handleAuthError);
   };
 
-  if (isUserLoading || isRedirectChecking) {
+  if (isUserLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
         <Loader2 className="animate-spin text-black/20" size={32} />
