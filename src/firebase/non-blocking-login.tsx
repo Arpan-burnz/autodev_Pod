@@ -6,7 +6,8 @@ import {
   signInWithEmailAndPassword,
   GoogleAuthProvider,
   GithubAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  signInWithRedirect
 } from 'firebase/auth';
 
 /** Initiate anonymous sign-in. */
@@ -24,18 +25,15 @@ export function initiateEmailSignIn(authInstance: Auth, email: string, password:
   return signInWithEmailAndPassword(authInstance, email, password);
 }
 
-/** Initiate Google sign-in. */
+/** Initiate Google sign-in via Redirect (more robust in restricted environments). */
 export function initiateGoogleSignIn(authInstance: Auth) {
   const provider = new GoogleAuthProvider();
-  // Forcing the account selection prompt can help prevent popups closing unexpectedly
-  // when multiple accounts are signed in or if there is a session conflict.
   provider.setCustomParameters({ prompt: 'select_account' });
-  return signInWithPopup(authInstance, provider);
+  return signInWithRedirect(authInstance, provider);
 }
 
-/** Initiate GitHub sign-in. */
+/** Initiate GitHub sign-in via Redirect. */
 export function initiateGithubSignIn(authInstance: Auth) {
   const provider = new GithubAuthProvider();
-  // Standard popup sign-in
-  return signInWithPopup(authInstance, provider);
+  return signInWithRedirect(authInstance, provider);
 }
