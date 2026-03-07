@@ -4,25 +4,25 @@
 
 @layer base {
   :root {
-    --background: 0 0% 98%;
-    --foreground: 0 0% 3%;
+    --background: 210 40% 98%;
+    --foreground: 222.2 47.4% 11.2%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 3%;
+    --card-foreground: 222.2 47.4% 11.2%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3%;
-    --primary: 0 0% 0%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 95%;
-    --secondary-foreground: 0 0% 0%;
-    --muted: 0 0% 95%;
-    --muted-foreground: 0 0% 40%;
-    --accent: 0 0% 0%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 0 0% 0%;
+    --popover-foreground: 222.2 47.4% 11.2%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 88%;
+    --input: 214.3 31.8% 88%;
+    --ring: 222.2 47.4% 11.2%;
     --radius: 0rem;
   }
 }
@@ -32,7 +32,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-body antialiased selection:bg-black selection:text-white;
+    @apply bg-background text-foreground font-body antialiased selection:bg-primary selection:text-primary-foreground;
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-headline uppercase tracking-tight font-bold;
@@ -43,11 +43,11 @@
 }
 
 .glass-panel {
-  @apply bg-white/70 backdrop-blur-xl border border-black/5;
+  @apply bg-card/70 backdrop-blur-xl border border-border;
 }
 
 .mono-outline {
-  @apply border border-black/10 hover:border-black/30 transition-all duration-300;
+  @apply border border-border hover:border-primary/30 transition-all duration-300;
 }
 
 ::-webkit-scrollbar {
@@ -57,7 +57,7 @@
   @apply bg-transparent;
 }
 ::-webkit-scrollbar-thumb {
-  @apply bg-black/10 hover:bg-black/20 transition-colors;
+  @apply bg-foreground/10 hover:bg-foreground/20 transition-colors;
 }
 
 @keyframes scanline {
@@ -87,6 +87,6 @@
 }
 
 .technical-grid {
-  background-image: radial-gradient(circle at 1px 1px, rgba(0,0,0,0.03) 1px, transparent 0);
+  background-image: radial-gradient(circle at 1px 1px, rgba(0,0,0,0.02) 1px, transparent 0);
   background-size: 32px 32px;
 }
