@@ -48,10 +48,15 @@ export default function AuthPage() {
         setIsFinalizingAuth(true);
         const result = await getRedirectResult(auth);
         if (result?.user) {
-          // Success! The useUser hook will pick up the user state and push to /
+          // Explicitly push to home if we got a result
           router.push('/');
         } else {
-          setIsFinalizingAuth(false);
+          // If no result but we have a user from the provider hook, push
+          if (user && !isUserLoading) {
+            router.push('/');
+          } else {
+            setIsFinalizingAuth(false);
+          }
         }
       } catch (error: any) {
         setIsFinalizingAuth(false);
@@ -60,8 +65,9 @@ export default function AuthPage() {
     };
 
     checkRedirect();
-  }, [auth, router]);
+  }, [auth, router, user, isUserLoading]);
 
+  // Global user watch for successful login
   useEffect(() => {
     if (user && !isUserLoading) {
       router.push('/');
