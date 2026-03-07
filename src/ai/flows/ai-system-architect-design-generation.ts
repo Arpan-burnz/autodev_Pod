@@ -55,12 +55,20 @@ export async function aiSystemArchitectDesignGeneration(input: AISystemArchitect
     }
 
     try {
+      // Use Gemini 2.5 Flash Image (Gemini Banana) for high-quality technical drafting
       const { media } = await ai.generate({
-        model: 'googleai/imagen-4.0-fast-generate-001',
-        prompt: `A professional technical system architecture diagram. Minimalist black and white style. High resolution schematic for: ${output.diagramPrompt}`,
+        model: 'googleai/gemini-2.5-flash-image',
+        prompt: [
+          { text: `Create a professional technical system architecture blueprint. The style should be clean, high-resolution, and minimalist using a professional slate and blue color palette. Schematic detail for: ${output.diagramPrompt}` }
+        ],
+        config: {
+          responseModalities: ['TEXT', 'IMAGE'],
+        },
       });
       return { ...output, diagramUrl: media?.url };
     } catch (error) {
+      // Fallback if image generation fails
+      console.error('Visual drafting failed:', error);
       return output;
     }
   });
