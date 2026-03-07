@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -41,7 +40,7 @@ export default function AuthPage() {
     }
   }, []);
 
-  // Handle successful login redirect
+  // Handle successful login redirect - ensure we only push once
   useEffect(() => {
     if (user && !isUserLoading) {
       router.push('/');
@@ -80,8 +79,11 @@ export default function AuthPage() {
       title = "DOMAIN_NOT_AUTHORIZED";
       message = `This domain (${window.location.hostname}) is not authorized for Firebase Authentication.`;
       setShowDomainHelp(true);
-    } else if (error.code === 'auth/popup-blocked' || error.code === 'auth/cancelled-by-user') {
-      message = "Authentication was cancelled or blocked.";
+    } else if (error.code === 'auth/popup-blocked') {
+      title = "POPUP_BLOCKED";
+      message = "Your browser blocked the authentication popup. Please allow popups for this site or try again.";
+    } else if (error.code === 'auth/cancelled-by-user') {
+      message = "Authentication was cancelled.";
     } else if (error.code === 'auth/network-request-failed') {
       message = "Network error. Please check your connection.";
     } else if (error.message) {
@@ -119,13 +121,23 @@ export default function AuthPage() {
   const handleGoogleLogin = () => {
     if (isLoading) return;
     setIsLoading(true);
-    initiateGoogleSignIn(auth).catch(handleAuthError);
+    initiateGoogleSignIn(auth)
+      .then(() => {
+        setIsLoading(false);
+        // router.push('/') handled by effect
+      })
+      .catch(handleAuthError);
   };
 
   const handleGithubLogin = () => {
     if (isLoading) return;
     setIsLoading(true);
-    initiateGithubSignIn(auth).catch(handleAuthError);
+    initiateGithubSignIn(auth)
+      .then(() => {
+        setIsLoading(false);
+        // router.push('/') handled by effect
+      })
+      .catch(handleAuthError);
   };
 
   if (isUserLoading || isRedirectChecking) {
@@ -164,15 +176,15 @@ export default function AuthPage() {
             <AlertTriangle className="h-4 w-4 text-destructive" />
             <AlertTitle className="text-[10px] font-bold tracking-[0.2em] uppercase">Auth Troubleshooting</AlertTitle>
             <AlertDescription className="text-[9px] uppercase tracking-wider font-medium mt-2 space-y-3">
-              <p>Sign-in redirected back but session was not established. Common causes:</p>
+              <p>Authentication was successful but your browser may be blocking essential storage or session cookies. Common causes:</p>
               <div className="p-3 bg-muted border border-border space-y-2">
-                <p className="font-bold">1. DOMAIN_AUTHORIZATION</p>
-                <p>Ensure this exact hostname is in your Firebase Authorized Domains:</p>
-                <code className="block bg-black text-white p-2 text-[10px] font-code break-all">{currentHostname}</code>
+                <p className="font-bold">1. THIRD_PARTY_COOKIES</p>
+                <p>Ensure your browser is NOT blocking third-party cookies. This is common in Incognito mode or with high privacy settings.</p>
               </div>
               <div className="p-3 bg-muted border border-border space-y-2">
-                <p className="font-bold">2. THIRD_PARTY_COOKIES</p>
-                <p>Browsers in full-screen or incognito mode often block essential cross-site cookies. Try disabling "Block third-party cookies" in your browser settings.</p>
+                <p className="font-bold">2. AUTHORIZED_DOMAINS</p>
+                <p>Confirm this domain is in your Firebase Console:</p>
+                <code className="block bg-black text-white p-2 text-[10px] font-code break-all">{currentHostname}</code>
               </div>
               <Button 
                 variant="link" 
