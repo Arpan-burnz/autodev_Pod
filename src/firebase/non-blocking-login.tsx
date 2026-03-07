@@ -6,7 +6,7 @@ import {
   signInWithEmailAndPassword,
   GoogleAuthProvider,
   GithubAuthProvider,
-  signInWithPopup,
+  signInWithRedirect,
 } from 'firebase/auth';
 
 /** Initiate anonymous sign-in. */
@@ -24,15 +24,15 @@ export function initiateEmailSignIn(authInstance: Auth, email: string, password:
   return signInWithEmailAndPassword(authInstance, email, password);
 }
 
-/** Initiate Google sign-in via Popup. */
+/** Initiate Google sign-in via Redirect. */
 export function initiateGoogleSignIn(authInstance: Auth) {
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
-  return signInWithPopup(authInstance, provider);
+  return signInWithRedirect(authInstance, provider);
 }
 
-/** Initiate GitHub sign-in via Popup. */
+/** Initiate GitHub sign-in via Redirect. */
 export function initiateGithubSignIn(authInstance: Auth) {
   const provider = new GithubAuthProvider();
-  return signInWithPopup(authInstance, provider);
+  return signInWithRedirect(authInstance, provider);
 }

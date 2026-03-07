@@ -10,6 +10,7 @@ import {
   initiateGoogleSignIn,
   initiateGithubSignIn
 } from '@/firebase/non-blocking-login';
+import { getRedirectResult } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,6 +27,7 @@ export default function AuthPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [isFinalizingAuth, setIsFinalizingAuth] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showDomainHelp, setShowDomainHelp] = useState(false);
@@ -36,6 +38,29 @@ export default function AuthPage() {
       setCurrentHostname(window.location.hostname);
     }
   }, []);
+
+  // Handle Redirect Result on Mount
+  useEffect(() => {
+    if (!auth) return;
+
+    const checkRedirect = async () => {
+      try {
+        setIsFinalizingAuth(true);
+        const result = await getRedirectResult(auth);
+        if (result?.user) {
+          // Success! The useUser hook will pick up the user state and push to /
+          router.push('/');
+        } else {
+          setIsFinalizingAuth(false);
+        }
+      } catch (error: any) {
+        setIsFinalizingAuth(false);
+        handleAuthError(error);
+      }
+    };
+
+    checkRedirect();
+  }, [auth, router]);
 
   useEffect(() => {
     if (user && !isUserLoading) {
@@ -56,7 +81,7 @@ export default function AuthPage() {
       setShowDomainHelp(true);
     } else if (error.code === 'auth/popup-blocked') {
       title = "POPUP_BLOCKED";
-      message = "The authentication window was blocked by your browser. Please allow popups for this site.";
+      message = "The authentication window was blocked. Please allow popups or use the redirect method.";
     } else if (error.code === 'auth/popup-closed-by-user') {
       message = "Authentication window was closed before completion.";
     } else if (error.message) {
@@ -94,24 +119,22 @@ export default function AuthPage() {
   const handleGoogleLogin = () => {
     if (isLoading) return;
     setIsLoading(true);
-    initiateGoogleSignIn(auth)
-      .then(() => router.push('/'))
-      .catch(handleAuthError);
+    initiateGoogleSignIn(auth).catch(handleAuthError);
   };
 
   const handleGithubLogin = () => {
     if (isLoading) return;
     setIsLoading(true);
-    initiateGithubSignIn(auth)
-      .then(() => router.push('/'))
-      .catch(handleAuthError);
+    initiateGithubSignIn(auth).catch(handleAuthError);
   };
 
-  if (isUserLoading) {
+  if (isUserLoading || isFinalizingAuth) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
         <Loader2 className="animate-spin text-black/20" size={32} />
-        <p className="text-[10px] font-bold tracking-[0.3em] uppercase opacity-40">Verifying_Session</p>
+        <p className="text-[10px] font-bold tracking-[0.3em] uppercase opacity-40">
+          {isFinalizingAuth ? 'Finalizing_Authentication' : 'Verifying_Session'}
+        </p>
       </div>
     );
   }
