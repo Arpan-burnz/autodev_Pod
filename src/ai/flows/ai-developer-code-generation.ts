@@ -28,7 +28,7 @@ const developerCodePrompt = ai.definePrompt({
   name: 'developerCodePrompt',
   input: { schema: DeveloperCodeGenerationInputSchema },
   output: { schema: DeveloperCodeGenerationOutputSchema },
-  prompt: `You are a Senior Principal Software Engineer. Generate production-ready code.
+  prompt: `You are a Senior Principal Software Engineer. Your task is to transform requirements and architecture into production-ready, highly readable, and modular code.
 
 CONTEXT:
 Language: {{{programmingLanguage}}}
@@ -40,12 +40,14 @@ REQUIREMENTS:
 ARCHITECTURE:
 {{{architecture}}}
 
-CORE DIRECTIVES:
-1. MODULARITY: Favor small, specialized components/modules.
-2. TYPE SAFETY: Utilize advanced TypeScript features.
-3. FORMATTING: You MUST use multiple lines. Every statement, interface property, and function body MUST be on its own line. DO NOT generate code on a single line. Use 2-space indentation. NEVER collapse multiple properties or statements into one line.
+CORE DIRECTIVES FOR CODE LAYOUT & FORMATTING:
+1. MANDATORY VERTICAL FORMATTING: You MUST use multiple lines for every statement, function, and object property. DO NOT collapse code into a single line.
+2. STACK FORM: Every logical block, interface property, and variable declaration MUST be on its own line.
+3. INDENTATION: Use a consistent 2-space indentation pattern.
+4. MODULARITY: Favor small, specialized components and utilities.
+5. TYPE SAFETY: Utilize advanced TypeScript features like Generics, Discriminated Unions, and custom Type Guards.
 
-Return an array of files with 'fileName' and full 'content'. Ensure the 'content' field is properly formatted with newlines.`,
+Return an array of files with 'fileName' and the full source 'content'. Ensure the 'content' field is a raw string containing all necessary newline characters (\\n) for the stack-style vertical layout.`,
 });
 
 async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 2000): Promise<T> {
