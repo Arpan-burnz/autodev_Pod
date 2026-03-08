@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Clipboard, Check, Download, FileCode, ChevronRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 
 interface AgentArtifactProps {
@@ -150,7 +149,7 @@ export function AgentArtifact({ title, type, content, icon }: AgentArtifactProps
             <div className="p-6">
               {type === 'code' ? (
                 <pre className="p-5 bg-background text-[11px] overflow-x-auto font-code leading-relaxed border border-border selection:bg-primary selection:text-primary-foreground shadow-inner">
-                  <code className="text-foreground/80 whitespace-pre-wrap">
+                  <code className="text-foreground/80 block whitespace-pre-wrap">
                     {typeof content === 'string' ? content : JSON.stringify(content, null, 2)}
                   </code>
                 </pre>

@@ -21,7 +21,7 @@ export type DeveloperCodeGenerationInput = z.infer<typeof DeveloperCodeGeneratio
 const DeveloperCodeGenerationOutputSchema = z.object({
   files: z.array(z.object({
     fileName: z.string().describe('Suggested file name with extension (e.g., page.tsx, button.tsx).'),
-    content: z.string().describe('The full source code for this specific file.'),
+    content: z.string().describe('The full source code for this specific file. MUST include proper indentation and newlines.'),
   })).describe('A collection of generated source files.'),
   codeExplanation: z.string().describe('High-level explanation of the implementation strategy.'),
 });
@@ -31,7 +31,7 @@ const developerCodePrompt = ai.definePrompt({
   name: 'developerCodePrompt',
   input: { schema: DeveloperCodeGenerationInputSchema },
   output: { schema: DeveloperCodeGenerationOutputSchema },
-  prompt: `You are a Senior Principal Software Engineer. Your goal is to generate production-ready, highly maintainable, and architecturally sound code.
+  prompt: `You are a Senior Principal Software Engineer at a top-tier tech firm. Your goal is to generate production-ready, highly maintainable, and architecturally sound code.
 
 CONTEXT:
 Language: {{{programmingLanguage}}}
@@ -57,11 +57,12 @@ CORE DIRECTIVES:
 4. ERROR HANDLING: Implement comprehensive error handling strategies, including graceful fallbacks, custom error classes, and clear logging.
 5. PERFORMANCE: Optimize for efficient render cycles, minimized memory footprint, and high execution speed.
 6. BEST PRACTICES: Follow the DRY (Don't Repeat Yourself), KISS (Keep It Simple, Stupid), and SOLID principles strictly.
+7. FORMATTING: You MUST output code with proper indentation (2 or 4 spaces) and clear newlines between blocks, functions, and logic segments. Never collapse code into a single line.
 
 DELIVERY REQUIREMENTS:
 - Provide a comprehensive and logical file structure.
 - Each file must be complete, correctly imported/exported, and ready for integration.
-- Return an array of files, each with a clear 'fileName' and its full 'content'.`,
+- Return an array of files, each with a clear 'fileName' and its full, multi-line 'content'.`,
 });
 
 async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 2000): Promise<T> {
