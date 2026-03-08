@@ -10,16 +10,14 @@ import {
   initiateGoogleSignIn,
   initiateGithubSignIn
 } from '@/firebase/non-blocking-login';
-import { getRedirectResult } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
-import { Cpu, Loader2, ArrowLeft, Ghost, Zap, ShieldCheck, Github, Chrome, AlertTriangle, ExternalLink, Lock } from 'lucide-react';
+import { Cpu, Loader2, ArrowLeft, Ghost, Zap, ShieldCheck, Github, Chrome } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function AuthPage() {
   const { user, isUserLoading } = useUser();
@@ -27,43 +25,8 @@ export default function AuthPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [isFinalizingAuth, setIsFinalizingAuth] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showDomainHelp, setShowDomainHelp] = useState(false);
-  const [apiErrorContext, setApiErrorContext] = useState<{ title: string; message: string; link?: string; details?: string } | null>(null);
-  const [currentHostname, setCurrentHostname] = useState('');
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setCurrentHostname(window.location.hostname);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!auth) return;
-
-    const checkRedirect = async () => {
-      try {
-        setIsFinalizingAuth(true);
-        const result = await getRedirectResult(auth);
-        if (result?.user) {
-          router.push('/');
-        } else {
-          if (user && !isUserLoading) {
-            router.push('/');
-          } else {
-            setIsFinalizingAuth(false);
-          }
-        }
-      } catch (error: any) {
-        setIsFinalizingAuth(false);
-        handleAuthError(error);
-      }
-    };
-
-    checkRedirect();
-  }, [auth, router, user, isUserLoading]);
 
   useEffect(() => {
     if (user && !isUserLoading) {
@@ -73,44 +36,9 @@ export default function AuthPage() {
 
   const handleAuthError = (error: any) => {
     console.error("Auth Error:", error);
-    let message = "An unexpected error occurred during authentication.";
-    let title = "AUTH_FAILURE";
-    let link = "";
-    let details = "";
-
-    const errorStr = error.message || "";
-    const errorCode = error.code || "";
-    
-    // Catch-all for API restrictions or blocked requests
-    if (errorStr.includes('identitytoolkit.googleapis.com') || errorStr.includes('are-blocked') || errorStr.includes('identitytoolkit-method')) {
-      title = "API_ACCESS_RESTRICTED";
-      message = "Requests to the Identity Toolkit API are currently blocked.";
-      details = "This error happens when your API Key is restricted in the Google Cloud Console. You must ensure that the 'Identity Toolkit API' is permitted for your API Key, and that 'Email/Password' sign-in is enabled in the Firebase Console.";
-      
-      link = `https://console.cloud.google.com/apis/credentials`;
-      
-      setApiErrorContext({ title, message, link, details });
-    } else if (errorCode === 'auth/operation-not-allowed') {
-      title = "METHOD_NOT_ENABLED";
-      message = "Email/Password sign-in is not enabled in the Firebase Console.";
-      details = "Go to Firebase Console > Authentication > Sign-in method and enable 'Email/Password'.";
-      setApiErrorContext({ title, message, details });
-    } else if (errorCode === 'auth/unauthorized-domain' || errorStr.includes('403') || errorStr.includes('unauthorized')) {
-      title = "DOMAIN_AUTHORIZATION_REQUIRED";
-      message = `Domain ${window.location.hostname} needs to be whitelisted in Firebase.`;
-      setShowDomainHelp(true);
-    } else if (errorCode === 'auth/popup-blocked') {
-      title = "POPUP_BLOCKED";
-      message = "The authentication window was blocked. Please allow popups or use the redirect method.";
-    } else if (errorCode === 'auth/popup-closed-by-user') {
-      message = "Authentication window was closed before completion.";
-    } else if (error.message) {
-      message = error.message;
-    }
-
     toast({
-      title: title,
-      description: message,
+      title: "AUTHENTICATION_ERROR",
+      description: error.message || "An unexpected error occurred.",
       variant: "destructive"
     });
     setIsLoading(false);
@@ -148,13 +76,11 @@ export default function AuthPage() {
     initiateGithubSignIn(auth).catch(handleAuthError);
   };
 
-  if (isUserLoading || isFinalizingAuth) {
+  if (isUserLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
         <Loader2 className="animate-spin text-black/20" size={32} />
-        <p className="text-[10px] font-bold tracking-[0.3em] uppercase opacity-40">
-          {isFinalizingAuth ? 'Finalizing_Authentication' : 'Verifying_Session'}
-        </p>
+        <p className="text-[10px] font-bold tracking-[0.3em] uppercase opacity-40">Verifying_Session</p>
       </div>
     );
   }
@@ -180,71 +106,6 @@ export default function AuthPage() {
             <p className="text-[9px] text-black/30 font-bold tracking-[0.6em] uppercase">Security Protocol v4.0</p>
           </div>
         </div>
-
-        {apiErrorContext && (
-          <Alert variant="destructive" className="rounded-none border-destructive bg-white shadow-xl animate-in fade-in slide-in-from-top-4 duration-500">
-            <Lock className="h-4 w-4" />
-            <AlertTitle className="text-[10px] font-bold tracking-[0.2em] uppercase">{apiErrorContext.title}</AlertTitle>
-            <AlertDescription className="text-[9px] uppercase tracking-wider font-medium mt-2 space-y-4">
-              <p>{apiErrorContext.message}</p>
-              <div className="p-3 bg-destructive/5 border border-destructive/20 space-y-3">
-                <p className="font-bold">REQUIRED ACTION:</p>
-                <p className="text-[8px] leading-relaxed">{apiErrorContext.details}</p>
-                {apiErrorContext.link && (
-                  <a 
-                    href={apiErrorContext.link} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 bg-destructive text-white px-4 py-2 text-[10px] font-bold tracking-widest hover:bg-destructive/90 transition-all uppercase"
-                  >
-                    CONFIGURE_API_RESTRICTIONS <ExternalLink size={12} />
-                  </a>
-                )}
-              </div>
-              <p className="text-destructive/60 italic">* Ensure &quot;Email/Password&quot; is enabled in Firebase Console &gt; Auth &gt; Sign-in method.</p>
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {showDomainHelp && !apiErrorContext && (
-          <Alert className="rounded-none border-black bg-white shadow-xl animate-in fade-in slide-in-from-top-4 duration-500">
-            <AlertTriangle className="h-4 w-4 text-destructive" />
-            <AlertTitle className="text-[10px] font-bold tracking-[0.2em] uppercase">Authorization Required (403)</AlertTitle>
-            <AlertDescription className="text-[9px] uppercase tracking-wider font-medium mt-2 space-y-4">
-              <p>Firebase requires this domain to be explicitly whitelisted. If you are seeing a 403 error, follow these steps:</p>
-              
-              <div className="p-3 bg-muted border border-border space-y-2">
-                <p className="font-bold">1. COPY CURRENT DOMAIN</p>
-                <code className="block bg-black text-white p-2 text-[9px] font-code break-all select-all cursor-pointer" title="Click to select all">
-                  {currentHostname}
-                </code>
-              </div>
-
-              <div className="p-3 bg-muted border border-border space-y-2">
-                <p className="font-bold">2. ADD TO FIREBASE CONSOLE</p>
-                <p>Go to <strong>Authentication</strong> &gt; <strong>Settings</strong> &gt; <strong>Authorized Domains</strong> and add the hostname above.</p>
-              </div>
-
-              <div className="flex justify-between items-center">
-                <Button 
-                  variant="link" 
-                  className="p-0 h-auto text-[9px] font-bold tracking-widest text-black/40 hover:text-black uppercase"
-                  onClick={() => setShowDomainHelp(false)}
-                >
-                  CLOSE_NOTICE
-                </Button>
-                <a 
-                  href="https://console.firebase.google.com/" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-[9px] font-bold tracking-widest text-primary flex items-center gap-1 uppercase"
-                >
-                  OPEN_FIREBASE <ExternalLink size={10} />
-                </a>
-              </div>
-            </AlertDescription>
-          </Alert>
-        )}
 
         <Tabs defaultValue="login" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-10 h-14 bg-black/5 border border-black/5 rounded-none p-1">
