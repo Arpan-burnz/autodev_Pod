@@ -81,14 +81,13 @@ export default function AuthPage() {
     const errorStr = error.message || "";
     const errorCode = error.code || "";
     
-    if (errorStr.includes('identitytoolkit.googleapis.com') || errorStr.includes('are-blocked')) {
-      title = "API_RESTRICTED_OR_DISABLED";
-      message = "The Identity Toolkit API is either disabled or blocked for this project.";
-      details = "This error usually means you need to enable the 'Email/Password' sign-in method in the Firebase Console, or your API Key is restricted in the Google Cloud Console.";
+    // Catch-all for API restrictions or blocked requests
+    if (errorStr.includes('identitytoolkit.googleapis.com') || errorStr.includes('are-blocked') || errorStr.includes('identitytoolkit-method')) {
+      title = "API_ACCESS_RESTRICTED";
+      message = "Requests to the Identity Toolkit API are currently blocked.";
+      details = "This error happens when your API Key is restricted in the Google Cloud Console. You must ensure that the 'Identity Toolkit API' is permitted for your API Key, and that 'Email/Password' sign-in is enabled in the Firebase Console.";
       
-      const projectMatch = errorStr.match(/project-(\d+)/);
-      const projectNum = projectMatch ? projectMatch[1] : "";
-      link = `https://console.firebase.google.com/project/_/authentication/providers`;
+      link = `https://console.cloud.google.com/apis/credentials`;
       
       setApiErrorContext({ title, message, link, details });
     } else if (errorCode === 'auth/operation-not-allowed') {
@@ -198,11 +197,11 @@ export default function AuthPage() {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 bg-destructive text-white px-4 py-2 text-[10px] font-bold tracking-widest hover:bg-destructive/90 transition-all uppercase"
                   >
-                    FIX_IN_CONSOLE <ExternalLink size={12} />
+                    CONFIGURE_API_RESTRICTIONS <ExternalLink size={12} />
                   </a>
                 )}
               </div>
-              <p className="text-destructive/60 italic">* Ensure "Email/Password" is enabled in Firebase Console &gt; Auth &gt; Sign-in method.</p>
+              <p className="text-destructive/60 italic">* Ensure &quot;Email/Password&quot; is enabled in Firebase Console &gt; Auth &gt; Sign-in method.</p>
             </AlertDescription>
           </Alert>
         )}
