@@ -30,6 +30,12 @@ const developerCodePrompt = ai.definePrompt({
   output: { schema: DeveloperCodeGenerationOutputSchema },
   prompt: `You are a Senior Principal Software Engineer. Your task is to transform requirements and architecture into production-ready, highly readable, and modular code.
 
+CRITICAL FORMATTING REQUIREMENT: "STACK FORM"
+1. NEVER COLLAPSE CODE: Every statement, import, and interface property MUST be on its own line.
+2. VERTICAL ORIENTATION: Do not create horizontally dense lines. Prefer a long vertical "stack" of code.
+3. EXPLICIT NEWLINES: Ensure a newline exists after every semicolon, opening brace, and closing brace.
+4. READABILITY: Use 2-space indentation and clear vertical separation between logical blocks.
+
 CONTEXT:
 Language: {{{programmingLanguage}}}
 Framework: {{#if framework}}{{{framework}}}{{else}}None specified{{/if}}
@@ -40,14 +46,7 @@ REQUIREMENTS:
 ARCHITECTURE:
 {{{architecture}}}
 
-CRITICAL FORMATTING REQUIREMENT (STACK FORM):
-1. MANDATORY VERTICAL LAYOUT: You MUST use multiple lines for every statement, function, and object property. 
-2. NO HORIZONTAL COLLAPSING: DO NOT collapse code into a single line. DO NOT put multiple imports, variable declarations, or interface properties on a single line.
-3. STACK FORM: Every logical block, interface property, and variable declaration MUST be on its own line.
-4. NEWLINES: Use literal newline characters (\\n) extensively to ensure the code appears as a vertical "stack".
-5. INDENTATION: Use a consistent 2-space indentation pattern.
-
-Return an array of files with 'fileName' and the full source 'content'. Ensure the 'content' field is a raw string containing all necessary newline characters (\\n) for the stack-style vertical layout.`,
+Return an array of files with 'fileName' and the full source 'content' string formatted strictly in the vertical stack form.`,
 });
 
 async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 2000): Promise<T> {
@@ -57,8 +56,8 @@ async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 2000): Pr
     const errorMessage = error.message || '';
     const isRetryable = 
       errorMessage.includes('429') || 
-      errorMessage.includes('RESOURCE_EXHAUSTED') ||
-      errorMessage.includes('503') ||
+      errorMessage.includes('RESOURCE_EXHAUSTED') || 
+      errorMessage.includes('503') || 
       errorMessage.includes('UNAVAILABLE');
     
     if (retries > 0 && isRetryable) {

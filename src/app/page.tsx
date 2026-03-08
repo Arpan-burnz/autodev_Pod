@@ -20,21 +20,13 @@ import {
   FileText,
   Activity,
   Zap,
-  AlertCircle,
   Download,
-  ClipboardCheck,
-  FileSearch,
-  Timer,
   History as HistoryIcon,
   Trash2,
-  ExternalLink,
-  ChevronDown,
-  MessageSquare,
   Cpu as CpuIcon,
   CalendarDays
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { AgentArtifact } from '@/components/AgentArtifact';
@@ -42,7 +34,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useUser, useAuth, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
 import { collection, doc, serverTimestamp, setDoc, query, orderBy } from 'firebase/firestore';
 import Link from 'next/link';
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -99,7 +90,6 @@ export default function AutoDevPodDashboard() {
   const [activeStage, setActiveStage] = useState<number>(0);
   const [project, setProject] = useState<ProjectState>({ idea: '' });
   const [isProcessing, setIsProcessing] = useState(false);
-  const [quotaError, setQuotaError] = useState(false);
   const [selectedTab, setSelectedTab] = useState<string>('requirements');
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -121,7 +111,7 @@ export default function AutoDevPodDashboard() {
     setLogs(prev => [...prev, { timestamp, agent, message, type }]);
   };
 
-  // History Fetching with sorting
+  // History Fetching
   const projectsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(collection(db, 'users', user.uid, 'projects'), orderBy('createdAt', 'desc'));
@@ -164,7 +154,6 @@ export default function AutoDevPodDashboard() {
     if (!user || !db) return;
 
     setIsProcessing(true);
-    setQuotaError(false);
     setLogs([]);
     addLog('SYSTEM', 'Initializing multi-agent workflow...', 'status');
     
@@ -189,9 +178,7 @@ export default function AutoDevPodDashboard() {
       try {
         await setDoc(projectRef, initialData);
         addLog('SYSTEM', `Assigned Project ID: ${projectId}`, 'info');
-      } catch (e) {
-        // Handle silently
-      }
+      } catch (e) {}
     } else {
       projectRef = doc(db, 'users', user.uid, 'projects', projectId);
       updateDocumentNonBlocking(projectRef, { status: 'working', updatedAt: serverTimestamp() });
@@ -210,7 +197,7 @@ export default function AutoDevPodDashboard() {
       if (!currentRequirements) {
         setSelectedTab('requirements');
         updateStatus(0, 'working');
-        addLog('PM', 'Analyzing project concept and user needs...', 'status');
+        addLog('PM', 'Analyzing project concept...', 'status');
         const results = await generateProjectRequirements({ projectIdea: project.idea });
         currentRequirements = results;
         setProject(prev => ({ ...prev, requirements: results }));
@@ -220,7 +207,7 @@ export default function AutoDevPodDashboard() {
         await delay(800);
       } else {
         updateStatus(0, 'completed');
-        addLog('PM', 'Requirements cached.', 'info');
+        addLog('PM', 'Requirements restored.', 'info');
       }
 
       // STAGE 1: SYSTEM ARCHITECT
@@ -228,19 +215,19 @@ export default function AutoDevPodDashboard() {
       if (!currentArchitecture) {
         setSelectedTab('architecture');
         updateStatus(1, 'working');
-        addLog('ARCH', 'Drafting system blueprint and database schema...', 'status');
+        addLog('ARCH', 'Drafting system blueprint...', 'status');
         const results = await aiSystemArchitectDesignGeneration({ 
           projectRequirements: JSON.stringify(currentRequirements) 
         });
         currentArchitecture = results;
         setProject(prev => ({ ...prev, architecture: results }));
         updateDocumentNonBlocking(projectRef, { architecture: results, updatedAt: serverTimestamp() });
-        addLog('ARCH', 'Architecture design finalized.', 'success');
+        addLog('ARCH', 'Architecture finalized.', 'success');
         updateStatus(1, 'completed');
         await delay(800);
       } else {
         updateStatus(1, 'completed');
-        addLog('ARCH', 'Architecture cached.', 'info');
+        addLog('ARCH', 'Architecture restored.', 'info');
       }
 
       // STAGE 2: DEVELOPER
@@ -248,7 +235,7 @@ export default function AutoDevPodDashboard() {
       if (!currentCode) {
         setSelectedTab('code');
         updateStatus(2, 'working');
-        addLog('DEV', 'Translating requirements into production code...', 'status');
+        addLog('DEV', 'Generating production code stack...', 'status');
         const results = await developerCodeGeneration({
           requirements: JSON.stringify(currentRequirements.userStories),
           architecture: currentArchitecture.systemArchitectureDescription,
@@ -258,12 +245,12 @@ export default function AutoDevPodDashboard() {
         currentCode = results;
         setProject(prev => ({ ...prev, code: results }));
         updateDocumentNonBlocking(projectRef, { code: results, updatedAt: serverTimestamp() });
-        addLog('DEV', `Successfully generated ${results.files?.length || 1} files.`, 'success');
+        addLog('DEV', `Successfully generated ${results.files?.length || 1} files in stack form.`, 'success');
         updateStatus(2, 'completed');
         await delay(800);
       } else {
         updateStatus(2, 'completed');
-        addLog('DEV', 'Codebase cached.', 'info');
+        addLog('DEV', 'Codebase restored.', 'info');
       }
 
       // STAGE 3: QA
@@ -271,7 +258,7 @@ export default function AutoDevPodDashboard() {
       if (!currentQa) {
         setSelectedTab('qa');
         updateStatus(3, 'working');
-        addLog('QA', 'Executing automated test suites...', 'status');
+        addLog('QA', 'Executing automated audit...', 'status');
         const results = await aiQaTestGenerationAndExecution({
           code: currentCode?.files?.map((f: any) => f.content).join('\n') || currentCode?.content || '',
           requirements: JSON.stringify(currentRequirements.requirements),
@@ -280,12 +267,12 @@ export default function AutoDevPodDashboard() {
         currentQa = results;
         setProject(prev => ({ ...prev, qa: results }));
         updateDocumentNonBlocking(projectRef, { qa: results, updatedAt: serverTimestamp() });
-        addLog('QA', `Audit complete. ${results.identifiedIssues.length} issues identified.`, 'success');
+        addLog('QA', `Audit complete. ${results.identifiedIssues.length} points identified.`, 'success');
         updateStatus(3, 'completed');
         await delay(800);
       } else {
         updateStatus(3, 'completed');
-        addLog('QA', 'QA reports cached.', 'info');
+        addLog('QA', 'QA reports restored.', 'info');
       }
 
       // STAGE 4: DEVOPS
@@ -293,7 +280,7 @@ export default function AutoDevPodDashboard() {
       if (!currentDevops) {
         setSelectedTab('devops');
         updateStatus(4, 'working');
-        addLog('OPS', 'Formulating CI/CD strategies...', 'status');
+        addLog('OPS', 'Formulating infrastructure plan...', 'status');
         const results = await aiDevOpsDeploymentSuggestions({
           projectDescription: project.idea,
           technologiesUsed: ['Next.js', 'TypeScript', 'TailwindCSS'],
@@ -307,7 +294,7 @@ export default function AutoDevPodDashboard() {
         updateStatus(4, 'completed');
       } else {
         updateStatus(4, 'completed');
-        addLog('OPS', 'DevOps plan cached.', 'info');
+        addLog('OPS', 'DevOps plan restored.', 'info');
       }
 
       addLog('SYSTEM', 'Autonomous pipeline execution completed.', 'success');
@@ -344,7 +331,7 @@ export default function AutoDevPodDashboard() {
     
     setActiveStage(resumeAt);
     setSelectedTab(stages[resumeAt].tab);
-    setQuotaError(false);
+    setIsProcessing(false);
     
     toast({ title: "PROJECT LOADED", description: "Archive restored successfully." });
   };
@@ -353,7 +340,6 @@ export default function AutoDevPodDashboard() {
     setProject({ idea: '' });
     setStatuses(['idle', 'idle', 'idle', 'idle', 'idle']);
     setActiveStage(0);
-    setQuotaError(false);
     setSelectedTab('requirements');
     setLogs([]);
   };
