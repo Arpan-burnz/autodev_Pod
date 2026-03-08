@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
-import { Cpu, Loader2, ArrowLeft, Ghost, Zap, ShieldCheck, Github, Chrome, AlertTriangle, ExternalLink, Settings } from 'lucide-react';
+import { Cpu, Loader2, ArrowLeft, Ghost, Zap, ShieldCheck, Github, Chrome, AlertTriangle, ExternalLink, Settings, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -31,7 +31,7 @@ export default function AuthPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showDomainHelp, setShowDomainHelp] = useState(false);
-  const [apiErrorContext, setApiErrorContext] = useState<{ title: string; message: string; link?: string } | null>(null);
+  const [apiErrorContext, setApiErrorContext] = useState<{ title: string; message: string; link?: string; details?: string } | null>(null);
   const [currentHostname, setCurrentHostname] = useState('');
 
   useEffect(() => {
@@ -76,27 +76,34 @@ export default function AuthPage() {
     let message = "An unexpected error occurred during authentication.";
     let title = "AUTH_FAILURE";
     let link = "";
+    let details = "";
 
     const errorStr = error.message || "";
+    const errorCode = error.code || "";
     
-    if (errorStr.includes('identitytoolkit.googleapis.com')) {
-      title = "API_DISABLED";
-      message = "The Identity Toolkit API is not enabled for this project. This is required for authentication to work.";
-      // Extract project number if possible, or just provide a general link
+    if (errorStr.includes('identitytoolkit.googleapis.com') || errorStr.includes('requests-to-this-api-identitytoolkit-method-google.cloud.identitytoolkit.v1.authenticationservice.signinwithpassword-are-blocked')) {
+      title = "API_RESTRICTED_OR_DISABLED";
+      message = "The Identity Toolkit API is either disabled or blocked for this API key.";
+      details = "This usually means you need to enable the Identity Toolkit API in Google Cloud Console, or your API Key has restrictions that prevent it from using this specific API.";
+      
       const projectMatch = errorStr.match(/project-(\d+)/);
       const projectNum = projectMatch ? projectMatch[1] : "";
       link = `https://console.developers.google.com/apis/api/identitytoolkit.googleapis.com/overview${projectNum ? `?project=${projectNum}` : ''}`;
-      setApiErrorContext({ title, message, link });
-    } else if (error.code === 'auth/operation-not-allowed') {
-      message = "This sign-in method is not enabled in the Firebase Console.";
-    } else if (error.code === 'auth/unauthorized-domain' || error.message?.includes('403') || error.message?.includes('unauthorized')) {
+      
+      setApiErrorContext({ title, message, link, details });
+    } else if (errorCode === 'auth/operation-not-allowed') {
+      title = "METHOD_NOT_ENABLED";
+      message = "Email/Password sign-in is not enabled in the Firebase Console.";
+      details = "Go to Firebase Console > Authentication > Sign-in method and enable 'Email/Password'.";
+      setApiErrorContext({ title, message, details });
+    } else if (errorCode === 'auth/unauthorized-domain' || errorStr.includes('403') || errorStr.includes('unauthorized')) {
       title = "DOMAIN_AUTHORIZATION_REQUIRED";
       message = `Domain ${window.location.hostname} needs to be whitelisted in Firebase.`;
       setShowDomainHelp(true);
-    } else if (error.code === 'auth/popup-blocked') {
+    } else if (errorCode === 'auth/popup-blocked') {
       title = "POPUP_BLOCKED";
       message = "The authentication window was blocked. Please allow popups or use the redirect method.";
-    } else if (error.code === 'auth/popup-closed-by-user') {
+    } else if (errorCode === 'auth/popup-closed-by-user') {
       message = "Authentication window was closed before completion.";
     } else if (error.message) {
       message = error.message;
@@ -177,22 +184,25 @@ export default function AuthPage() {
 
         {apiErrorContext && (
           <Alert variant="destructive" className="rounded-none border-destructive bg-white shadow-xl animate-in fade-in slide-in-from-top-4 duration-500">
-            <Settings className="h-4 w-4" />
-            <AlertTitle className="text-[10px] font-bold tracking-[0.2em] uppercase">Service Activation Required</AlertTitle>
+            <Lock className="h-4 w-4" />
+            <AlertTitle className="text-[10px] font-bold tracking-[0.2em] uppercase">{apiErrorContext.title}</AlertTitle>
             <AlertDescription className="text-[9px] uppercase tracking-wider font-medium mt-2 space-y-4">
               <p>{apiErrorContext.message}</p>
-              <div className="p-3 bg-destructive/5 border border-destructive/20">
-                <p className="font-bold mb-2">REQUIRED ACTION:</p>
-                <a 
-                  href={apiErrorContext.link} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 bg-destructive text-white px-4 py-2 text-[10px] font-bold tracking-widest hover:bg-destructive/90 transition-all uppercase"
-                >
-                  ENABLE_IDENTITY_TOOLKIT <ExternalLink size={12} />
-                </a>
+              <div className="p-3 bg-destructive/5 border border-destructive/20 space-y-3">
+                <p className="font-bold">REQUIRED ACTION:</p>
+                <p className="text-[8px] leading-relaxed">{apiErrorContext.details}</p>
+                {apiErrorContext.link && (
+                  <a 
+                    href={apiErrorContext.link} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 bg-destructive text-white px-4 py-2 text-[10px] font-bold tracking-widest hover:bg-destructive/90 transition-all uppercase"
+                  >
+                    FIX_IN_CONSOLE <ExternalLink size={12} />
+                  </a>
+                )}
               </div>
-              <p className="text-destructive/60 italic">* After enabling, wait 2-3 minutes for the changes to propagate before retrying.</p>
+              <p className="text-destructive/60 italic">* Ensure "Email/Password" is enabled in Firebase Console > Auth > Sign-in method.</p>
             </AlertDescription>
           </Alert>
         )}
