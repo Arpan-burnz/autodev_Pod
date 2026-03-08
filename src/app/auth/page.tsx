@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
-import { Cpu, Loader2, ArrowLeft, Ghost, Zap, ShieldCheck, Github, Chrome, AlertTriangle } from 'lucide-react';
+import { Cpu, Loader2, ArrowLeft, Ghost, Zap, ShieldCheck, Github, Chrome, AlertTriangle, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -48,10 +48,8 @@ export default function AuthPage() {
         setIsFinalizingAuth(true);
         const result = await getRedirectResult(auth);
         if (result?.user) {
-          // Explicitly push to home if we got a result
           router.push('/');
         } else {
-          // If no result but we have a user from the provider hook, push
           if (user && !isUserLoading) {
             router.push('/');
           } else {
@@ -79,11 +77,12 @@ export default function AuthPage() {
     let message = "An unexpected error occurred during authentication.";
     let title = "AUTH_FAILURE";
     
+    // Explicitly handle 403 Forbidden / Unauthorized Domain
     if (error.code === 'auth/operation-not-allowed') {
       message = "This sign-in method is not enabled in the Firebase Console.";
-    } else if (error.code === 'auth/unauthorized-domain') {
-      title = "DOMAIN_NOT_AUTHORIZED";
-      message = `This domain (${window.location.hostname}) is not authorized for Firebase Authentication.`;
+    } else if (error.code === 'auth/unauthorized-domain' || error.message?.includes('403') || error.message?.includes('unauthorized')) {
+      title = "DOMAIN_AUTHORIZATION_REQUIRED";
+      message = `Domain ${window.location.hostname} needs to be whitelisted in Firebase.`;
       setShowDomainHelp(true);
     } else if (error.code === 'auth/popup-blocked') {
       title = "POPUP_BLOCKED";
@@ -170,24 +169,44 @@ export default function AuthPage() {
         {showDomainHelp && (
           <Alert className="rounded-none border-black bg-white shadow-xl animate-in fade-in slide-in-from-top-4 duration-500">
             <AlertTriangle className="h-4 w-4 text-destructive" />
-            <AlertTitle className="text-[10px] font-bold tracking-[0.2em] uppercase">Authorized Domain Required</AlertTitle>
-            <AlertDescription className="text-[9px] uppercase tracking-wider font-medium mt-2 space-y-3">
-              <p>Firebase requires this domain to be explicitly authorized in the console:</p>
+            <AlertTitle className="text-[10px] font-bold tracking-[0.2em] uppercase">Authorization Required (403)</AlertTitle>
+            <AlertDescription className="text-[9px] uppercase tracking-wider font-medium mt-2 space-y-4">
+              <p>Firebase requires this domain to be explicitly whitelisted. If you are seeing a 403 error, follow these steps:</p>
+              
               <div className="p-3 bg-muted border border-border space-y-2">
-                <p className="font-bold">1. COPY_DOMAIN</p>
-                <code className="block bg-black text-white p-2 text-[10px] font-code break-all">{currentHostname}</code>
+                <p className="font-bold">1. COPY CURRENT DOMAIN</p>
+                <code className="block bg-black text-white p-2 text-[9px] font-code break-all select-all cursor-pointer" title="Click to select all">
+                  {currentHostname}
+                </code>
               </div>
+
               <div className="p-3 bg-muted border border-border space-y-2">
-                <p className="font-bold">2. ADD_TO_FIREBASE</p>
-                <p>Go to Authentication &gt; Settings &gt; Authorized Domains and add the value above.</p>
+                <p className="font-bold">2. ADD TO FIREBASE CONSOLE</p>
+                <p>Go to <strong>Authentication</strong> &gt; <strong>Settings</strong> &gt; <strong>Authorized Domains</strong> and add the hostname above.</p>
               </div>
-              <Button 
-                variant="link" 
-                className="p-0 h-auto text-[9px] font-bold tracking-widest text-black/40 hover:text-black uppercase mt-2"
-                onClick={() => setShowDomainHelp(false)}
-              >
-                CLOSE_NOTICE
-              </Button>
+
+              <div className="p-3 bg-muted border border-border space-y-2">
+                <p className="font-bold">3. CHECK API KEY RESTRICTIONS</p>
+                <p>Ensure your API Key is not restricted by domain in the Google Cloud Console.</p>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <Button 
+                  variant="link" 
+                  className="p-0 h-auto text-[9px] font-bold tracking-widest text-black/40 hover:text-black uppercase"
+                  onClick={() => setShowDomainHelp(false)}
+                >
+                  CLOSE_NOTICE
+                </Button>
+                <a 
+                  href="https://console.firebase.google.com/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-[9px] font-bold tracking-widest text-primary flex items-center gap-1 uppercase"
+                >
+                  OPEN_FIREBASE <ExternalLink size={10} />
+                </a>
+              </div>
             </AlertDescription>
           </Alert>
         )}
