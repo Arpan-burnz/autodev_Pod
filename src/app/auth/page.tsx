@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
-import { Cpu, Loader2, ArrowLeft, Ghost, Zap, ShieldCheck, Github, Chrome, AlertTriangle, ExternalLink } from 'lucide-react';
+import { Cpu, Loader2, ArrowLeft, Ghost, Zap, ShieldCheck, Github, Chrome, AlertTriangle, ExternalLink, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -31,6 +31,7 @@ export default function AuthPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showDomainHelp, setShowDomainHelp] = useState(false);
+  const [apiErrorContext, setApiErrorContext] = useState<{ title: string; message: string; link?: string } | null>(null);
   const [currentHostname, setCurrentHostname] = useState('');
 
   useEffect(() => {
@@ -39,7 +40,6 @@ export default function AuthPage() {
     }
   }, []);
 
-  // Handle Redirect Result on Mount
   useEffect(() => {
     if (!auth) return;
 
@@ -65,7 +65,6 @@ export default function AuthPage() {
     checkRedirect();
   }, [auth, router, user, isUserLoading]);
 
-  // Global user watch for successful login
   useEffect(() => {
     if (user && !isUserLoading) {
       router.push('/');
@@ -76,9 +75,19 @@ export default function AuthPage() {
     console.error("Auth Error:", error);
     let message = "An unexpected error occurred during authentication.";
     let title = "AUTH_FAILURE";
+    let link = "";
+
+    const errorStr = error.message || "";
     
-    // Explicitly handle 403 Forbidden / Unauthorized Domain
-    if (error.code === 'auth/operation-not-allowed') {
+    if (errorStr.includes('identitytoolkit.googleapis.com')) {
+      title = "API_DISABLED";
+      message = "The Identity Toolkit API is not enabled for this project. This is required for authentication to work.";
+      // Extract project number if possible, or just provide a general link
+      const projectMatch = errorStr.match(/project-(\d+)/);
+      const projectNum = projectMatch ? projectMatch[1] : "";
+      link = `https://console.developers.google.com/apis/api/identitytoolkit.googleapis.com/overview${projectNum ? `?project=${projectNum}` : ''}`;
+      setApiErrorContext({ title, message, link });
+    } else if (error.code === 'auth/operation-not-allowed') {
       message = "This sign-in method is not enabled in the Firebase Console.";
     } else if (error.code === 'auth/unauthorized-domain' || error.message?.includes('403') || error.message?.includes('unauthorized')) {
       title = "DOMAIN_AUTHORIZATION_REQUIRED";
@@ -166,7 +175,29 @@ export default function AuthPage() {
           </div>
         </div>
 
-        {showDomainHelp && (
+        {apiErrorContext && (
+          <Alert variant="destructive" className="rounded-none border-destructive bg-white shadow-xl animate-in fade-in slide-in-from-top-4 duration-500">
+            <Settings className="h-4 w-4" />
+            <AlertTitle className="text-[10px] font-bold tracking-[0.2em] uppercase">Service Activation Required</AlertTitle>
+            <AlertDescription className="text-[9px] uppercase tracking-wider font-medium mt-2 space-y-4">
+              <p>{apiErrorContext.message}</p>
+              <div className="p-3 bg-destructive/5 border border-destructive/20">
+                <p className="font-bold mb-2">REQUIRED ACTION:</p>
+                <a 
+                  href={apiErrorContext.link} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 bg-destructive text-white px-4 py-2 text-[10px] font-bold tracking-widest hover:bg-destructive/90 transition-all uppercase"
+                >
+                  ENABLE_IDENTITY_TOOLKIT <ExternalLink size={12} />
+                </a>
+              </div>
+              <p className="text-destructive/60 italic">* After enabling, wait 2-3 minutes for the changes to propagate before retrying.</p>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {showDomainHelp && !apiErrorContext && (
           <Alert className="rounded-none border-black bg-white shadow-xl animate-in fade-in slide-in-from-top-4 duration-500">
             <AlertTriangle className="h-4 w-4 text-destructive" />
             <AlertTitle className="text-[10px] font-bold tracking-[0.2em] uppercase">Authorization Required (403)</AlertTitle>
@@ -183,11 +214,6 @@ export default function AuthPage() {
               <div className="p-3 bg-muted border border-border space-y-2">
                 <p className="font-bold">2. ADD TO FIREBASE CONSOLE</p>
                 <p>Go to <strong>Authentication</strong> &gt; <strong>Settings</strong> &gt; <strong>Authorized Domains</strong> and add the hostname above.</p>
-              </div>
-
-              <div className="p-3 bg-muted border border-border space-y-2">
-                <p className="font-bold">3. CHECK API KEY RESTRICTIONS</p>
-                <p>Ensure your API Key is not restricted by domain in the Google Cloud Console.</p>
               </div>
 
               <div className="flex justify-between items-center">
