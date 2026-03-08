@@ -136,7 +136,7 @@ export function AgentArtifact({ title, type, content, icon }: AgentArtifactProps
                 <span className="text-[7px] font-bold text-foreground/20 uppercase">READ_ONLY</span>
               </div>
               <ScrollArea className="flex-1">
-                <pre className="p-6 text-[11px] font-code leading-relaxed selection:bg-primary selection:text-primary-foreground">
+                <pre className="p-6 text-[11px] font-code leading-relaxed selection:bg-primary selection:text-primary-foreground overflow-auto h-full">
                   <code className="text-foreground/80 block whitespace-pre">
                     {content.files[selectedFileIndex]?.content}
                   </code>
@@ -146,10 +146,10 @@ export function AgentArtifact({ title, type, content, icon }: AgentArtifactProps
           </div>
         ) : (
           <ScrollArea className="flex-1">
-            <div className="p-6">
+            <div className="p-6 h-full">
               {type === 'code' ? (
-                <pre className="p-5 bg-background text-[11px] overflow-x-auto font-code leading-relaxed border border-border selection:bg-primary selection:text-primary-foreground shadow-inner">
-                  <code className="text-foreground/80 block whitespace-pre-wrap">
+                <pre className="p-5 bg-background text-[11px] overflow-auto font-code leading-relaxed border border-border selection:bg-primary selection:text-primary-foreground shadow-inner h-full">
+                  <code className="text-foreground/80 block whitespace-pre">
                     {typeof content === 'string' ? content : JSON.stringify(content, null, 2)}
                   </code>
                 </pre>

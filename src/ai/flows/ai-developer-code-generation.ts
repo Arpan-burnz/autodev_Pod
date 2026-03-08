@@ -43,9 +43,9 @@ ARCHITECTURE:
 CORE DIRECTIVES:
 1. MODULARITY: Favor small, specialized components/modules.
 2. TYPE SAFETY: Utilize advanced TypeScript features.
-3. FORMATTING: Use proper indentation and mandatory newlines. Never collapse code into a single line.
+3. FORMATTING: You MUST use multiple lines. Every statement, interface property, and function body MUST be on its own line. DO NOT generate code on a single line. Use 2-space indentation. NEVER collapse multiple properties or statements into one line.
 
-Return an array of files with 'fileName' and full 'content'.`,
+Return an array of files with 'fileName' and full 'content'. Ensure the 'content' field is properly formatted with newlines.`,
 });
 
 async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 2000): Promise<T> {
