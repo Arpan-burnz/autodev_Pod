@@ -81,7 +81,7 @@ export default function AuthPage() {
     const errorStr = error.message || "";
     const errorCode = error.code || "";
     
-    if (errorStr.includes('identitytoolkit.googleapis.com') || errorStr.includes('signinwithpassword-are-blocked')) {
+    if (errorStr.includes('identitytoolkit.googleapis.com') || errorStr.includes('are-blocked')) {
       title = "API_RESTRICTED_OR_DISABLED";
       message = "The Identity Toolkit API is either disabled or blocked for this project.";
       details = "This error usually means you need to enable the 'Email/Password' sign-in method in the Firebase Console, or your API Key is restricted in the Google Cloud Console.";
