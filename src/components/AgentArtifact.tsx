@@ -172,7 +172,7 @@ export function AgentArtifact({ title, type, content, icon }: AgentArtifactProps
                 </div>
               ) : (
                 <pre className="p-6 bg-background text-[11px] font-code border border-border overflow-x-auto shadow-inner w-full">
-                  <code className="text-foreground/80 whitespace-pre">{JSON.stringify(content, null, 2)}</code>
+                  <code className="text-foreground/80 block whitespace-pre">{JSON.stringify(content, null, 2)}</code>
                 </pre>
               )}
             </div>

@@ -40,12 +40,12 @@ REQUIREMENTS:
 ARCHITECTURE:
 {{{architecture}}}
 
-CORE DIRECTIVES FOR CODE LAYOUT & FORMATTING:
-1. MANDATORY VERTICAL FORMATTING: You MUST use multiple lines for every statement, function, and object property. DO NOT collapse code into a single line.
-2. STACK FORM: Every logical block, interface property, and variable declaration MUST be on its own line.
-3. INDENTATION: Use a consistent 2-space indentation pattern.
-4. MODULARITY: Favor small, specialized components and utilities.
-5. TYPE SAFETY: Utilize advanced TypeScript features like Generics, Discriminated Unions, and custom Type Guards.
+CRITICAL FORMATTING REQUIREMENT (STACK FORM):
+1. MANDATORY VERTICAL LAYOUT: You MUST use multiple lines for every statement, function, and object property. 
+2. NO HORIZONTAL COLLAPSING: DO NOT collapse code into a single line. DO NOT put multiple imports, variable declarations, or interface properties on a single line.
+3. STACK FORM: Every logical block, interface property, and variable declaration MUST be on its own line.
+4. NEWLINES: Use literal newline characters (\\n) extensively to ensure the code appears as a vertical "stack".
+5. INDENTATION: Use a consistent 2-space indentation pattern.
 
 Return an array of files with 'fileName' and the full source 'content'. Ensure the 'content' field is a raw string containing all necessary newline characters (\\n) for the stack-style vertical layout.`,
 });
