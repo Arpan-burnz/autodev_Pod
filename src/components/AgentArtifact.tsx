@@ -99,9 +99,9 @@ export function AgentArtifact({ title, type, content, icon }: AgentArtifactProps
       </CardHeader>
       <CardContent className="flex-1 p-0 overflow-hidden flex flex-col">
         {isMultiFile ? (
-          <div className="flex-1 flex overflow-hidden">
+          <div className="flex-1 flex overflow-hidden h-full">
             {/* File Sidebar */}
-            <div className="w-64 border-r border-border bg-muted/20 flex flex-col">
+            <div className="w-64 border-r border-border bg-muted/20 flex flex-col h-full">
               <div className="p-3 border-b border-border bg-background/50">
                 <span className="text-[8px] font-bold uppercase tracking-widest text-foreground/30">FILE_EXPLORER</span>
               </div>
@@ -128,15 +128,15 @@ export function AgentArtifact({ title, type, content, icon }: AgentArtifactProps
             </div>
 
             {/* Code Content */}
-            <div className="flex-1 flex flex-col overflow-hidden bg-background">
+            <div className="flex-1 flex flex-col overflow-hidden bg-background h-full">
               <div className="p-3 border-b border-border bg-muted/50 flex items-center justify-between">
                 <span className="text-[9px] font-code font-bold uppercase tracking-[0.2em] text-foreground/60">
                   {content.files[selectedFileIndex]?.fileName}
                 </span>
                 <span className="text-[7px] font-bold text-foreground/20 uppercase">READ_ONLY</span>
               </div>
-              <ScrollArea className="flex-1">
-                <pre className="p-6 text-[11px] font-code leading-relaxed selection:bg-primary selection:text-primary-foreground overflow-auto h-full">
+              <ScrollArea className="flex-1 h-full">
+                <pre className="p-8 text-[11px] font-code leading-relaxed selection:bg-primary selection:text-primary-foreground overflow-auto w-full min-h-full">
                   <code className="text-foreground/80 block whitespace-pre">
                     {content.files[selectedFileIndex]?.content}
                   </code>
@@ -145,34 +145,34 @@ export function AgentArtifact({ title, type, content, icon }: AgentArtifactProps
             </div>
           </div>
         ) : (
-          <ScrollArea className="flex-1">
-            <div className="p-6 h-full">
+          <ScrollArea className="flex-1 h-full">
+            <div className="p-8 h-full w-full">
               {type === 'code' ? (
-                <pre className="p-5 bg-background text-[11px] overflow-auto font-code leading-relaxed border border-border selection:bg-primary selection:text-primary-foreground shadow-inner h-full">
+                <pre className="p-6 bg-background text-[11px] overflow-auto font-code leading-relaxed border border-border selection:bg-primary selection:text-primary-foreground shadow-inner w-full min-h-full">
                   <code className="text-foreground/80 block whitespace-pre">
                     {typeof content === 'string' ? content : JSON.stringify(content, null, 2)}
                   </code>
                 </pre>
               ) : type === 'list' && Array.isArray(content) ? (
-                <div className="space-y-2">
+                <div className="space-y-3 w-full">
                   {content.map((item, idx) => (
-                    <div key={idx} className="flex gap-4 p-4 border border-border bg-background/30 hover:bg-background transition-colors group">
-                      <span className="text-[9px] font-code font-bold opacity-10 group-hover:opacity-30 transition-opacity">
+                    <div key={idx} className="flex gap-6 p-5 border border-border bg-background/30 hover:bg-background transition-colors group">
+                      <span className="text-[10px] font-code font-bold opacity-10 group-hover:opacity-30 transition-opacity">
                         {(idx + 1).toString().padStart(2, '0')}
                       </span>
-                      <p className="text-[11px] text-foreground/70 leading-relaxed tracking-wide font-medium uppercase">
+                      <p className="text-[11px] text-foreground/70 leading-relaxed tracking-widest font-medium uppercase">
                         {typeof item === 'string' ? item : JSON.stringify(item)}
                       </p>
                     </div>
                   ))}
                 </div>
               ) : type === 'text' ? (
-                <div className="space-y-4 text-foreground/60 text-[11px] tracking-wide leading-relaxed font-medium uppercase whitespace-pre-wrap">
+                <div className="space-y-5 text-foreground/60 text-[11px] tracking-widest leading-loose font-medium uppercase whitespace-pre-wrap w-full">
                   {content}
                 </div>
               ) : (
-                <pre className="p-5 bg-background text-[11px] font-code border border-border overflow-x-auto shadow-inner">
-                  <code className="text-foreground/80">{JSON.stringify(content, null, 2)}</code>
+                <pre className="p-6 bg-background text-[11px] font-code border border-border overflow-x-auto shadow-inner w-full">
+                  <code className="text-foreground/80 whitespace-pre">{JSON.stringify(content, null, 2)}</code>
                 </pre>
               )}
             </div>

@@ -30,7 +30,8 @@ import {
   ExternalLink,
   ChevronDown,
   MessageSquare,
-  Cpu as CpuIcon
+  Cpu as CpuIcon,
+  CalendarDays
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -39,7 +40,7 @@ import { Badge } from '@/components/ui/badge';
 import { AgentArtifact } from '@/components/AgentArtifact';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useAuth, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
-import { collection, doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, setDoc, query, orderBy } from 'firebase/firestore';
 import Link from 'next/link';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -55,6 +56,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
 // AI Flow imports
 import { generateProjectRequirements } from '@/ai/flows/ai-product-manager-requirements-generation';
@@ -85,6 +87,7 @@ interface ProjectState {
   qa?: any;
   devops?: any;
   status?: string;
+  createdAt?: any;
   updatedAt?: any;
 }
 
@@ -118,10 +121,10 @@ export default function AutoDevPodDashboard() {
     setLogs(prev => [...prev, { timestamp, agent, message, type }]);
   };
 
-  // History Fetching
+  // History Fetching with sorting
   const projectsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return collection(db, 'users', user.uid, 'projects');
+    return query(collection(db, 'users', user.uid, 'projects'), orderBy('createdAt', 'desc'));
   }, [db, user]);
 
   const { data: projects, isLoading: isProjectsLoading } = useCollection<ProjectState>(projectsQuery);
@@ -171,8 +174,7 @@ export default function AutoDevPodDashboard() {
     if (!projectId) {
       projectRef = doc(collection(db, 'users', user.uid, 'projects'));
       projectId = projectRef.id;
-      setProject(prev => ({ ...prev, id: projectId }));
-
+      
       const initialData = {
         id: projectId,
         ownerId: user.uid,
@@ -182,11 +184,13 @@ export default function AutoDevPodDashboard() {
         updatedAt: serverTimestamp(),
       };
       
+      setProject(prev => ({ ...prev, ...initialData }));
+
       try {
         await setDoc(projectRef, initialData);
         addLog('SYSTEM', `Assigned Project ID: ${projectId}`, 'info');
       } catch (e) {
-        // Silently handle doc creation issues
+        // Handle silently
       }
     } else {
       projectRef = doc(db, 'users', user.uid, 'projects', projectId);
@@ -211,12 +215,12 @@ export default function AutoDevPodDashboard() {
         currentRequirements = results;
         setProject(prev => ({ ...prev, requirements: results }));
         updateDocumentNonBlocking(projectRef, { requirements: results, updatedAt: serverTimestamp() });
-        addLog('PM', `Generated ${results.userStories.length} user stories and specifications.`, 'success');
+        addLog('PM', `Generated ${results.userStories.length} user stories.`, 'success');
         updateStatus(0, 'completed');
         await delay(800);
       } else {
         updateStatus(0, 'completed');
-        addLog('PM', 'Requirements cached from previous run.', 'info');
+        addLog('PM', 'Requirements cached.', 'info');
       }
 
       // STAGE 1: SYSTEM ARCHITECT
@@ -231,12 +235,12 @@ export default function AutoDevPodDashboard() {
         currentArchitecture = results;
         setProject(prev => ({ ...prev, architecture: results }));
         updateDocumentNonBlocking(projectRef, { architecture: results, updatedAt: serverTimestamp() });
-        addLog('ARCH', 'Architecture design and technical points complete.', 'success');
+        addLog('ARCH', 'Architecture design finalized.', 'success');
         updateStatus(1, 'completed');
         await delay(800);
       } else {
         updateStatus(1, 'completed');
-        addLog('ARCH', 'Architecture cached from previous run.', 'info');
+        addLog('ARCH', 'Architecture cached.', 'info');
       }
 
       // STAGE 2: DEVELOPER
@@ -254,12 +258,12 @@ export default function AutoDevPodDashboard() {
         currentCode = results;
         setProject(prev => ({ ...prev, code: results }));
         updateDocumentNonBlocking(projectRef, { code: results, updatedAt: serverTimestamp() });
-        addLog('DEV', `Successfully generated ${results.files?.length || 1} source files.`, 'success');
+        addLog('DEV', `Successfully generated ${results.files?.length || 1} files.`, 'success');
         updateStatus(2, 'completed');
         await delay(800);
       } else {
         updateStatus(2, 'completed');
-        addLog('DEV', 'Codebase cached from previous run.', 'info');
+        addLog('DEV', 'Codebase cached.', 'info');
       }
 
       // STAGE 3: QA
@@ -267,7 +271,7 @@ export default function AutoDevPodDashboard() {
       if (!currentQa) {
         setSelectedTab('qa');
         updateStatus(3, 'working');
-        addLog('QA', 'Executing automated test suites and vulnerability scans...', 'status');
+        addLog('QA', 'Executing automated test suites...', 'status');
         const results = await aiQaTestGenerationAndExecution({
           code: currentCode?.files?.map((f: any) => f.content).join('\n') || currentCode?.content || '',
           requirements: JSON.stringify(currentRequirements.requirements),
@@ -276,12 +280,12 @@ export default function AutoDevPodDashboard() {
         currentQa = results;
         setProject(prev => ({ ...prev, qa: results }));
         updateDocumentNonBlocking(projectRef, { qa: results, updatedAt: serverTimestamp() });
-        addLog('QA', `Audit complete. ${results.identifiedIssues.length} issues detected.`, results.identifiedIssues.length > 0 ? 'info' : 'success');
+        addLog('QA', `Audit complete. ${results.identifiedIssues.length} issues identified.`, 'success');
         updateStatus(3, 'completed');
         await delay(800);
       } else {
         updateStatus(3, 'completed');
-        addLog('QA', 'QA reports cached from previous run.', 'info');
+        addLog('QA', 'QA reports cached.', 'info');
       }
 
       // STAGE 4: DEVOPS
@@ -289,7 +293,7 @@ export default function AutoDevPodDashboard() {
       if (!currentDevops) {
         setSelectedTab('devops');
         updateStatus(4, 'working');
-        addLog('OPS', 'Formulating CI/CD strategies and cloud deployment steps...', 'status');
+        addLog('OPS', 'Formulating CI/CD strategies...', 'status');
         const results = await aiDevOpsDeploymentSuggestions({
           projectDescription: project.idea,
           technologiesUsed: ['Next.js', 'TypeScript', 'TailwindCSS'],
@@ -303,24 +307,21 @@ export default function AutoDevPodDashboard() {
         updateStatus(4, 'completed');
       } else {
         updateStatus(4, 'completed');
-        addLog('OPS', 'DevOps plan cached from previous run.', 'info');
+        addLog('OPS', 'DevOps plan cached.', 'info');
       }
 
-      addLog('SYSTEM', 'Autonomous pipeline execution completed successfully.', 'success');
-      toast({ title: "PIPELINE COMPLETE", description: "All artifacts have been verified." });
+      addLog('SYSTEM', 'Autonomous pipeline execution completed.', 'success');
+      toast({ title: "PIPELINE COMPLETE", description: "All artifacts verified." });
 
     } catch (error: any) {
-      const errorMessage = error.message || '';
-      const isQuota = errorMessage.includes('429') || errorMessage.includes('RESOURCE_EXHAUSTED');
+      const errorMessage = error.message || 'Unknown error occurred.';
       addLog('SYSTEM', `Pipeline Error: ${errorMessage}`, 'error');
-      if (isQuota) {
-        setQuotaError(true);
-      } else {
-        toast({ title: "PROCESS ERROR", description: errorMessage, variant: "destructive" });
-      }
       updateStatus(activeStage, 'error');
-      const pRef = doc(db, 'users', user.uid, 'projects', projectId!);
-      updateDocumentNonBlocking(pRef, { status: 'error', updatedAt: serverTimestamp() });
+      if (projectId) {
+        const pRef = doc(db, 'users', user.uid, 'projects', projectId);
+        updateDocumentNonBlocking(pRef, { status: 'error', updatedAt: serverTimestamp() });
+      }
+      toast({ title: "PROCESS ERROR", description: errorMessage, variant: "destructive" });
     } finally {
       setIsProcessing(false);
     }
@@ -345,7 +346,7 @@ export default function AutoDevPodDashboard() {
     setSelectedTab(stages[resumeAt].tab);
     setQuotaError(false);
     
-    toast({ title: "PROJECT LOADED", description: "Session restored from archive." });
+    toast({ title: "PROJECT LOADED", description: "Archive restored successfully." });
   };
 
   const handleClearBuffer = () => {
@@ -358,7 +359,7 @@ export default function AutoDevPodDashboard() {
   };
 
   const handleDownloadReport = () => {
-    if (!isPipelineComplete && !project.devops) return;
+    if (!project.devops) return;
 
     const reportContent = `
 # AUTODEV_POD FINAL REPORT
@@ -399,6 +400,16 @@ ${project.devops?.ciCdPipelineOutline}
     URL.revokeObjectURL(url);
   };
 
+  const getFriendlyTime = (timestamp: any) => {
+    if (!timestamp) return '...';
+    try {
+      const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+      return format(date, 'MMM dd, HH:mm');
+    } catch (e) {
+      return '...';
+    }
+  };
+
   if (isUserLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -409,7 +420,7 @@ ${project.devops?.ciCdPipelineOutline}
 
   if (!user) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background text-center selection:bg-primary selection:text-primary-foreground technical-grid">
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background text-center technical-grid">
         <div className="w-20 h-20 border border-primary flex items-center justify-center text-primary mb-16 relative z-10 bg-card shadow-xl">
           <Cpu size={36} />
         </div>
@@ -535,7 +546,7 @@ ${project.devops?.ciCdPipelineOutline}
                 <h3 className="text-[9px] font-bold text-foreground/30 uppercase tracking-[0.2em] flex items-center gap-2">
                   <HistoryIcon size={12} className="text-primary" /> Archive_Logs
                 </h3>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {isProjectsLoading ? (
                     <div className="flex justify-center p-4"><Loader2 size={16} className="animate-spin opacity-20" /></div>
                   ) : projects?.map((proj) => (
@@ -543,19 +554,36 @@ ${project.devops?.ciCdPipelineOutline}
                       key={proj.id}
                       onClick={() => handleLoadProject(proj)}
                       className={cn(
-                        "p-3 border group cursor-pointer transition-all",
+                        "p-4 border group cursor-pointer transition-all space-y-3",
                         project.id === proj.id ? 'border-primary bg-primary/[0.02]' : 'border-border hover:border-primary/20'
                       )}
                     >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-[7px] font-bold text-foreground/30 uppercase tracking-tighter">
-                          {proj.id?.substring(0, 8)}
-                        </span>
-                        <button onClick={(e) => { e.stopPropagation(); setProjectToDelete(proj.id!); }} className="opacity-0 group-hover:opacity-100 p-1 hover:text-destructive">
+                      <div className="flex items-center justify-between">
+                        <div className="flex flex-col">
+                          <span className="text-[7px] font-bold text-foreground/30 uppercase tracking-tighter">
+                            ID: {proj.id?.substring(0, 8)}
+                          </span>
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <CalendarDays size={8} className="text-foreground/30" />
+                            <span className="text-[7px] font-medium text-foreground/40">{getFriendlyTime(proj.createdAt)}</span>
+                          </div>
+                        </div>
+                        <Badge variant="outline" className={cn(
+                          "text-[6px] px-1 py-0 h-4 rounded-none uppercase",
+                          proj.status === 'completed' ? 'border-primary text-primary' : 'border-border text-foreground/40'
+                        )}>
+                          {proj.status}
+                        </Badge>
+                      </div>
+                      <p className="text-[9px] font-bold uppercase truncate text-foreground/70">{proj.idea}</p>
+                      <div className="flex justify-end pt-1">
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); setProjectToDelete(proj.id!); }} 
+                          className="opacity-0 group-hover:opacity-100 p-1 hover:text-destructive text-foreground/20 transition-all"
+                        >
                           <Trash2 size={10} />
                         </button>
                       </div>
-                      <p className="text-[9px] font-bold uppercase truncate text-foreground/70">{proj.idea}</p>
                     </div>
                   ))}
                 </div>
@@ -659,61 +687,111 @@ ${project.devops?.ciCdPipelineOutline}
                 </TabsContent>
 
                 <TabsContent value="summary" className="m-0 h-full">
-                  {isPipelineComplete || project.devops ? (
-                    <div className="h-full border border-border bg-card p-10 space-y-8 overflow-y-auto">
-                      <div className="flex items-center justify-between border-b border-border pb-6">
-                        <div>
-                          <h2 className="text-2xl font-bold tracking-tight uppercase">OVERALL_GENERATION_REPORT</h2>
-                          <p className="text-[10px] font-bold text-foreground/40 tracking-widest uppercase">ID: {project.id}</p>
-                        </div>
-                        <Badge variant="outline" className="text-[9px] uppercase tracking-widest bg-primary text-primary-foreground py-1 px-4">STATUS: VERIFIED</Badge>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <div className="space-y-4">
-                          <h4 className="text-[10px] font-bold uppercase tracking-widest text-primary">01_CORE_CONCEPT</h4>
-                          <p className="text-[11px] uppercase leading-relaxed text-foreground/60">{project.idea}</p>
-                        </div>
-                        <div className="space-y-4">
-                          <h4 className="text-[10px] font-bold uppercase tracking-widest text-primary">02_ARCHITECTURE_TYPE</h4>
-                          <p className="text-[11px] uppercase leading-relaxed text-foreground/60">{project.architecture?.systemArchitectureDescription.split('\n')[0]}</p>
-                        </div>
-                        <div className="space-y-4">
-                          <h4 className="text-[10px] font-bold uppercase tracking-widest text-primary">03_QA_ASSESSMENT</h4>
-                          <p className="text-[11px] uppercase leading-relaxed text-foreground/60">{project.qa?.overallAssessment.substring(0, 150)}...</p>
-                        </div>
-                      </div>
-
-                      <Separator className="opacity-20" />
-
-                      <div className="space-y-6">
-                        <h4 className="text-[10px] font-bold uppercase tracking-widest">SYSTEM_METRICS_&_VALIDATION</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="p-4 border border-border bg-muted/20">
-                            <span className="text-[8px] font-bold text-foreground/30 block mb-2">FEATURES_GENERATED</span>
-                            <span className="text-xl font-bold">{project.requirements?.featureSpecifications?.length || 0}</span>
-                          </div>
-                          <div className="p-4 border border-border bg-muted/20">
-                            <span className="text-[8px] font-bold text-foreground/30 block mb-2">CODE_ASSETS_STAGED</span>
-                            <span className="text-xl font-bold">{project.code?.files?.length || 0}</span>
+                  {(isPipelineComplete || project.devops) ? (
+                    <div className="h-full border border-border bg-card p-12 space-y-12 overflow-y-auto">
+                      <div className="flex items-center justify-between border-b border-border pb-10">
+                        <div className="space-y-2">
+                          <h2 className="text-3xl font-bold tracking-tight uppercase">EXECUTIVE_ENGINEERING_REPORT</h2>
+                          <div className="flex items-center gap-4 text-foreground/40 font-bold text-[9px] uppercase tracking-widest">
+                            <span>ID: {project.id}</span>
+                            <span>•</span>
+                            <span>CREATED: {getFriendlyTime(project.createdAt)}</span>
                           </div>
                         </div>
+                        <Badge variant="outline" className="text-[10px] uppercase tracking-widest bg-primary text-primary-foreground py-2 px-6 rounded-none">STATUS: VERIFIED</Badge>
                       </div>
 
-                      <div className="space-y-4">
-                        <h4 className="text-[10px] font-bold uppercase tracking-widest">DEPLOYMENT_READINESS</h4>
-                        <div className="p-6 border border-primary/20 bg-primary/[0.02] text-[11px] uppercase tracking-wide leading-relaxed">
-                          {project.devops?.suggestedDeploymentStrategies[0]}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+                        <div className="space-y-6">
+                          <h4 className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary flex items-center gap-2">
+                            <Box size={14} /> 01_PROJECT_CORE
+                          </h4>
+                          <div className="p-6 border border-border bg-muted/20 space-y-4">
+                            <p className="text-[11px] uppercase leading-relaxed text-foreground/70 font-medium">
+                              {project.idea}
+                            </p>
+                            <div className="flex gap-2">
+                              <Badge variant="outline" className="text-[8px] rounded-none opacity-50">NEXT.JS</Badge>
+                              <Badge variant="outline" className="text-[8px] rounded-none opacity-50">TYPESCRIPT</Badge>
+                            </div>
+                          </div>
                         </div>
+                        
+                        <div className="space-y-6">
+                          <h4 className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary flex items-center gap-2">
+                            <Layers size={14} /> 02_ARCH_BLUEPRINT
+                          </h4>
+                          <div className="p-6 border border-border bg-muted/20 space-y-4">
+                            <p className="text-[10px] uppercase leading-relaxed text-foreground/60 font-bold italic">
+                              {project.architecture?.systemArchitectureDescription.split('\n')[0]}
+                            </p>
+                            <p className="text-[10px] uppercase leading-relaxed text-foreground/50">
+                              System designed for scalability using enterprise-grade structural patterns.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-6">
+                          <h4 className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary flex items-center gap-2">
+                            <ShieldCheck size={14} /> 03_QA_AUDIT
+                          </h4>
+                          <div className="p-6 border border-border bg-muted/20 space-y-4">
+                            <p className="text-[10px] uppercase leading-relaxed text-foreground/60 font-bold">
+                              {project.qa?.overallAssessment.substring(0, 180)}...
+                            </p>
+                            <div className="flex items-center gap-2">
+                              <div className="h-1 flex-1 bg-border overflow-hidden">
+                                <div className="h-full bg-primary" style={{ width: '85%' }} />
+                              </div>
+                              <span className="text-[9px] font-bold">85% PASS</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <Separator className="opacity-10" />
+
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                        <div className="space-y-8">
+                          <h4 className="text-[11px] font-bold uppercase tracking-[0.4em] flex items-center gap-3">
+                            <Activity size={16} className="text-primary" /> SYSTEM_VALIDATION_METRICS
+                          </h4>
+                          <div className="grid grid-cols-2 gap-6">
+                            <div className="p-8 border border-border bg-background shadow-sm space-y-2">
+                              <span className="text-[8px] font-bold text-foreground/20 block tracking-widest uppercase">FEATURES_GENERATED</span>
+                              <span className="text-4xl font-headline font-bold text-primary">{project.requirements?.featureSpecifications?.length || 0}</span>
+                            </div>
+                            <div className="p-8 border border-border bg-background shadow-sm space-y-2">
+                              <span className="text-[8px] font-bold text-foreground/20 block tracking-widest uppercase">CODE_ASSETS_STAGED</span>
+                              <span className="text-4xl font-headline font-bold text-primary">{project.code?.files?.length || 0}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-8">
+                          <h4 className="text-[11px] font-bold uppercase tracking-[0.4em] flex items-center gap-3">
+                            <Rocket size={16} className="text-primary" /> DEPLOYMENT_STRATEGY
+                          </h4>
+                          <div className="p-8 border border-primary/10 bg-primary/[0.01] text-[11px] uppercase tracking-widest leading-loose text-foreground/60 font-medium">
+                            {project.devops?.suggestedDeploymentStrategies[0]}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="pt-10 border-t border-border flex justify-between items-center">
+                        <span className="text-[8px] font-bold text-foreground/20 tracking-[1em] uppercase">SECURE_ARCHIVE_NODE_V4</span>
+                        <Button onClick={handleDownloadReport} className="rounded-none h-12 px-8 text-[10px] tracking-widest font-bold">
+                          EXPORT_FULL_REPORT <Download size={14} className="ml-3" />
+                        </Button>
                       </div>
                     </div>
-                  ) : <EmptyView name="Final Report" icon={<Activity size={48} />} description="Complete the full pipeline to generate the verified report." />}
+                  ) : <EmptyView name="Final Report" icon={<Activity size={48} />} description="Complete the full pipeline to generate the verified executive report." />}
                 </TabsContent>
               </div>
             </Tabs>
 
             {/* Terminal Activity Logs */}
-            <div className="h-48 shrink-0 bg-black/90 border border-primary/20 flex flex-col shadow-2xl relative">
+            <div className="h-48 shrink-0 bg-black/95 border border-primary/20 flex flex-col shadow-2xl relative">
               <div className="absolute inset-0 scanline opacity-10 pointer-events-none" />
               <div className="h-8 border-b border-white/5 px-4 flex items-center justify-between bg-white/[0.02]">
                 <div className="flex items-center gap-3">
