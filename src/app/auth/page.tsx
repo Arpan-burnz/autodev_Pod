@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
-import { Cpu, Loader2, ArrowLeft, Ghost, Zap, ShieldCheck, Github, Chrome, AlertTriangle, ExternalLink, Settings, Lock } from 'lucide-react';
+import { Cpu, Loader2, ArrowLeft, Ghost, Zap, ShieldCheck, Github, Chrome, AlertTriangle, ExternalLink, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -202,7 +202,7 @@ export default function AuthPage() {
                   </a>
                 )}
               </div>
-              <p className="text-destructive/60 italic">* Ensure "Email/Password" is enabled in Firebase Console > Auth > Sign-in method.</p>
+              <p className="text-destructive/60 italic">* Ensure "Email/Password" is enabled in Firebase Console &gt; Auth &gt; Sign-in method.</p>
             </AlertDescription>
           </Alert>
         )}
