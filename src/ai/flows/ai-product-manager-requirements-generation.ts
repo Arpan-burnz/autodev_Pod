@@ -6,8 +6,6 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
-const maxDuration = 60;
-
 const GenerateProjectRequirementsInputSchema = z.object({
   projectIdea: z.string().describe('A high-level description of the project idea.'),
 });

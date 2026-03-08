@@ -6,8 +6,6 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
-const maxDuration = 60;
-
 const DevOpsDeploymentInputSchema = z.object({
   projectDescription: z.string().describe('Project description.'),
   technologiesUsed: z.array(z.string()).describe('Technologies used.'),

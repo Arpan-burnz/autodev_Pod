@@ -6,8 +6,6 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
-const maxDuration = 60;
-
 const AiQaTestGenerationAndExecutionInputSchema = z.object({
   code: z.string().describe('The generated source code to be reviewed and tested.'),
   requirements: z.string().optional().describe('The original project requirements for context.'),

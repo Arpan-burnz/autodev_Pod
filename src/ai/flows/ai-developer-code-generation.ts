@@ -1,13 +1,10 @@
 'use server';
 /**
  * @fileOverview An AI Developer agent flow that generates code for specific functionalities.
- * Now supports generating multiple files (e.g., components, pages, utilities).
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-
-const maxDuration = 60;
 
 const DeveloperCodeGenerationInputSchema = z.object({
   requirements: z.string().describe('Detailed functional requirements or user stories.'),
@@ -20,8 +17,8 @@ export type DeveloperCodeGenerationInput = z.infer<typeof DeveloperCodeGeneratio
 
 const DeveloperCodeGenerationOutputSchema = z.object({
   files: z.array(z.object({
-    fileName: z.string().describe('Suggested file name with extension (e.g., page.tsx, button.tsx).'),
-    content: z.string().describe('The full source code for this specific file. MUST include proper indentation and newlines.'),
+    fileName: z.string().describe('Suggested file name with extension.'),
+    content: z.string().describe('The full source code for this specific file.'),
   })).describe('A collection of generated source files.'),
   codeExplanation: z.string().describe('High-level explanation of the implementation strategy.'),
 });
@@ -31,38 +28,24 @@ const developerCodePrompt = ai.definePrompt({
   name: 'developerCodePrompt',
   input: { schema: DeveloperCodeGenerationInputSchema },
   output: { schema: DeveloperCodeGenerationOutputSchema },
-  prompt: `You are a Senior Principal Software Engineer at a top-tier tech firm. Your goal is to generate production-ready, highly maintainable, and architecturally sound code.
+  prompt: `You are a Senior Principal Software Engineer. Generate production-ready code.
 
 CONTEXT:
 Language: {{{programmingLanguage}}}
 Framework: {{#if framework}}{{{framework}}}{{else}}None specified{{/if}}
 
-BUSINESS REQUIREMENTS & USER STORIES:
+REQUIREMENTS:
 {{{requirements}}}
 
-TECHNICAL ARCHITECTURE DESIGN:
+ARCHITECTURE:
 {{{architecture}}}
 
-{{#if existingCode}}
-EXISTING SYSTEM CONTEXT:
-SOURCE_START
-{{{existingCode}}}
-SOURCE_END
-{{/if}}
-
 CORE DIRECTIVES:
-1. DESIGN PATTERNS: Implement industry-standard design patterns (e.g., Factory, Strategy, Observer, Repository) where appropriate to solve the problem elegantly.
-2. MODULARITY: Favor small, specialized components/modules over monolithic files. Ensure strict separation of concerns (UI, Logic, Data Access, State Management).
-3. TYPE SAFETY: Utilize advanced TypeScript features (Generics, Utility Types, Discriminated Unions, Type Guards) for maximum reliability and self-documenting code.
-4. ERROR HANDLING: Implement comprehensive error handling strategies, including graceful fallbacks, custom error classes, and clear logging.
-5. PERFORMANCE: Optimize for efficient render cycles, minimized memory footprint, and high execution speed.
-6. BEST PRACTICES: Follow the DRY (Don't Repeat Yourself), KISS (Keep It Simple, Stupid), and SOLID principles strictly.
-7. FORMATTING: You MUST output code with proper indentation (2 or 4 spaces) and clear newlines between blocks, functions, and logic segments. Never collapse code into a single line.
+1. MODULARITY: Favor small, specialized components/modules.
+2. TYPE SAFETY: Utilize advanced TypeScript features.
+3. FORMATTING: Use proper indentation and mandatory newlines. Never collapse code into a single line.
 
-DELIVERY REQUIREMENTS:
-- Provide a comprehensive and logical file structure.
-- Each file must be complete, correctly imported/exported, and ready for integration.
-- Return an array of files, each with a clear 'fileName' and its full, multi-line 'content'.`,
+Return an array of files with 'fileName' and full 'content'.`,
 });
 
 async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 2000): Promise<T> {
