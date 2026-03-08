@@ -81,14 +81,14 @@ export default function AuthPage() {
     const errorStr = error.message || "";
     const errorCode = error.code || "";
     
-    if (errorStr.includes('identitytoolkit.googleapis.com') || errorStr.includes('requests-to-this-api-identitytoolkit-method-google.cloud.identitytoolkit.v1.authenticationservice.signinwithpassword-are-blocked')) {
+    if (errorStr.includes('identitytoolkit.googleapis.com') || errorStr.includes('signinwithpassword-are-blocked')) {
       title = "API_RESTRICTED_OR_DISABLED";
-      message = "The Identity Toolkit API is either disabled or blocked for this API key.";
-      details = "This usually means you need to enable the Identity Toolkit API in Google Cloud Console, or your API Key has restrictions that prevent it from using this specific API.";
+      message = "The Identity Toolkit API is either disabled or blocked for this project.";
+      details = "This error usually means you need to enable the 'Email/Password' sign-in method in the Firebase Console, or your API Key is restricted in the Google Cloud Console.";
       
       const projectMatch = errorStr.match(/project-(\d+)/);
       const projectNum = projectMatch ? projectMatch[1] : "";
-      link = `https://console.developers.google.com/apis/api/identitytoolkit.googleapis.com/overview${projectNum ? `?project=${projectNum}` : ''}`;
+      link = `https://console.firebase.google.com/project/_/authentication/providers`;
       
       setApiErrorContext({ title, message, link, details });
     } else if (errorCode === 'auth/operation-not-allowed') {
