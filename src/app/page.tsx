@@ -230,7 +230,7 @@ export default function AutoDevPodDashboard() {
         currentArchitecture = results;
         setProject(prev => ({ ...prev, architecture: results }));
         updateDocumentNonBlocking(projectRef, { architecture: results, updatedAt: serverTimestamp() });
-        addLog('ARCH', 'Architecture design and technical diagram complete.', 'success');
+        addLog('ARCH', 'Architecture design and technical points complete.', 'success');
         updateStatus(1, 'completed');
         await delay(800);
       } else {
@@ -476,6 +476,17 @@ ${project.devops?.ciCdPipelineOutline}
                 >
                   {isProcessing ? <><Loader2 className="mr-3 animate-spin" size={16} /> Processing</> : <><Play className="mr-3 fill-current" size={14} /> Execute Pipeline</>}
                 </Button>
+                
+                {(isPipelineComplete || project.devops) && (
+                  <Button 
+                    variant="outline" 
+                    className="w-full h-12 rounded-none border-primary text-[10px] tracking-[0.2em] uppercase"
+                    onClick={handleDownloadReport}
+                  >
+                    <Download size={14} className="mr-3" /> Download Report
+                  </Button>
+                )}
+
                 <Button 
                   variant="outline" 
                   className="w-full h-12 rounded-none border-primary text-[10px] tracking-[0.2em] uppercase"
@@ -571,11 +582,6 @@ ${project.devops?.ciCdPipelineOutline}
                     06_REPORT
                   </TabsTrigger>
                 </TabsList>
-                {(isPipelineComplete || project.devops) && (
-                  <Button variant="outline" size="sm" className="h-9 px-6 rounded-none text-[9px] font-bold tracking-[0.2em] uppercase" onClick={handleDownloadReport}>
-                    <Download size={14} className="mr-2" /> Download_Report
-                  </Button>
-                )}
               </div>
 
               <div className="flex-1 overflow-hidden mt-10">
@@ -595,8 +601,8 @@ ${project.devops?.ciCdPipelineOutline}
                   {project.architecture ? (
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">
                       <div className="lg:col-span-8 flex flex-col gap-8 h-full">
-                        <AgentArtifact title="System Blueprint" type="image" content={project.architecture.diagramUrl} icon={<Layers size={16} />} />
-                        <AgentArtifact title="Description" type="text" content={project.architecture.systemArchitectureDescription} />
+                        <AgentArtifact title="System Blueprint" type="list" content={project.architecture.systemBlueprintPoints} icon={<Layers size={16} />} />
+                        <AgentArtifact title="Architecture Narrative" type="text" content={project.architecture.systemArchitectureDescription} />
                       </div>
                       <div className="lg:col-span-4 flex flex-col gap-8 h-full">
                         <AgentArtifact title="Data Schema" type="code" content={project.architecture.databaseSchema} />
@@ -618,7 +624,7 @@ ${project.devops?.ciCdPipelineOutline}
                         />
                       </div>
                       <div className="lg:col-span-3 h-full">
-                        <AgentArtifact title="Logics" type="text" content={project.code.codeExplanation} />
+                        <AgentArtifact title="Implementation Logic" type="text" content={project.code.codeExplanation} />
                       </div>
                     </div>
                   ) : <EmptyView name="AI Developer" icon={<Terminal size={48} />} />}
@@ -649,6 +655,58 @@ ${project.devops?.ciCdPipelineOutline}
                       </div>
                     </div>
                   ) : <EmptyView name="DevOps" icon={<Rocket size={48} />} />}
+                </TabsContent>
+
+                <TabsContent value="summary" className="m-0 h-full">
+                  {isPipelineComplete || project.devops ? (
+                    <div className="h-full border border-border bg-card p-10 space-y-8 overflow-y-auto">
+                      <div className="flex items-center justify-between border-b border-border pb-6">
+                        <div>
+                          <h2 className="text-2xl font-bold tracking-tight uppercase">OVERALL_GENERATION_REPORT</h2>
+                          <p className="text-[10px] font-bold text-foreground/40 tracking-widest uppercase">ID: {project.id}</p>
+                        </div>
+                        <Badge variant="outline" className="text-[9px] uppercase tracking-widest bg-primary text-primary-foreground py-1 px-4">STATUS: VERIFIED</Badge>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div className="space-y-4">
+                          <h4 className="text-[10px] font-bold uppercase tracking-widest text-primary">01_CORE_CONCEPT</h4>
+                          <p className="text-[11px] uppercase leading-relaxed text-foreground/60">{project.idea}</p>
+                        </div>
+                        <div className="space-y-4">
+                          <h4 className="text-[10px] font-bold uppercase tracking-widest text-primary">02_ARCHITECTURE_TYPE</h4>
+                          <p className="text-[11px] uppercase leading-relaxed text-foreground/60">{project.architecture?.systemArchitectureDescription.split('\n')[0]}</p>
+                        </div>
+                        <div className="space-y-4">
+                          <h4 className="text-[10px] font-bold uppercase tracking-widest text-primary">03_QA_ASSESSMENT</h4>
+                          <p className="text-[11px] uppercase leading-relaxed text-foreground/60">{project.qa?.overallAssessment.substring(0, 150)}...</p>
+                        </div>
+                      </div>
+
+                      <Separator className="opacity-20" />
+
+                      <div className="space-y-6">
+                        <h4 className="text-[10px] font-bold uppercase tracking-widest">SYSTEM_METRICS_&_VALIDATION</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="p-4 border border-border bg-muted/20">
+                            <span className="text-[8px] font-bold text-foreground/30 block mb-2">FEATURES_GENERATED</span>
+                            <span className="text-xl font-bold">{project.requirements?.featureSpecifications?.length || 0}</span>
+                          </div>
+                          <div className="p-4 border border-border bg-muted/20">
+                            <span className="text-[8px] font-bold text-foreground/30 block mb-2">CODE_ASSETS_STAGED</span>
+                            <span className="text-xl font-bold">{project.code?.files?.length || 0}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <h4 className="text-[10px] font-bold uppercase tracking-widest">DEPLOYMENT_READINESS</h4>
+                        <div className="p-6 border border-primary/20 bg-primary/[0.02] text-[11px] uppercase tracking-wide leading-relaxed">
+                          {project.devops?.suggestedDeploymentStrategies[0]}
+                        </div>
+                      </div>
+                    </div>
+                  ) : <EmptyView name="Final Report" icon={<Activity size={48} />} description="Complete the full pipeline to generate the verified report." />}
                 </TabsContent>
               </div>
             </Tabs>
