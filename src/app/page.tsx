@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -94,10 +95,15 @@ export default function AutoDevPodDashboard() {
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [isClient, setIsClient] = useState(false);
   
   const [statuses, setStatuses] = useState<AgentStatus[]>([
     'idle', 'idle', 'idle', 'idle', 'idle'
   ]);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // Auto-scroll logs
   useEffect(() => {
@@ -387,7 +393,7 @@ ${project.devops?.ciCdPipelineOutline}
   };
 
   const getFriendlyTime = (timestamp: any) => {
-    if (!timestamp) return '...';
+    if (!timestamp || !isClient) return '...';
     try {
       const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
       return format(date, 'MMM dd, HH:mm');
