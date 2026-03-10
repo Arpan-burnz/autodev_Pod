@@ -46,6 +46,17 @@ The frontend is a high-fidelity engineering dashboard designed for professional 
 - **UI Components**: ShadCN UI for high-performance, accessible dashboard modules.
 - **State Machine**: Custom React hooks for managing the autonomous agent pipeline and log streaming.
 
+## ⚙️ Backend Architecture
+
+The backend is a serverless, event-driven orchestration layer.
+
+- **AI Orchestration**: Google Genkit (v1.x) with Gemini 2.5 Flash.
+- **AI Models**: Google Generative AI (Gemini) for high-speed technical reasoning.
+- **Data Layer**: Firebase Firestore (NoSQL) with hierarchical user-owned document paths.
+- **Authentication**: Firebase Auth (Google, GitHub, and Anonymous providers).
+- **Security**: Granular Firestore Security Rules enforcing path-based ownership and data validation.
+- **Execution**: Next.js Server Actions for seamless client-to-agent communication with robust retry logic and error handling.
+
 ## 📡 Pipeline Execution
 
 1. **Idea Input**: Provide a high-level project concept.
