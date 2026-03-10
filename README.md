@@ -1,30 +1,35 @@
 # AutoDev Pod | Autonomous Engineering Node
 
-AutoDev Pod is a high-fidelity, multi-agent AI development environment that simulates a complete software engineering lifecycle from a single project concept.
+AutoDev Pod is an autonomous, multi-agent AI system designed to simulate an entire software development department. It transforms a single high-level project idea into a complete engineering package—including requirements, architecture, production-ready code, quality audits, and deployment plans.
 
-## 🚀 System Capabilities
+## 🚀 The AutoDev Pod Team
 
 The system utilizes five specialized AI agents, powered by **Google Gemini** and orchestrated via **Genkit**, to deliver production-ready engineering artifacts.
 
 ### 01. AI Product Manager (PM)
-Translates project concepts into technical rigor.
-- **Outputs**: Functional/Non-functional requirements, User Stories (As-a-I-want-so-that), and deep Feature Specifications.
+Distills vague ideas into structured technical rigor.
+- **Role**: Technical Product Management.
+- **Outputs**: Functional/Non-functional requirements, User Stories (As-a-I-want-so-that), and deep Feature Specifications including UX considerations.
 
 ### 02. AI System Architect
-Builds the structural blueprint of the application.
-- **Outputs**: System Architecture Narratives (Microservices, Monolithic, Serverless), Database Schemas (DDL), and API Endpoint Designs.
+Designs the structural blueprint and technical foundation.
+- **Role**: Enterprise Systems Architecture.
+- **Outputs**: System Architecture Narratives (Microservices, Monolithic, Serverless), Database Schemas (SQL/NoSQL), and detailed REST/GraphQL API contracts.
 
 ### 03. AI Developer
 Writes production-grade, modular source code.
-- **Outputs**: Multi-file TypeScript/Next.js codebases formatted in professional "Vertical Stack" form for maximum readability.
+- **Role**: Senior Principal Software Engineer.
+- **Outputs**: High-quality TypeScript/Next.js codebases formatted in a clean, vertical "stack" form for maximum readability and maintainability.
 
 ### 04. AI Quality Assurance (QA)
 Performs autonomous audits and security reviews.
-- **Outputs**: Identification of bugs and vulnerabilities, Code Review Summaries, and multi-tier Test Plans (Unit, E2E, Security).
+- **Role**: Software Quality Engineering.
+- **Outputs**: Identification of bugs and vulnerabilities, Code Review Summaries, and multi-tier Test Plans (Unit, Integration, Security).
 
-### 05. AI DevOps
-Designs the delivery and infrastructure strategy.
-- **Outputs**: CI/CD Pipeline outlines, Deployment Instructions, and optimal cloud infrastructure suggestions.
+### 05. AI DevOps Engineer
+Formulates modern infrastructure and delivery strategies.
+- **Role**: Infrastructure & Cloud Operations.
+- **Outputs**: CI/CD Pipeline outlines, Deployment Instructions, and optimal cloud infrastructure suggestions for platforms like Vercel, AWS, or GCP.
 
 ## 🛠️ Technical Stack
 

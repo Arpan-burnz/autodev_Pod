@@ -783,31 +783,31 @@ ${project.devops?.ciCdPipelineOutline}
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                           <div className="p-6 border border-border bg-card space-y-3">
                             <div className="flex items-center gap-2 text-primary">
-                              <Server size={14} />
-                              <span className="text-[9px] font-bold uppercase tracking-widest">Compute</span>
+                              <Users size={14} />
+                              <span className="text-[9px] font-bold uppercase tracking-widest">Product</span>
                             </div>
-                            <p className="text-[8px] text-foreground/40 leading-relaxed uppercase">Autonomous orchestration powered by Gemini 2.5 Flash via Genkit flows.</p>
+                            <p className="text-[8px] text-foreground/40 leading-relaxed uppercase">Product Manager distills vague ideas into structured user stories and technical requirements.</p>
                           </div>
                           <div className="p-6 border border-border bg-card space-y-3">
                             <div className="flex items-center gap-2 text-primary">
-                              <Database size={14} />
-                              <span className="text-[9px] font-bold uppercase tracking-widest">Persistence</span>
+                              <Layers size={14} />
+                              <span className="text-[9px] font-bold uppercase tracking-widest">Architecture</span>
                             </div>
-                            <p className="text-[8px] text-foreground/40 leading-relaxed uppercase">High-fidelity artifact storage in Firebase Firestore with Auth integration.</p>
+                            <p className="text-[8px] text-foreground/40 leading-relaxed uppercase">System Architect designs scalable patterns, database schemas, and REST/GraphQL API contracts.</p>
+                          </div>
+                          <div className="p-6 border border-border bg-card space-y-3">
+                            <div className="flex items-center gap-2 text-primary">
+                              <Terminal size={14} />
+                              <span className="text-[9px] font-bold uppercase tracking-widest">Development</span>
+                            </div>
+                            <p className="text-[8px] text-foreground/40 leading-relaxed uppercase">AI Developer generates modular, high-quality TypeScript/Next.js code in a clean vertical stack.</p>
                           </div>
                           <div className="p-6 border border-border bg-card space-y-3">
                             <div className="flex items-center gap-2 text-primary">
                               <ShieldCheck size={14} />
-                              <span className="text-[9px] font-bold uppercase tracking-widest">Security</span>
+                              <span className="text-[9px] font-bold uppercase tracking-widest">Assurance</span>
                             </div>
-                            <p className="text-[8px] text-foreground/40 leading-relaxed uppercase">Enterprise-grade validation via specialized AI-QA auditing agents.</p>
-                          </div>
-                          <div className="p-6 border border-border bg-card space-y-3">
-                            <div className="flex items-center gap-2 text-primary">
-                              <Globe size={14} />
-                              <span className="text-[9px] font-bold uppercase tracking-widest">Delivery</span>
-                            </div>
-                            <p className="text-[8px] text-foreground/40 leading-relaxed uppercase">Automated DevOps strategy formulation for multi-cloud deployment environments.</p>
+                            <p className="text-[8px] text-foreground/40 leading-relaxed uppercase">Quality Assurance identifies security vulnerabilities and drafts comprehensive test plans.</p>
                           </div>
                         </div>
                       </div>
