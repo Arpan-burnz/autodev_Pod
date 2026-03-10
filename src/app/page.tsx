@@ -25,7 +25,11 @@ import {
   History as HistoryIcon,
   Trash2,
   Cpu as CpuIcon,
-  CalendarDays
+  CalendarDays,
+  Info,
+  Server,
+  Database,
+  Globe
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -766,6 +770,44 @@ ${project.devops?.ciCdPipelineOutline}
                           </h4>
                           <div className="p-8 border border-primary/10 bg-primary/[0.01] text-[11px] uppercase tracking-widest leading-loose text-foreground/60 font-medium">
                             {project.devops?.suggestedDeploymentStrategies[0]}
+                          </div>
+                        </div>
+                      </div>
+
+                      <Separator className="opacity-10" />
+
+                      <div className="space-y-8">
+                        <h4 className="text-[11px] font-bold uppercase tracking-[0.4em] flex items-center gap-3">
+                          <Info size={16} className="text-primary" /> SYSTEM_INTEL
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                          <div className="p-6 border border-border bg-card space-y-3">
+                            <div className="flex items-center gap-2 text-primary">
+                              <Server size={14} />
+                              <span className="text-[9px] font-bold uppercase tracking-widest">Compute</span>
+                            </div>
+                            <p className="text-[8px] text-foreground/40 leading-relaxed uppercase">Autonomous orchestration powered by Gemini 2.5 Flash via Genkit flows.</p>
+                          </div>
+                          <div className="p-6 border border-border bg-card space-y-3">
+                            <div className="flex items-center gap-2 text-primary">
+                              <Database size={14} />
+                              <span className="text-[9px] font-bold uppercase tracking-widest">Persistence</span>
+                            </div>
+                            <p className="text-[8px] text-foreground/40 leading-relaxed uppercase">High-fidelity artifact storage in Firebase Firestore with Auth integration.</p>
+                          </div>
+                          <div className="p-6 border border-border bg-card space-y-3">
+                            <div className="flex items-center gap-2 text-primary">
+                              <ShieldCheck size={14} />
+                              <span className="text-[9px] font-bold uppercase tracking-widest">Security</span>
+                            </div>
+                            <p className="text-[8px] text-foreground/40 leading-relaxed uppercase">Enterprise-grade validation via specialized AI-QA auditing agents.</p>
+                          </div>
+                          <div className="p-6 border border-border bg-card space-y-3">
+                            <div className="flex items-center gap-2 text-primary">
+                              <Globe size={14} />
+                              <span className="text-[9px] font-bold uppercase tracking-widest">Delivery</span>
+                            </div>
+                            <p className="text-[8px] text-foreground/40 leading-relaxed uppercase">Automated DevOps strategy formulation for multi-cloud deployment environments.</p>
                           </div>
                         </div>
                       </div>
