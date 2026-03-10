@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -29,7 +28,8 @@ import {
   Info,
   Server,
   Database,
-  Globe
+  Globe,
+  Settings
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -472,7 +472,7 @@ ${project.devops?.ciCdPipelineOutline}
                 </label>
                 <textarea
                   placeholder="DESCRIBE_SYSTEM_REQUIREMENTS..."
-                  className="w-full h-48 bg-muted border border-border rounded-none p-5 text-[11px] font-code focus:border-primary outline-none resize-none transition-all placeholder:text-foreground/20 leading-relaxed uppercase text-foreground"
+                  className="w-full h-48 bg-muted border border-border rounded-none p-5 text-[11px] font-code focus:border-primary outline-none resize-none transition-all placeholder:text-foreground/20 leading-relaxed uppercase text-foreground shadow-inner"
                   value={project.idea}
                   onChange={(e) => setProject(prev => ({ ...prev, idea: e.target.value }))}
                   disabled={isProcessing}
@@ -488,7 +488,7 @@ ${project.devops?.ciCdPipelineOutline}
                 {(isPipelineComplete || project.devops) && (
                   <Button 
                     variant="outline" 
-                    className="w-full h-12 rounded-none border-primary text-[10px] tracking-[0.2em] uppercase"
+                    className="w-full h-12 rounded-none border-primary text-[10px] tracking-[0.2em] uppercase hover:bg-primary hover:text-primary-foreground transition-all"
                     onClick={handleDownloadReport}
                   >
                     <Download size={14} className="mr-3" /> Download Report
@@ -497,7 +497,7 @@ ${project.devops?.ciCdPipelineOutline}
 
                 <Button 
                   variant="outline" 
-                  className="w-full h-12 rounded-none border-primary text-[10px] tracking-[0.2em] uppercase"
+                  className="w-full h-12 rounded-none border-primary text-[10px] tracking-[0.2em] uppercase hover:bg-muted transition-all"
                   onClick={handleClearBuffer}
                   disabled={isProcessing}
                 >
@@ -515,10 +515,10 @@ ${project.devops?.ciCdPipelineOutline}
                       key={idx}
                       onClick={() => setSelectedTab(stage.tab)}
                       className={cn(
-                        "w-full h-14 px-5 transition-all flex items-center justify-between border text-left",
+                        "w-full h-14 px-5 transition-all flex items-center justify-between border text-left rounded-none",
                         selectedTab === stage.tab 
                           ? 'border-primary bg-primary/[0.03] ring-1 ring-primary' 
-                          : 'border-border hover:border-primary/20'
+                          : 'border-border hover:border-primary/20 bg-card'
                       )}
                     >
                       <div className="flex items-center gap-3">
@@ -550,8 +550,8 @@ ${project.devops?.ciCdPipelineOutline}
                       key={proj.id}
                       onClick={() => handleLoadProject(proj)}
                       className={cn(
-                        "p-4 border group cursor-pointer transition-all space-y-3",
-                        project.id === proj.id ? 'border-primary bg-primary/[0.02]' : 'border-border hover:border-primary/20'
+                        "p-4 border group cursor-pointer transition-all space-y-3 rounded-none",
+                        project.id === proj.id ? 'border-primary bg-primary/[0.02]' : 'border-border hover:border-primary/20 bg-card'
                       )}
                     >
                       <div className="flex items-center justify-between">
@@ -684,7 +684,7 @@ ${project.devops?.ciCdPipelineOutline}
 
                 <TabsContent value="summary" className="m-0 h-full">
                   {(isPipelineComplete || project.devops) ? (
-                    <div className="h-full border border-border bg-card p-12 space-y-12 overflow-y-auto">
+                    <div className="h-full border border-border bg-card p-12 space-y-12 overflow-y-auto custom-scroll">
                       <div className="flex items-center justify-between border-b border-border pb-10">
                         <div className="space-y-2">
                           <h2 className="text-3xl font-bold tracking-tight uppercase">EXECUTIVE_ENGINEERING_REPORT</h2>
@@ -707,8 +707,8 @@ ${project.devops?.ciCdPipelineOutline}
                               {project.idea}
                             </p>
                             <div className="flex gap-2">
-                              <Badge variant="outline" className="text-[8px] rounded-none opacity-50">NEXT.JS</Badge>
-                              <Badge variant="outline" className="text-[8px] rounded-none opacity-50">TYPESCRIPT</Badge>
+                              <Badge variant="outline" className="text-[8px] rounded-none opacity-50 uppercase tracking-tighter">NEXT.JS</Badge>
+                              <Badge variant="outline" className="text-[8px] rounded-none opacity-50 uppercase tracking-tighter">TYPESCRIPT</Badge>
                             </div>
                           </div>
                         </div>
@@ -780,41 +780,48 @@ ${project.devops?.ciCdPipelineOutline}
                         <h4 className="text-[11px] font-bold uppercase tracking-[0.4em] flex items-center gap-3">
                           <Info size={16} className="text-primary" /> SYSTEM_INTEL
                         </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                          <div className="p-6 border border-border bg-card space-y-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                          <div className="p-6 border border-border bg-card space-y-3 shadow-sm hover:shadow-md transition-all">
                             <div className="flex items-center gap-2 text-primary">
                               <Users size={14} />
-                              <span className="text-[9px] font-bold uppercase tracking-widest">Product</span>
+                              <span className="text-[9px] font-bold uppercase tracking-widest">Product Manager (PM)</span>
                             </div>
-                            <p className="text-[8px] text-foreground/40 leading-relaxed uppercase">Product Manager distills vague ideas into structured user stories and technical requirements.</p>
+                            <p className="text-[8px] text-foreground/50 leading-relaxed uppercase">The PM bridges the gap between vision and execution. Using structured Technical Product Management, it distills project ideas into rigorous user stories, feature specs, and both functional and non-functional requirements.</p>
                           </div>
-                          <div className="p-6 border border-border bg-card space-y-3">
+                          <div className="p-6 border border-border bg-card space-y-3 shadow-sm hover:shadow-md transition-all">
                             <div className="flex items-center gap-2 text-primary">
                               <Layers size={14} />
-                              <span className="text-[9px] font-bold uppercase tracking-widest">Architecture</span>
+                              <span className="text-[9px] font-bold uppercase tracking-widest">System Architect</span>
                             </div>
-                            <p className="text-[8px] text-foreground/40 leading-relaxed uppercase">System Architect designs scalable patterns, database schemas, and REST/GraphQL API contracts.</p>
+                            <p className="text-[8px] text-foreground/50 leading-relaxed uppercase">The Architect designs scalable enterprise patterns. It defines data flow, security layers, and relational integrity via detailed SQL/NoSQL schemas and RESTful/GraphQL API contracts, ensuring a forward-thinking structural foundation.</p>
                           </div>
-                          <div className="p-6 border border-border bg-card space-y-3">
+                          <div className="p-6 border border-border bg-card space-y-3 shadow-sm hover:shadow-md transition-all">
                             <div className="flex items-center gap-2 text-primary">
                               <Terminal size={14} />
-                              <span className="text-[9px] font-bold uppercase tracking-widest">Development</span>
+                              <span className="text-[9px] font-bold uppercase tracking-widest">Lead Developer</span>
                             </div>
-                            <p className="text-[8px] text-foreground/40 leading-relaxed uppercase">AI Developer generates modular, high-quality TypeScript/Next.js code in a clean vertical stack.</p>
+                            <p className="text-[8px] text-foreground/50 leading-relaxed uppercase">Our Developer acts as a Senior Principal Engineer, generating modular, production-ready TypeScript/Next.js code. Every asset follows a strict vertical "stack" form for maximum readability, employing SOLID principles and enterprise design patterns.</p>
                           </div>
-                          <div className="p-6 border border-border bg-card space-y-3">
+                          <div className="p-6 border border-border bg-card space-y-3 shadow-sm hover:shadow-md transition-all">
                             <div className="flex items-center gap-2 text-primary">
                               <ShieldCheck size={14} />
-                              <span className="text-[9px] font-bold uppercase tracking-widest">Assurance</span>
+                              <span className="text-[9px] font-bold uppercase tracking-widest">Quality Assurance</span>
                             </div>
-                            <p className="text-[8px] text-foreground/40 leading-relaxed uppercase">Quality Assurance identifies security vulnerabilities and drafts comprehensive test plans.</p>
+                            <p className="text-[8px] text-foreground/50 leading-relaxed uppercase">The QA agent identifies vulnerabilities through automated audits. It evaluates the generated codebase for logical bugs, security flaws, and performance bottlenecks while drafting multi-tier validation plans from unit to e2e.</p>
+                          </div>
+                          <div className="p-6 border border-border bg-card space-y-3 shadow-sm hover:shadow-md transition-all">
+                            <div className="flex items-center gap-2 text-primary">
+                              <Rocket size={14} />
+                              <span className="text-[9px] font-bold uppercase tracking-widest">DevOps Engineer</span>
+                            </div>
+                            <p className="text-[8px] text-foreground/50 leading-relaxed uppercase">The DevOps agent automates the path to production. It formulates optimized CI/CD pipeline outlines and infrastructure-as-code suggestions for global-scale cloud providers like Vercel, AWS, and GCP.</p>
                           </div>
                         </div>
                       </div>
 
-                      <div className="pt-10 border-t border-border flex justify-between items-center">
-                        <span className="text-[8px] font-bold text-foreground/20 tracking-[1em] uppercase">SECURE_ARCHIVE_NODE_V4</span>
-                        <Button onClick={handleDownloadReport} className="rounded-none h-12 px-8 text-[10px] tracking-widest font-bold">
+                      <div className="pt-10 border-t border-border flex flex-col md:flex-row justify-between items-center gap-6">
+                        <span className="text-[8px] font-bold text-foreground/20 tracking-[1em] uppercase">SECURE_ARCHIVE_NODE_V4_VERIFIED</span>
+                        <Button onClick={handleDownloadReport} className="rounded-none h-12 px-8 text-[10px] tracking-widest font-bold bg-primary hover:bg-primary/90 transition-all shadow-lg">
                           EXPORT_FULL_REPORT <Download size={14} className="ml-3" />
                         </Button>
                       </div>
@@ -840,7 +847,7 @@ ${project.devops?.ciCdPipelineOutline}
                   </div>
                 </div>
               </div>
-              <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 terminal-scroll font-code text-[10px] leading-relaxed">
+              <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 terminal-scroll font-code text-[10px] leading-relaxed custom-scroll">
                 {logs.length > 0 ? logs.map((log, i) => (
                   <div key={i} className="flex gap-4 mb-1">
                     <span className="text-white/20 whitespace-nowrap">[{log.timestamp}]</span>
@@ -856,7 +863,7 @@ ${project.devops?.ciCdPipelineOutline}
                     )}>{log.message}</span>
                   </div>
                 )) : (
-                  <div className="flex items-center gap-2 text-foreground/20 italic">
+                  <div className="flex items-center gap-2 text-foreground/20 italic uppercase tracking-widest">
                     <span className="animate-pulse">_</span>
                     <span>System idle. Awaiting instruction.</span>
                   </div>
@@ -872,12 +879,12 @@ ${project.devops?.ciCdPipelineOutline}
         <AlertDialogContent className="rounded-none border-border">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xs font-bold uppercase tracking-[0.2em]">Delete Project Archive?</AlertDialogTitle>
-            <AlertDialogDescription className="text-[10px] uppercase tracking-wider">
-              This will permanently remove the project and all generated artifacts from the system database.
+            <AlertDialogDescription className="text-[10px] uppercase tracking-wider leading-relaxed">
+              This will permanently remove the project and all generated artifacts from the system database. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-none text-[10px] uppercase font-bold tracking-widest">Abort</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-none text-[10px] uppercase font-bold tracking-widest hover:bg-muted transition-all">Abort</AlertDialogCancel>
             <AlertDialogAction 
               onClick={() => {
                 if (projectToDelete && user && db) {
@@ -887,7 +894,7 @@ ${project.devops?.ciCdPipelineOutline}
                   toast({ title: "ARCHIVE REMOVED", description: "Project data purged." });
                 }
               }} 
-              className="rounded-none bg-destructive text-destructive-foreground text-[10px] uppercase font-bold tracking-widest"
+              className="rounded-none bg-destructive text-destructive-foreground text-[10px] uppercase font-bold tracking-widest hover:bg-destructive/90 transition-all shadow-md"
             >
               Confirm Purge
             </AlertDialogAction>
@@ -901,7 +908,7 @@ ${project.devops?.ciCdPipelineOutline}
 function EmptyView({ name, icon, description = "Awaiting deployment parameters..." }: { name: string, icon: React.ReactNode, description?: string }) {
   return (
     <div className="h-full border border-border bg-card flex flex-col items-center justify-center text-center p-20 space-y-8 shadow-sm">
-      <div className="w-20 h-20 border border-border flex items-center justify-center text-foreground/5 bg-background">
+      <div className="w-20 h-20 border border-border flex items-center justify-center text-foreground/5 bg-background shadow-inner">
         {React.cloneElement(icon as React.ReactElement, { size: 40 })}
       </div>
       <div className="space-y-3">

@@ -7,29 +7,34 @@ AutoDev Pod is an autonomous, multi-agent AI system designed to simulate an enti
 The system utilizes five specialized AI agents, powered by **Google Gemini** and orchestrated via **Genkit**, to deliver production-ready engineering artifacts.
 
 ### 01. AI Product Manager (PM)
-Distills vague ideas into structured technical rigor.
-- **Role**: Technical Product Management.
-- **Outputs**: Functional/Non-functional requirements, User Stories (As-a-I-want-so-that), and deep Feature Specifications including UX considerations.
+Transforms ambiguity into technical rigor.
+- **Role**: Technical Product Management & Business Analysis.
+- **Mission**: To bridge the gap between user vision and engineering execution.
+- **Outputs**: Comprehensive Functional/Non-functional requirements, structured User Stories (As-a-I-want-so-that), and deep Feature Specifications including UX considerations, accessibility standards, and edge-case mapping.
 
 ### 02. AI System Architect
 Designs the structural blueprint and technical foundation.
-- **Role**: Enterprise Systems Architecture.
-- **Outputs**: System Architecture Narratives (Microservices, Monolithic, Serverless), Database Schemas (SQL/NoSQL), and detailed REST/GraphQL API contracts.
+- **Role**: Enterprise Systems Architecture & Data Modeling.
+- **Mission**: To ensure scalability, security, and maintainability through proven structural patterns.
+- **Outputs**: System Architecture Narratives (Microservices, Monolithic, Serverless), detailed Database Schemas (SQL/NoSQL), and rigorous REST/GraphQL API contracts defining the interaction between system components.
 
 ### 03. AI Developer
 Writes production-grade, modular source code.
 - **Role**: Senior Principal Software Engineer.
-- **Outputs**: High-quality TypeScript/Next.js codebases formatted in a clean, vertical "stack" form for maximum readability and maintainability.
+- **Mission**: To implement technical designs into executable, high-quality code assets.
+- **Outputs**: Modular TypeScript/Next.js codebases formatted in a clean, vertical "stack" form. Employs SOLID principles, DRY methodology, and enterprise-grade design patterns (Factory, Strategy, Observer).
 
 ### 04. AI Quality Assurance (QA)
 Performs autonomous audits and security reviews.
-- **Role**: Software Quality Engineering.
-- **Outputs**: Identification of bugs and vulnerabilities, Code Review Summaries, and multi-tier Test Plans (Unit, Integration, Security).
+- **Role**: Software Quality & Security Engineering.
+- **Mission**: To identify vulnerabilities and ensure the codebase meets rigorous performance and reliability standards.
+- **Outputs**: Identification of logic bugs and security vulnerabilities, Code Review Summaries, and multi-tier Test Plans (Unit, Integration, E2E, and Security).
 
 ### 05. AI DevOps Engineer
 Formulates modern infrastructure and delivery strategies.
 - **Role**: Infrastructure & Cloud Operations.
-- **Outputs**: CI/CD Pipeline outlines, Deployment Instructions, and optimal cloud infrastructure suggestions for platforms like Vercel, AWS, or GCP.
+- **Mission**: To automate the path from code to production.
+- **Outputs**: CI/CD Pipeline outlines, automated Deployment Instructions, and optimal cloud infrastructure suggestions for global-scale platforms like Vercel, AWS, or GCP.
 
 ## 🛠️ Technical Stack
 
