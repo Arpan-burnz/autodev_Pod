@@ -59,9 +59,9 @@ The backend is a serverless, event-driven orchestration layer.
 
 ## 📦 How to Upload to GitHub
 
-To push this project to your own GitHub repository:
+To push this project to your own GitHub repository, follow these steps:
 
-1. **Create a new repository** on GitHub.
+1. **Create a new repository** on GitHub (do not initialize with README or License).
 2. **Initialize Git** in your local project folder:
    ```bash
    git init
