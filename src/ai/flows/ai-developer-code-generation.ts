@@ -35,6 +35,7 @@ CRITICAL FORMATTING REQUIREMENT: "STACK FORM"
 2. VERTICAL ORIENTATION: Do not create horizontally dense lines. Prefer a long vertical "stack" of code.
 3. EXPLICIT NEWLINES: Ensure a newline exists after every semicolon, opening brace, and closing brace.
 4. READABILITY: Use 2-space indentation and clear vertical separation between logical blocks.
+5. FIT TO WORKSPACE: Ensure the code is strictly vertical to utilize the full workspace height without being horizontally stretched.
 
 CONTEXT:
 Language: {{{programmingLanguage}}}
