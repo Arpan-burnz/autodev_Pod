@@ -57,23 +57,7 @@ The backend is a serverless, event-driven orchestration layer.
 - **Security**: Granular Firestore Security Rules enforcing path-based ownership and data validation.
 - **Execution**: Next.js Server Actions for seamless client-to-agent communication with robust retry logic and error handling.
 
-## 📦 How to Upload to GitHub
 
-To push this project to your own GitHub repository, follow these steps:
-
-1. **Create a new repository** on GitHub (do not initialize with README or License).
-2. **Initialize Git** in your local project folder:
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit: AutoDev Pod Core"
-   ```
-3. **Connect to GitHub**:
-   ```bash
-   git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
-   git branch -M main
-   git push -u origin main
-   ```
 
 **Note:** The `.gitignore` file included will protect your `.env` file from being uploaded. You will need to manually add your `GEMINI_API_KEY` and Firebase config to your deployment environment (e.g., Vercel Environment Variables or Firebase App Hosting).
 
