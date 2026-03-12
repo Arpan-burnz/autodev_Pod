@@ -28,8 +28,8 @@ import {
   Info,
   Server,
   Database,
-  Globe,
-  Settings
+  Search,
+  BookOpen
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -109,7 +109,6 @@ export default function AutoDevPodDashboard() {
     setIsClient(true);
   }, []);
 
-  // Auto-scroll logs
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -121,7 +120,6 @@ export default function AutoDevPodDashboard() {
     setLogs(prev => [...prev, { timestamp, agent, message, type }]);
   };
 
-  // History Fetching
   const projectsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(collection(db, 'users', user.uid, 'projects'), orderBy('createdAt', 'desc'));
@@ -202,7 +200,6 @@ export default function AutoDevPodDashboard() {
       let currentQa = project.qa;
       let currentDevops = project.devops;
 
-      // STAGE 0: PRODUCT MANAGER
       setActiveStage(0);
       if (!currentRequirements) {
         setSelectedTab('requirements');
@@ -220,7 +217,6 @@ export default function AutoDevPodDashboard() {
         addLog('PM', 'Requirements restored.', 'info');
       }
 
-      // STAGE 1: SYSTEM ARCHITECT
       setActiveStage(1);
       if (!currentArchitecture) {
         setSelectedTab('architecture');
@@ -240,7 +236,6 @@ export default function AutoDevPodDashboard() {
         addLog('ARCH', 'Architecture restored.', 'info');
       }
 
-      // STAGE 2: DEVELOPER
       setActiveStage(2);
       if (!currentCode) {
         setSelectedTab('code');
@@ -255,7 +250,7 @@ export default function AutoDevPodDashboard() {
         currentCode = results;
         setProject(prev => ({ ...prev, code: results }));
         updateDocumentNonBlocking(projectRef, { code: results, updatedAt: serverTimestamp() });
-        addLog('DEV', `Successfully generated ${results.files?.length || 1} files in stack form.`, 'success');
+        addLog('DEV', `Successfully generated ${results.files?.length || 1} files.`, 'success');
         updateStatus(2, 'completed');
         await delay(800);
       } else {
@@ -263,7 +258,6 @@ export default function AutoDevPodDashboard() {
         addLog('DEV', 'Codebase restored.', 'info');
       }
 
-      // STAGE 3: QA
       setActiveStage(3);
       if (!currentQa) {
         setSelectedTab('qa');
@@ -285,7 +279,6 @@ export default function AutoDevPodDashboard() {
         addLog('QA', 'QA reports restored.', 'info');
       }
 
-      // STAGE 4: DEVOPS
       setActiveStage(4);
       if (!currentDevops) {
         setSelectedTab('devops');
@@ -462,7 +455,6 @@ ${project.devops?.ciCdPipelineOutline}
       </header>
 
       <main className="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-0">
-        {/* Sidebar Controls */}
         <div className="lg:col-span-3 border-r border-border bg-card flex flex-col h-full overflow-hidden">
           <ScrollArea className="flex-1">
             <div className="p-8 space-y-10">
@@ -588,7 +580,6 @@ ${project.devops?.ciCdPipelineOutline}
           </ScrollArea>
         </div>
 
-        {/* Main Artifact Area */}
         <div className="lg:col-span-9 flex flex-col h-full overflow-hidden bg-background">
           <div className="flex-1 overflow-hidden p-10 flex flex-col gap-10">
             <Tabs value={selectedTab} onValueChange={setSelectedTab} className="flex-1 flex flex-col">
@@ -706,10 +697,6 @@ ${project.devops?.ciCdPipelineOutline}
                             <p className="text-[11px] uppercase leading-relaxed text-foreground/70 font-medium">
                               {project.idea}
                             </p>
-                            <div className="flex gap-2">
-                              <Badge variant="outline" className="text-[8px] rounded-none opacity-50 uppercase tracking-tighter">NEXT.JS</Badge>
-                              <Badge variant="outline" className="text-[8px] rounded-none opacity-50 uppercase tracking-tighter">TYPESCRIPT</Badge>
-                            </div>
                           </div>
                         </div>
                         
@@ -718,9 +705,6 @@ ${project.devops?.ciCdPipelineOutline}
                             <Layers size={14} /> 02_ARCH_BLUEPRINT
                           </h4>
                           <div className="p-6 border border-border bg-muted/20 space-y-4">
-                            <p className="text-[10px] uppercase leading-relaxed text-foreground/60 font-bold italic">
-                              {project.architecture?.systemArchitectureDescription.split('\n')[0]}
-                            </p>
                             <p className="text-[10px] uppercase leading-relaxed text-foreground/50">
                               System designed for scalability using enterprise-grade structural patterns.
                             </p>
@@ -735,43 +719,37 @@ ${project.devops?.ciCdPipelineOutline}
                             <p className="text-[10px] uppercase leading-relaxed text-foreground/60 font-bold">
                               {project.qa?.overallAssessment.substring(0, 180)}...
                             </p>
-                            <div className="flex items-center gap-2">
-                              <div className="h-1 flex-1 bg-border overflow-hidden">
-                                <div className="h-full bg-primary" style={{ width: '85%' }} />
-                              </div>
-                              <span className="text-[9px] font-bold">85% PASS</span>
-                            </div>
                           </div>
                         </div>
                       </div>
 
                       <Separator className="opacity-10" />
 
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                        <div className="space-y-8">
-                          <h4 className="text-[11px] font-bold uppercase tracking-[0.4em] flex items-center gap-3">
-                            <Activity size={16} className="text-primary" /> SYSTEM_VALIDATION_METRICS
-                          </h4>
-                          <div className="grid grid-cols-2 gap-6">
-                            <div className="p-8 border border-border bg-background shadow-sm space-y-2">
-                              <span className="text-[8px] font-bold text-foreground/20 block tracking-widest uppercase">FEATURES_GENERATED</span>
-                              <span className="text-4xl font-headline font-bold text-primary">{project.requirements?.featureSpecifications?.length || 0}</span>
+                      <div className="space-y-12">
+                         <div className="flex items-center gap-4 text-primary">
+                           <Search size={18} />
+                           <h3 className="text-[12px] font-bold uppercase tracking-[0.5em]">Architecture_Intelligence: Prompt Chaining</h3>
+                         </div>
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                            <div className="space-y-4 border-l-2 border-primary/20 pl-6">
+                               <h4 className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
+                                 <Activity size={12} /> Status: No RAG Implemented
+                               </h4>
+                               <p className="text-[10px] uppercase text-foreground/50 leading-loose">
+                                 AutoDev Pod currently operates on a sequential prompt-chaining model. This means that context is explicitly passed from one agent's output to the next agent's input, creating a coherent engineering lifecycle without the need for external vector searches.
+                               </p>
                             </div>
-                            <div className="p-8 border border-border bg-background shadow-sm space-y-2">
-                              <span className="text-[8px] font-bold text-foreground/20 block tracking-widest uppercase">CODE_ASSETS_STAGED</span>
-                              <span className="text-4xl font-headline font-bold text-primary">{project.code?.files?.length || 0}</span>
+                            <div className="space-y-4 border-l-2 border-primary/20 pl-6">
+                               <h4 className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
+                                 <BookOpen size={12} /> Potential RAG Scope
+                               </h4>
+                               <ul className="text-[9px] uppercase text-foreground/50 leading-loose space-y-2">
+                                 <li>• <strong>Code Retrieval</strong>: Indexing and searching relevant snippets from massive historical repositories.</li>
+                                 <li>• <strong>Documentation Lookup</strong>: Real-time retrieval of API docs for libraries like Next.js or Firebase.</li>
+                                 <li>• <strong>Security Standards</strong>: Fetching internal compliance docs to audit code against proprietary rules.</li>
+                               </ul>
                             </div>
-                          </div>
-                        </div>
-
-                        <div className="space-y-8">
-                          <h4 className="text-[11px] font-bold uppercase tracking-[0.4em] flex items-center gap-3">
-                            <Rocket size={16} className="text-primary" /> DEPLOYMENT_STRATEGY
-                          </h4>
-                          <div className="p-8 border border-primary/10 bg-primary/[0.01] text-[11px] uppercase tracking-widest leading-loose text-foreground/60 font-medium">
-                            {project.devops?.suggestedDeploymentStrategies[0]}
-                          </div>
-                        </div>
+                         </div>
                       </div>
 
                       <Separator className="opacity-10" />
@@ -781,40 +759,26 @@ ${project.devops?.ciCdPipelineOutline}
                           <Info size={16} className="text-primary" /> SYSTEM_INTEL
                         </h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                          <div className="p-6 border border-border bg-card space-y-3 shadow-sm hover:shadow-md transition-all">
+                          <div className="p-6 border border-border bg-card space-y-3">
                             <div className="flex items-center gap-2 text-primary">
                               <Users size={14} />
-                              <span className="text-[9px] font-bold uppercase tracking-widest">Product Manager (PM)</span>
+                              <span className="text-[9px] font-bold uppercase tracking-widest">Product Manager</span>
                             </div>
-                            <p className="text-[8px] text-foreground/50 leading-relaxed uppercase">The PM bridges the gap between vision and execution. Using structured Technical Product Management, it distills project ideas into rigorous user stories, feature specs, and both functional and non-functional requirements.</p>
+                            <p className="text-[8px] text-foreground/50 leading-relaxed uppercase">Transforms vision into rigor. Distills ideas into requirements, user stories, and feature specs.</p>
                           </div>
-                          <div className="p-6 border border-border bg-card space-y-3 shadow-sm hover:shadow-md transition-all">
+                          <div className="p-6 border border-border bg-card space-y-3">
                             <div className="flex items-center gap-2 text-primary">
                               <Layers size={14} />
                               <span className="text-[9px] font-bold uppercase tracking-widest">System Architect</span>
                             </div>
-                            <p className="text-[8px] text-foreground/50 leading-relaxed uppercase">The Architect designs scalable enterprise patterns. It defines data flow, security layers, and relational integrity via detailed SQL/NoSQL schemas and RESTful/GraphQL API contracts, ensuring a forward-thinking structural foundation.</p>
+                            <p className="text-[8px] text-foreground/50 leading-relaxed uppercase">Designs scalable patterns. Defines data flow, schemas, and API contracts.</p>
                           </div>
-                          <div className="p-6 border border-border bg-card space-y-3 shadow-sm hover:shadow-md transition-all">
+                          <div className="p-6 border border-border bg-card space-y-3">
                             <div className="flex items-center gap-2 text-primary">
                               <Terminal size={14} />
                               <span className="text-[9px] font-bold uppercase tracking-widest">Lead Developer</span>
                             </div>
-                            <p className="text-[8px] text-foreground/50 leading-relaxed uppercase">Our Developer acts as a Senior Principal Engineer, generating modular, production-ready TypeScript/Next.js code. Every asset follows a strict vertical "stack" form for maximum readability, employing SOLID principles and enterprise design patterns.</p>
-                          </div>
-                          <div className="p-6 border border-border bg-card space-y-3 shadow-sm hover:shadow-md transition-all">
-                            <div className="flex items-center gap-2 text-primary">
-                              <ShieldCheck size={14} />
-                              <span className="text-[9px] font-bold uppercase tracking-widest">Quality Assurance</span>
-                            </div>
-                            <p className="text-[8px] text-foreground/50 leading-relaxed uppercase">The QA agent identifies vulnerabilities through automated audits. It evaluates the generated codebase for logical bugs, security flaws, and performance bottlenecks while drafting multi-tier validation plans from unit to e2e.</p>
-                          </div>
-                          <div className="p-6 border border-border bg-card space-y-3 shadow-sm hover:shadow-md transition-all">
-                            <div className="flex items-center gap-2 text-primary">
-                              <Rocket size={14} />
-                              <span className="text-[9px] font-bold uppercase tracking-widest">DevOps Engineer</span>
-                            </div>
-                            <p className="text-[8px] text-foreground/50 leading-relaxed uppercase">The DevOps agent automates the path to production. It formulates optimized CI/CD pipeline outlines and infrastructure-as-code suggestions for global-scale cloud providers like Vercel, AWS, and GCP.</p>
+                            <p className="text-[8px] text-foreground/50 leading-relaxed uppercase">Senior Principal Engineer. Generates production-ready, vertical stack form code.</p>
                           </div>
                         </div>
                       </div>
@@ -831,20 +795,12 @@ ${project.devops?.ciCdPipelineOutline}
               </div>
             </Tabs>
 
-            {/* Terminal Activity Logs */}
             <div className="h-48 shrink-0 bg-black/95 border border-primary/20 flex flex-col shadow-2xl relative">
               <div className="absolute inset-0 scanline opacity-10 pointer-events-none" />
               <div className="h-8 border-b border-white/5 px-4 flex items-center justify-between bg-white/[0.02]">
                 <div className="flex items-center gap-3">
                   <CpuIcon size={12} className="text-primary animate-pulse" />
                   <span className="text-[9px] font-bold text-primary/70 tracking-[0.4em] uppercase">Subsystem_Logs</span>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="flex gap-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-red-500/50" />
-                    <div className="w-1.5 h-1.5 rounded-full bg-yellow-500/50" />
-                    <div className="w-1.5 h-1.5 rounded-full bg-green-500/50" />
-                  </div>
                 </div>
               </div>
               <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 terminal-scroll font-code text-[10px] leading-relaxed custom-scroll">
@@ -874,17 +830,16 @@ ${project.devops?.ciCdPipelineOutline}
         </div>
       </main>
 
-      {/* Delete Confirmation */}
       <AlertDialog open={!!projectToDelete} onOpenChange={() => setProjectToDelete(null)}>
         <AlertDialogContent className="rounded-none border-border">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xs font-bold uppercase tracking-[0.2em]">Delete Project Archive?</AlertDialogTitle>
             <AlertDialogDescription className="text-[10px] uppercase tracking-wider leading-relaxed">
-              This will permanently remove the project and all generated artifacts from the system database. This action cannot be undone.
+              This will permanently remove the project and all generated artifacts.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-none text-[10px] uppercase font-bold tracking-widest hover:bg-muted transition-all">Abort</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-none text-[10px] uppercase font-bold tracking-widest">Abort</AlertDialogCancel>
             <AlertDialogAction 
               onClick={() => {
                 if (projectToDelete && user && db) {
@@ -894,7 +849,7 @@ ${project.devops?.ciCdPipelineOutline}
                   toast({ title: "ARCHIVE REMOVED", description: "Project data purged." });
                 }
               }} 
-              className="rounded-none bg-destructive text-destructive-foreground text-[10px] uppercase font-bold tracking-widest hover:bg-destructive/90 transition-all shadow-md"
+              className="rounded-none bg-destructive text-destructive-foreground text-[10px] uppercase font-bold tracking-widest"
             >
               Confirm Purge
             </AlertDialogAction>

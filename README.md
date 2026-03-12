@@ -10,76 +10,64 @@ The system utilizes five specialized AI agents, powered by **Google Gemini** and
 Transforms ambiguity into technical rigor.
 - **Role**: Technical Product Management & Business Analysis.
 - **Mission**: To bridge the gap between user vision and engineering execution.
-- **Outputs**: Comprehensive Functional/Non-functional requirements, structured User Stories, and deep Feature Specifications including UX considerations and accessibility standards.
+- **Outputs**: Comprehensive Functional/Non-functional requirements, structured User Stories, and deep Feature Specifications.
 
 ### 02. AI System Architect
 Designs the structural blueprint and technical foundation.
 - **Role**: Enterprise Systems Architecture & Data Modeling.
 - **Mission**: To ensure scalability, security, and maintainability through proven structural patterns.
-- **Outputs**: System Architecture Narratives, detailed Database Schemas (SQL/NoSQL), and rigorous REST/GraphQL API contracts.
+- **Outputs**: System Architecture Narratives, detailed Database Schemas, and REST/GraphQL API contracts.
 
 ### 03. AI Developer
 Writes production-grade, modular source code.
 - **Role**: Senior Principal Software Engineer.
-- **Mission**: To implement technical designs into executable, high-quality code assets.
-- **Outputs**: Modular TypeScript/Next.js codebases formatted in a clean, vertical "stack" form for maximum readability.
+- **Mission**: To implement technical designs into executable, high-quality code assets formatted in a clean, vertical "stack" form.
+- **Outputs**: Modular TypeScript/Next.js codebases.
 
 ### 04. AI Quality Assurance (QA)
 Performs autonomous audits and security reviews.
 - **Role**: Software Quality & Security Engineering.
-- **Mission**: To identify vulnerabilities and ensure the codebase meets rigorous performance standards.
-- **Outputs**: Identification of logic bugs and security vulnerabilities, Code Review Summaries, and multi-tier Test Plans.
+- **Mission**: To identify vulnerabilities and ensure code meets rigorous performance standards.
+- **Outputs**: Logic bug identification, Security Vulnerabilities, and multi-tier Test Plans.
 
 ### 05. AI DevOps Engineer
 Formulates modern infrastructure and delivery strategies.
 - **Role**: Infrastructure & Cloud Operations.
 - **Mission**: To automate the path from code to production.
-- **Outputs**: CI/CD Pipeline outlines, automated Deployment Instructions, and optimal cloud infrastructure suggestions.
+- **Outputs**: CI/CD Pipeline outlines and automated Deployment Instructions.
 
-## 💻 Frontend Architecture
+## ⚙️ Architecture: Chaining vs. RAG
 
-The frontend is a high-fidelity engineering dashboard designed for professional DevOps workflows.
+Currently, AutoDev Pod utilizes **Prompt Chaining** and **Context Injection**. Data flows sequentially through the agents to maintain state.
+
+### Is RAG Implemented?
+No. RAG (Retrieval-Augmented Generation) is not part of the core MVP. The system relies on the model's parametric knowledge and the specific context passed through the pipeline.
+
+### Scope of RAG (Future Integration)
+- **Code Retrieval**: Searching internal libraries for reusable components.
+- **Doc Retrieval**: Querying up-to-date documentation for specialized libraries.
+- **Standards Retrieval**: Auditing code against specific, non-public corporate standards.
+
+## 💻 Technical Stack
 
 - **Framework**: Next.js 15 (App Router) & React 19.
-- **Styling**: Tailwind CSS with a custom "Terminal Engineering" theme (Space Grotesk & Inter typography).
-- **Real-time Engine**: Firebase Firestore & Auth for instantaneous data persistence and multi-device sync.
-- **UI Components**: ShadCN UI for high-performance, accessible dashboard modules.
-- **State Machine**: Custom React hooks for managing the autonomous agent pipeline and log streaming.
-
-## ⚙️ Backend Architecture
-
-The backend is a serverless, event-driven orchestration layer.
-
-- **AI Orchestration**: Google Genkit (v1.x) with Gemini 2.5 Flash.
-- **AI Models**: Google Generative AI (Gemini) for high-speed technical reasoning.
-- **Data Layer**: Firebase Firestore (NoSQL) with hierarchical user-owned document paths.
-- **Authentication**: Firebase Auth (Google, GitHub, and Anonymous providers).
-- **Security**: Granular Firestore Security Rules enforcing path-based ownership and data validation.
-- **Execution**: Next.js Server Actions for seamless client-to-agent communication with robust retry logic and error handling.
+- **AI Orchestration**: Google Genkit & Gemini 2.5 Flash.
+- **Persistence**: Firebase Firestore & Auth.
+- **Styling**: Tailwind CSS & ShadCN UI.
 
 ## 📦 How to Upload to GitHub
 
-To push this project to your own GitHub repository, follow these steps:
-
-1. **Create a new repository** on GitHub (do not initialize with README or License).
-2. **Initialize Git** in your local project folder:
+1. **Initialize Git**:
    ```bash
    git init
    git add .
    git commit -m "Initial commit: AutoDev Pod Core"
    ```
-3. **Connect to GitHub**:
+2. **Connect to GitHub**:
    ```bash
    git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
    git branch -M main
    git push -u origin main
    ```
 
-**Note:** The `.gitignore` file included will protect your `.env` file from being uploaded. You will need to manually add your `GEMINI_API_KEY` and Firebase config to your deployment environment (e.g., Vercel Environment Variables or Firebase App Hosting).
-
-## 📡 Pipeline Execution
-
-1. **Idea Input**: Provide a high-level project concept.
-2. **Autonomous Trigger**: Start the pipeline to engage agents sequentially.
-3. **Review & Iterate**: Inspect artifacts in the real-time terminal and tabbed viewer.
-4. **Export**: Download the verified Executive Engineering Report in Markdown format.
+**Note:** Ensure your `GEMINI_API_KEY` and Firebase config are set as Environment Variables in your deployment platform.
