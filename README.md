@@ -48,12 +48,15 @@ No. RAG (Retrieval-Augmented Generation) is not part of the core MVP. The system
 - **Doc Retrieval**: Querying up-to-date documentation for specialized libraries.
 - **Standards Retrieval**: Auditing code against specific, non-public corporate standards.
 
-## 💻 Technical Stack
+## 💻 Technical Stack & Languages
 
-- **Framework**: Next.js 15 (App Router) & React 19.
-- **AI Orchestration**: Google Genkit & Gemini 2.5 Flash.
-- **Persistence**: Firebase Firestore & Auth.
-- **Styling**: Tailwind CSS & ShadCN UI.
+- **Primary Language**: **TypeScript** (Used for 100% of application logic, components, and AI flows).
+- **Frontend Framework**: **Next.js 15** (App Router) & **React 19**.
+- **AI Orchestration**: **Google Genkit** & **Gemini 2.5 Flash**.
+- **Styling**: **Tailwind CSS** & **ShadCN UI**.
+- **Persistence & Auth**: **Firebase Firestore** & **Firebase Auth**.
+- **Security Logic**: **CEL** (Common Expression Language) for Firestore Rules.
+- **Configuration**: **JSON**, **YAML**, and **Shell (.env)**.
 
 ## 📦 How to Upload to GitHub
 
