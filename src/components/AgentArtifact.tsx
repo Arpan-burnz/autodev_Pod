@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -100,8 +101,7 @@ export function AgentArtifact({ title, type, content, icon }: AgentArtifactProps
       <CardContent className="flex-1 p-0 overflow-hidden flex flex-col">
         {isMultiFile ? (
           <div className="flex-1 flex overflow-hidden h-full">
-            {/* File Sidebar */}
-            <div className="w-64 border-r border-border bg-muted/20 flex flex-col h-full">
+            <div className="w-64 border-r border-border bg-muted/20 flex flex-col h-full shrink-0">
               <div className="p-3 border-b border-border bg-background/50">
                 <span className="text-[8px] font-bold uppercase tracking-widest text-foreground/30">FILE_EXPLORER</span>
               </div>
@@ -127,7 +127,6 @@ export function AgentArtifact({ title, type, content, icon }: AgentArtifactProps
               </ScrollArea>
             </div>
 
-            {/* Code Content */}
             <div className="flex-1 flex flex-col overflow-hidden bg-background h-full">
               <div className="p-3 border-b border-border bg-muted/50 flex items-center justify-between">
                 <span className="text-[9px] font-code font-bold uppercase tracking-[0.2em] text-foreground/60">
