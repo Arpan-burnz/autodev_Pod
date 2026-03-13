@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -29,7 +30,8 @@ import {
   Server,
   Database,
   Search,
-  BookOpen
+  BookOpen,
+  Dna
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -728,25 +730,26 @@ ${project.devops?.ciCdPipelineOutline}
                       <div className="space-y-12">
                          <div className="flex items-center gap-4 text-primary">
                            <Search size={18} />
-                           <h3 className="text-[12px] font-bold uppercase tracking-[0.5em]">Architecture_Intelligence: Prompt Chaining</h3>
+                           <h3 className="text-[12px] font-bold uppercase tracking-[0.5em]">Architecture_Intelligence: RAG & Similarity</h3>
                          </div>
                          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                             <div className="space-y-4 border-l-2 border-primary/20 pl-6">
                                <h4 className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
-                                 <Activity size={12} /> Status: No RAG Implemented
+                                 <Activity size={12} /> Strategy: Context Chaining
                                </h4>
                                <p className="text-[10px] uppercase text-foreground/50 leading-loose">
-                                 AutoDev Pod currently operates on a sequential prompt-chaining model. This means that context is explicitly passed from one agent's output to the next agent's input, creating a coherent engineering lifecycle without the need for external vector searches.
+                                 Currently, AutoDev Pod operates on a sequential context-chaining model. Each agent receives the full output of previous nodes to maintain engineering coherence.
                                </p>
                             </div>
                             <div className="space-y-4 border-l-2 border-primary/20 pl-6">
                                <h4 className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
-                                 <BookOpen size={12} /> Potential RAG Scope
+                                 <Dna size={12} /> RAG Similarity Parameters
                                </h4>
                                <ul className="text-[9px] uppercase text-foreground/50 leading-loose space-y-2">
-                                 <li>• <strong>Code Retrieval</strong>: Indexing and searching relevant snippets from massive historical repositories.</li>
-                                 <li>• <strong>Documentation Lookup</strong>: Real-time retrieval of API docs for libraries like Next.js or Firebase.</li>
-                                 <li>• <strong>Security Standards</strong>: Fetching internal compliance docs to audit code against proprietary rules.</li>
+                                 <li>• <strong>Metric</strong>: Cosine Similarity (Semantic Vector Orientation).</li>
+                                 <li>• <strong>Embeddings</strong>: High-density text representations via Google GenAI models.</li>
+                                 <li>• <strong>Thresholding</strong>: Minimum relevance score (e.g., 0.85) for artifact retrieval.</li>
+                                 <li>• <strong>Top-K</strong>: Retrieving the most relevant context chunks for the prompt.</li>
                                </ul>
                             </div>
                          </div>

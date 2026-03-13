@@ -33,10 +33,12 @@ Copy and paste these into the **Project_Definition** terminal to see the agents 
 ## 📂 RAG vs. Chaining (Current Scope)
 Currently, AutoDev Pod utilizes **Prompt Chaining**. It relies on the model's parametric knowledge and context injected from previous steps.
 
-**Future RAG Scope**:
-- **Code Retrieval**: Searching local libraries for reusable snippets.
-- **Doc Retrieval**: Real-time lookup of up-to-date documentation for libraries like Genkit or Firebase.
-- **Standards Retrieval**: Auditing code against proprietary corporate compliance standards.
+### 📂 RAG Scope & Similarity Parameters
+In the future RAG roadmap, the system will implement vector retrieval with the following **Similarity Parameters**:
+- **Metric**: **Cosine Similarity** (calculating the dot product of normalized vectors) to find semantically related code patterns.
+- **Embeddings**: High-density vector representations of code and documentation using the **Google text-embedding** models.
+- **Top-K Retrieval**: Extracting the top 5-10 most relevant code "chunks" to inject into the Developer Agent's context.
+- **Thresholding**: A minimum similarity score (e.g., 0.85) to ensure only highly relevant data is used for code generation.
 
 ## 💻 Technical Languages
 - **TypeScript**: Core logic, components, and AI flows.
