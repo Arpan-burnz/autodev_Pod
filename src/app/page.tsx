@@ -31,7 +31,8 @@ import {
   Database,
   Search,
   BookOpen,
-  Dna
+  Dna,
+  Coins
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -48,8 +49,6 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
@@ -728,29 +727,59 @@ ${project.devops?.ciCdPipelineOutline}
                       <Separator className="opacity-10" />
 
                       <div className="space-y-12">
-                         <div className="flex items-center gap-4 text-primary">
-                           <Search size={18} />
-                           <h3 className="text-[12px] font-bold uppercase tracking-[0.5em]">Architecture_Intelligence: RAG & Similarity</h3>
-                         </div>
-                         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                            <div className="space-y-4 border-l-2 border-primary/20 pl-6">
-                               <h4 className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
-                                 <Activity size={12} /> Strategy: Context Chaining
-                               </h4>
-                               <p className="text-[10px] uppercase text-foreground/50 leading-loose">
-                                 Currently, AutoDev Pod operates on a sequential context-chaining model. Each agent receives the full output of previous nodes to maintain engineering coherence.
-                               </p>
+                         <div className="flex items-center gap-12 flex-wrap">
+                            <div className="space-y-6 flex-1 min-w-[300px]">
+                               <div className="flex items-center gap-4 text-primary">
+                                 <Search size={18} />
+                                 <h3 className="text-[12px] font-bold uppercase tracking-[0.5em]">Architecture_Intelligence: RAG & Similarity</h3>
+                               </div>
+                               <div className="grid grid-cols-1 gap-10">
+                                  <div className="space-y-4 border-l-2 border-primary/20 pl-6">
+                                     <h4 className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
+                                       <Activity size={12} /> Strategy: Context Chaining
+                                     </h4>
+                                     <p className="text-[10px] uppercase text-foreground/50 leading-loose">
+                                       Currently, AutoDev Pod operates on a sequential context-chaining model. Each agent receives the full output of previous nodes to maintain engineering coherence.
+                                     </p>
+                                  </div>
+                                  <div className="space-y-4 border-l-2 border-primary/20 pl-6">
+                                     <h4 className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
+                                       <Dna size={12} /> RAG Similarity Parameters
+                                     </h4>
+                                     <ul className="text-[9px] uppercase text-foreground/50 leading-loose space-y-2">
+                                       <li>• <strong>Metric</strong>: Cosine Similarity (Semantic Orientation).</li>
+                                       <li>• <strong>Embeddings</strong>: High-density text vectors via Google GenAI.</li>
+                                       <li>• <strong>Thresholding</strong>: Minimum relevance score (0.85).</li>
+                                     </ul>
+                                  </div>
+                               </div>
                             </div>
-                            <div className="space-y-4 border-l-2 border-primary/20 pl-6">
-                               <h4 className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
-                                 <Dna size={12} /> RAG Similarity Parameters
-                               </h4>
-                               <ul className="text-[9px] uppercase text-foreground/50 leading-loose space-y-2">
-                                 <li>• <strong>Metric</strong>: Cosine Similarity (Semantic Vector Orientation).</li>
-                                 <li>• <strong>Embeddings</strong>: High-density text representations via Google GenAI models.</li>
-                                 <li>• <strong>Thresholding</strong>: Minimum relevance score (e.g., 0.85) for artifact retrieval.</li>
-                                 <li>• <strong>Top-K</strong>: Retrieving the most relevant context chunks for the prompt.</li>
-                               </ul>
+
+                            <div className="space-y-6 flex-1 min-w-[300px]">
+                               <div className="flex items-center gap-4 text-primary">
+                                 <Coins size={18} />
+                                 <h3 className="text-[12px] font-bold uppercase tracking-[0.5em]">Deployment_Economics</h3>
+                               </div>
+                               <div className="grid grid-cols-1 gap-10">
+                                  <div className="space-y-4 border-l-2 border-primary/20 pl-6">
+                                     <h4 className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
+                                       <Activity size={12} /> Probable Scaling Costs
+                                     </h4>
+                                     <div className="space-y-4">
+                                       <div className="flex justify-between items-center border-b border-border pb-2">
+                                          <span className="text-[9px] font-bold uppercase tracking-widest text-foreground/40">Tier: Prototyping</span>
+                                          <span className="text-[11px] font-bold text-primary">$0.00 / mo</span>
+                                       </div>
+                                       <div className="flex justify-between items-center border-b border-border pb-2">
+                                          <span className="text-[9px] font-bold uppercase tracking-widest text-foreground/40">Tier: Scaling</span>
+                                          <span className="text-[11px] font-bold text-primary">$5 - $25 / mo</span>
+                                       </div>
+                                       <p className="text-[8px] uppercase text-foreground/30 leading-relaxed">
+                                          Costs primarily driven by Firestore throughput and Gemini API high-priority tokens. Spark plan covers initial development.
+                                       </p>
+                                     </div>
+                                  </div>
+                               </div>
                             </div>
                          </div>
                       </div>
@@ -767,7 +796,7 @@ ${project.devops?.ciCdPipelineOutline}
                               <Users size={14} />
                               <span className="text-[9px] font-bold uppercase tracking-widest">Product Manager</span>
                             </div>
-                            <p className="text-[8px] text-foreground/50 leading-relaxed uppercase">Transforms vision into rigor. Distills ideas into requirements, user stories, and feature specs.</p>
+                            <p className="text-[8px] text-foreground/50 leading-relaxed uppercase">Transforms vision into technical rigor. Distills ideas into requirements, user stories, and specs.</p>
                           </div>
                           <div className="p-6 border border-border bg-card space-y-3">
                             <div className="flex items-center gap-2 text-primary">
@@ -781,7 +810,7 @@ ${project.devops?.ciCdPipelineOutline}
                               <Terminal size={14} />
                               <span className="text-[9px] font-bold uppercase tracking-widest">Lead Developer</span>
                             </div>
-                            <p className="text-[8px] text-foreground/50 leading-relaxed uppercase">Senior Principal Engineer. Generates production-ready, vertical stack form code.</p>
+                            <p className="text-[8px] text-foreground/50 leading-relaxed uppercase">Generates production-ready, strictly vertical stack form code optimized for workspace fit.</p>
                           </div>
                         </div>
                       </div>
