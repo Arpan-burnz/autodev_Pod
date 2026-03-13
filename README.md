@@ -38,12 +38,6 @@ In the future RAG roadmap, the system will implement vector retrieval with the f
 - **Embeddings**: High-density vector representations via Google text-embedding models.
 - **Top-K Retrieval**: Extracting the top 5-10 most relevant code "chunks" to inject into context.
 
-## 💰 Deployment Economics (Probable Cost)
-
-AutoDev Pod is designed for high-efficiency operations:
-- **Development Phase**: **$0/month** (Utilizing Free Tiers for Firebase and Google AI Studio).
-- **Production Scaling**: **$5 - $25/month** (Pay-as-you-go model for Firestore traffic and Gemini high-volume API calls).
-
 ## 💻 Technical Languages
 - **TypeScript**: Core logic, components, and AI flows.
 - **CEL (Common Expression Language)**: Firestore Security Rules.
