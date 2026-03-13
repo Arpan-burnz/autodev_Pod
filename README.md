@@ -3,6 +3,19 @@
 
 AutoDev Pod is an autonomous, multi-agent AI system designed to simulate an entire software development department. It transforms a single high-level project idea into a complete engineering package—including requirements, architecture, production-ready code, quality audits, and deployment plans.
 
+## 🚀 Suggested Project Scenarios
+
+Copy and paste these into the **Project_Definition** terminal to see the agents in action:
+
+### 1. "Pulse-Check" (Remote Team Sentiment Platform)
+> "Develop a secure, anonymous employee sentiment analysis platform for remote-first teams. It should feature a daily 1-minute 'vibe check' via Slack/Teams, a manager dashboard showing aggregated trends without exposing individual identities, and AI-driven burnout alerts. The system needs to support multi-tenancy and high data encryption."
+
+### 2. "Green-Loop" (Eco-Subscription Marketplace)
+> "Create an e-commerce platform for eco-friendly product subscription boxes. Users should be able to customize their monthly delivery based on sustainability goals (e.g., zero plastic, vegan-only). The architecture must handle recurring billing, inventory sync with local sustainable suppliers, and a carbon-footprint tracker for every shipment."
+
+### 3. "Code-Sentry" (Automated Security Auditor)
+> "Build a developer tool that connects to GitHub repositories and performs real-time security audits on every Pull Request. It should identify 'leaked secrets', 'deprecated dependencies', and 'OWASP Top 10 vulnerabilities'. Provide a clean dashboard for security officers to track compliance across multiple microservices."
+
 ## ⚙️ Architecture: Frontend & Backend
 
 ### Frontend (User Interface)
@@ -16,14 +29,6 @@ AutoDev Pod is an autonomous, multi-agent AI system designed to simulate an enti
 - **Logic**: Implemented via **Prompt Chaining**. Data flows sequentially from one specialized agent to the next, maintaining state within a single Firestore document.
 - **Security**: Strict **User-Ownership** policies enforced by **Firestore Security Rules** (using CEL), ensuring all engineering assets are private to the creator.
 - **Infrastructure**: Serverless execution via **Next.js Server Actions**, allowing for high-scaling AI compute without a persistent server.
-
-## 🚀 The AI Engineering Team
-
-1. **AI Product Manager**: Transforms ambiguity into technical rigor. Outputs Functional/Non-functional requirements and User Stories.
-2. **AI System Architect**: Designs structural blueprints. Outputs Data Schemas and REST/GraphQL API contracts.
-3. **AI Developer**: Senior Principal Software Engineer. Implements technical designs into modular, vertical-stack TypeScript code.
-4. **AI Quality Assurance**: Autonomous audit agent. Identifies bugs, vulnerabilities, and drafts multi-tier Test Plans.
-5. **AI DevOps Engineer**: Infrastructure strategist. Formulates CI/CD pipelines and automated deployment instructions.
 
 ## 📂 RAG vs. Chaining (Current Scope)
 Currently, AutoDev Pod utilizes **Prompt Chaining**. It relies on the model's parametric knowledge and context injected from previous steps.
