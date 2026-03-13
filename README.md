@@ -44,6 +44,9 @@ In the future RAG roadmap, the system will implement vector retrieval with the f
 - **Tailwind CSS**: High-end technical styling.
 - **Markdown**: Report generation and documentation.
 
+## 📝 CV / Portfolio Highlight
+"Developed an autonomous multi-agent AI platform utilizing **Next.js 15**, **Google Genkit**, and **Firebase**. Orchestrated five specialized AI agents to automate the full software engineering lifecycle—generating functional requirements, system architectures, production-ready code, and DevOps deployment strategies."
+
 ## 📦 How to Upload to GitHub
 
 1. **Initialize Git**:
