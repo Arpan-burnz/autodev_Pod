@@ -59,8 +59,6 @@ The backend is a serverless, event-driven orchestration layer.
 
 
 
-**Note:** The `.gitignore` file included will protect your `.env` file from being uploaded. You will need to manually add your `GEMINI_API_KEY` and Firebase config to your deployment environment (e.g., Vercel Environment Variables or Firebase App Hosting).
-
 ## 📡 Pipeline Execution
 
 1. **Idea Input**: Provide a high-level project concept.
