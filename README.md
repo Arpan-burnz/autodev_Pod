@@ -1,4 +1,3 @@
-
 # AutoDev Pod | Autonomous Engineering Node
 
 AutoDev Pod is an autonomous, multi-agent AI system designed to simulate an entire software development department. It transforms a single high-level project idea into a complete engineering package—including requirements, architecture, production-ready code, quality audits, and deployment plans.
@@ -47,17 +46,9 @@ In the future RAG roadmap, the system will implement vector retrieval with the f
 ## 📝 CV / Portfolio Highlight
 "Developed an autonomous multi-agent AI platform utilizing **Next.js 15**, **Google Genkit**, and **Firebase**. Orchestrated five specialized AI agents to automate the full software engineering lifecycle—generating functional requirements, system architectures, production-ready code, and DevOps deployment strategies."
 
-## 📦 How to Upload to GitHub
+## 📡 Pipeline Execution
 
-1. **Initialize Git**:
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit: AutoDev Pod Core"
-   ```
-2. **Connect to GitHub**:
-   ```bash
-   git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
-   git branch -M main
-   git push -u origin main
-   ```
+1. **Idea Input**: Provide a high-level project concept.
+2. **Autonomous Trigger**: Start the pipeline to engage agents sequentially.
+3. **Review & Iterate**: Inspect artifacts in the real-time terminal and tabbed viewer.
+4. **Export**: Download the verified Executive Engineering Report in Markdown format.
