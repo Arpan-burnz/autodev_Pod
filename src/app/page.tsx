@@ -1,124 +1,125 @@
-
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  Users, 
-  Lightbulb, 
-  Terminal, 
-  ShieldCheck, 
-  Rocket, 
+  Sparkles, 
   Play, 
   RotateCcw, 
-  CheckCircle2, 
-  Loader2,
-  Cpu,
-  Box,
-  Layers,
-  LogOut,
-  ChevronRight,
-  Code,
+  Download, 
+  FileCode, 
+  Layers, 
+  ShieldCheck, 
+  Cpu, 
+  LogOut, 
+  ChevronRight, 
+  History as HistoryIcon, 
+  Trash2, 
+  Copy, 
+  Check, 
+  CalendarDays, 
   FileText,
-  Activity,
-  Zap,
-  Download,
-  History as HistoryIcon,
-  Trash2,
-  Cpu as CpuIcon,
-  CalendarDays,
-  Info,
-  Search,
-  Dna
+  Boxes,
+  Compass,
+  ArrowRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { AgentArtifact } from '@/components/AgentArtifact';
-import { useToast } from '@/hooks/use-toast';
-import { useUser, useAuth, useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
-import { collection, doc, serverTimestamp, setDoc, query, orderBy } from 'firebase/firestore';
-import Link from 'next/link';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import {
+import { 
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
   AlertDialogDescription,
   AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
 } from "@/components/ui/alert-dialog";
-import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
+import { 
+  useUser, 
+  useAuth, 
+  useFirestore, 
+  useCollection, 
+  useMemoFirebase, 
+  updateDocumentNonBlocking, 
+  deleteDocumentNonBlocking 
+} from '@/firebase';
+import { collection, doc, serverTimestamp, setDoc, query, orderBy } from 'firebase/firestore';
+import Link from 'next/link';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
-// AI Flow imports
-import { generateProjectRequirements } from '@/ai/flows/ai-product-manager-requirements-generation';
-import { aiSystemArchitectDesignGeneration } from '@/ai/flows/ai-system-architect-design-generation';
-import { developerCodeGeneration } from '@/ai/flows/ai-developer-code-generation';
-import { aiQaTestGenerationAndExecution } from '@/ai/flows/ai-qa-test-generation-and-execution';
-import { aiDevOpsDeploymentSuggestions } from '@/ai/flows/ai-dev-ops-deployment-suggestions';
-
-type AgentStatus = 'idle' | 'working' | 'completed' | 'error';
-
-interface LogEntry {
-  timestamp: string;
-  agent: string;
-  message: string;
-  type: 'status' | 'info' | 'error' | 'success';
-}
+// Dynamic App Engine Imports
+import { DynamicAppRunner } from '@/components/dynamic-app/DynamicAppRunner';
+import { DocumentUploader } from '@/components/dynamic-app/DocumentUploader';
+import { MultiAgentPipelineSection } from '@/components/pipeline/MultiAgentPipelineSection';
+import { HeroLandingPage } from '@/components/landing/HeroLandingPage';
+import { DynamicAppSpec, GeneratedSourceFile } from '@/types/dynamic-app';
+import { PipelineData } from '@/types/pipeline';
+import { createClientFallbackAppSpec, generateClientCodeStack } from '@/lib/client-app-generator';
 
 interface ProjectState {
   id?: string;
   idea: string;
-  requirements?: any;
-  architecture?: any;
-  code?: {
-    files?: Array<{ fileName: string; content: string }>;
-    content?: string;
-    codeExplanation: string;
-  };
-  qa?: any;
-  devops?: any;
+  supportingDocument?: string;
+  supportingDocName?: string;
+  appSpec?: DynamicAppSpec;
+  codeFiles?: GeneratedSourceFile[];
+  pipelineData?: PipelineData;
+  summary?: string;
   status?: string;
   createdAt?: any;
   updatedAt?: any;
 }
+
+const PRESET_REQUIREMENTS = [
+  {
+    title: 'Medical Clinic Queue & Triage',
+    category: 'Healthcare',
+    description: 'Patient registration, triage categorization (Routine, Urgent, Emergency), department queues, and clinical notes.',
+    prompt: 'A clinical intake and triage queue portal for a private multi-specialty medical clinic. Doctors and receptionists register arriving patients, assign them to departments (Cardiology, Pediatrics, General Medicine, Orthopedics), tag them with triage priority (Emergency, Urgent, Routine), record intake symptoms, and track status (Waiting, In Consultation, Completed).',
+    docPreview: 'Specification: Clinic Operating Hours: 08:00 - 20:00. Mandatory Fields: Patient Full Name, Email, Department, Triage Priority, Status, Intake Date.',
+  },
+  {
+    title: 'IT Helpdesk & Incident Tickets',
+    category: 'IT Operations',
+    description: 'Customer ticket submission, priority classification (Low, Medium, High, Critical), assignee routing, and SLA tracking.',
+    prompt: 'Enterprise IT helpdesk incident portal. Customers and staff log technical issues across categories (Account Access, Billing & Invoicing, Technical Bug, Security). Each ticket must have a severity rating, assigned support engineer, status tracker (Open, In Progress, Resolved), and resolution notes.',
+    docPreview: 'SLA Policy: Critical incidents must be assigned within 15 minutes. High severity within 1 hour. All tickets require customer contact email and detailed issue description.',
+  },
+  {
+    title: 'Equipment & Asset Catalog',
+    category: 'Logistics',
+    description: 'Hardware, software license, and facility inventory tracker with stock counts, unit costs, and maintenance schedules.',
+    prompt: 'Internal company asset and equipment management registry. IT and facilities staff track inventory items (Hardware, Software Licenses, Office Equipment, Infrastructure). Each item tracks asset SKU code, unit cost, available quantity, operational status (Available, In Use, Maintenance), and last inspection date.',
+    docPreview: 'Asset Registry Schema: Fields: Asset Code (SKU), Item Name, Category, Stock Quantity (Integer >= 0), Unit Cost (Decimal), Status, Last Inspection Date.',
+  },
+];
 
 export default function AutoDevPodDashboard() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const db = useFirestore();
   const { toast } = useToast();
-  const [activeStage, setActiveStage] = useState<number>(0);
+
   const [project, setProject] = useState<ProjectState>({ idea: '' });
+  const [supportingDoc, setSupportingDoc] = useState<string>('');
+  const [supportingDocName, setSupportingDocName] = useState<string | undefined>();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [selectedTab, setSelectedTab] = useState<string>('requirements');
+  const [selectedWorkspaceTab, setSelectedWorkspaceTab] = useState<string>('app');
+  const [selectedCodeFileIndex, setSelectedCodeFileIndex] = useState(0);
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
-  const [logs, setLogs] = useState<LogEntry[]>([]);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [copiedCode, setCopiedCode] = useState(false);
   const [isClient, setIsClient] = useState(false);
-  
-  const [statuses, setStatuses] = useState<AgentStatus[]>([
-    'idle', 'idle', 'idle', 'idle', 'idle'
-  ]);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [logs]);
-
-  const addLog = (agent: string, message: string, type: LogEntry['type'] = 'info') => {
-    const timestamp = new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    setLogs(prev => [...prev, { timestamp, agent, message, type }]);
-  };
-
+  // Fetch Saved Projects from Firestore
   const projectsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(collection(db, 'users', user.uid, 'projects'), orderBy('createdAt', 'desc'));
@@ -126,191 +127,117 @@ export default function AutoDevPodDashboard() {
 
   const { data: projects, isLoading: isProjectsLoading } = useCollection<ProjectState>(projectsQuery);
 
-  const stages = [
-    { name: 'Product Manager', id: 'pm', icon: <Users size={16} />, tab: 'requirements' },
-    { name: 'System Architect', id: 'arch', icon: <Layers size={16} />, tab: 'architecture' },
-    { name: 'Developer', id: 'dev', icon: <Terminal size={16} />, tab: 'code' },
-    { name: 'Quality Assurance', id: 'qa', icon: <ShieldCheck size={16} />, tab: 'qa' },
-    { name: 'DevOps', id: 'ops', icon: <Rocket size={16} />, tab: 'devops' }
-  ];
-
-  const updateStatus = (index: number, status: AgentStatus) => {
-    setStatuses(prev => {
-      const next = [...prev];
-      next[index] = status;
-      return next;
+  const handleApplyPreset = (preset: typeof PRESET_REQUIREMENTS[0]) => {
+    setProject(prev => ({ ...prev, idea: preset.prompt }));
+    setSupportingDoc(preset.docPreview);
+    setSupportingDocName(`${preset.title.replace(/\s+/g, '-').toLowerCase()}-spec.txt`);
+    toast({
+      title: "Preset Loaded",
+      description: `Loaded "${preset.title}". Click "Generate Application" to run.`,
     });
   };
 
-  const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-  const isPipelineComplete = statuses.every(s => s === 'completed');
-
-  useEffect(() => {
-    if (isPipelineComplete) {
-      setSelectedTab('summary');
-    }
-  }, [isPipelineComplete]);
-
-  const handleStartPipeline = async () => {
-    if (!project.idea) {
-      toast({ title: "IDEA REQUIRED", description: "Please enter a project concept to begin.", variant: "destructive" });
+  const handleStartGeneration = async () => {
+    if (!project.idea.trim()) {
+      toast({
+        title: "Requirement Required",
+        description: "Please describe your business requirement or pick a preset.",
+        variant: "destructive",
+      });
       return;
     }
 
-    if (!user || !db) return;
-
     setIsProcessing(true);
-    setLogs([]);
-    addLog('SYSTEM', 'Initializing multi-agent workflow...', 'status');
-    
+
     let projectId = project.id;
-    let projectRef;
+    let projectRef: any = null;
 
-    if (!projectId) {
-      projectRef = doc(collection(db, 'users', user.uid, 'projects'));
-      projectId = projectRef.id;
-      
-      const initialData = {
-        id: projectId,
-        ownerId: user.uid,
-        idea: project.idea,
-        status: 'working',
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      };
-      
-      setProject(prev => ({ ...prev, ...initialData }));
-
-      try {
-        await setDoc(projectRef, initialData);
-        addLog('SYSTEM', `Assigned Project ID: ${projectId}`, 'info');
-      } catch (e) {}
-    } else {
-      projectRef = doc(db, 'users', user.uid, 'projects', projectId);
-      updateDocumentNonBlocking(projectRef, { status: 'working', updatedAt: serverTimestamp() });
-      addLog('SYSTEM', `Resuming Project: ${projectId}`, 'info');
+    if (user && db) {
+      if (!projectId) {
+        projectRef = doc(collection(db, 'users', user.uid, 'projects'));
+        projectId = projectRef.id;
+        const initialData = {
+          id: projectId,
+          ownerId: user.uid,
+          idea: project.idea,
+          supportingDocument: supportingDoc,
+          supportingDocName: supportingDocName,
+          status: 'generating',
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        };
+        try {
+          await setDoc(projectRef, initialData);
+        } catch (e) {
+          console.warn('Firestore write omitted:', e);
+        }
+      }
     }
 
     try {
-      let currentRequirements = project.requirements;
-      let currentArchitecture = project.architecture;
-      let currentCode = project.code;
-      let currentQa = project.qa;
-      let currentDevops = project.devops;
-
-      setActiveStage(0);
-      if (!currentRequirements) {
-        setSelectedTab('requirements');
-        updateStatus(0, 'working');
-        addLog('PM', 'Analyzing project concept...', 'status');
-        const results = await generateProjectRequirements({ projectIdea: project.idea });
-        currentRequirements = results;
-        setProject(prev => ({ ...prev, requirements: results }));
-        updateDocumentNonBlocking(projectRef, { requirements: results, updatedAt: serverTimestamp() });
-        addLog('PM', `Generated ${results.userStories.length} user stories.`, 'success');
-        updateStatus(0, 'completed');
-        await delay(800);
-      } else {
-        updateStatus(0, 'completed');
-        addLog('PM', 'Requirements restored.', 'info');
-      }
-
-      setActiveStage(1);
-      if (!currentArchitecture) {
-        setSelectedTab('architecture');
-        updateStatus(1, 'working');
-        addLog('ARCH', 'Drafting system blueprint...', 'status');
-        const results = await aiSystemArchitectDesignGeneration({ 
-          projectRequirements: JSON.stringify(currentRequirements) 
+      let result: any = null;
+      try {
+        const response = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            businessRequirement: project.idea,
+            supportingDocument: supportingDoc,
+          }),
         });
-        currentArchitecture = results;
-        setProject(prev => ({ ...prev, architecture: results }));
-        updateDocumentNonBlocking(projectRef, { architecture: results, updatedAt: serverTimestamp() });
-        addLog('ARCH', 'Architecture finalized.', 'success');
-        updateStatus(1, 'completed');
-        await delay(800);
-      } else {
-        updateStatus(1, 'completed');
-        addLog('ARCH', 'Architecture restored.', 'info');
+        if (response.ok) {
+          result = await response.json();
+        }
+      } catch (netErr) {
+        console.warn('API /api/generate fetch failed, switching to client synthesizer:', netErr);
       }
 
-      setActiveStage(2);
-      if (!currentCode) {
-        setSelectedTab('code');
-        updateStatus(2, 'working');
-        addLog('DEV', 'Generating production code stack...', 'status');
-        const results = await developerCodeGeneration({
-          requirements: JSON.stringify(currentRequirements.userStories),
-          architecture: currentArchitecture.systemArchitectureDescription,
-          programmingLanguage: 'TypeScript',
-          framework: 'Next.js'
-        });
-        currentCode = results;
-        setProject(prev => ({ ...prev, code: results }));
-        updateDocumentNonBlocking(projectRef, { code: results, updatedAt: serverTimestamp() });
-        addLog('DEV', `Successfully generated ${results.files?.length || 1} files.`, 'success');
-        updateStatus(2, 'completed');
-        await delay(800);
-      } else {
-        updateStatus(2, 'completed');
-        addLog('DEV', 'Codebase restored.', 'info');
+      if (!result || !result.appSpec) {
+        const fallbackSpec = createClientFallbackAppSpec(project.idea);
+        const codeFiles = generateClientCodeStack(fallbackSpec);
+        result = {
+          appSpec: fallbackSpec,
+          codeFiles,
+          summary: `Synthesized application ${fallbackSpec.name} with real-time validated workflows and localStorage persistence.`,
+        };
       }
 
-      setActiveStage(3);
-      if (!currentQa) {
-        setSelectedTab('qa');
-        updateStatus(3, 'working');
-        addLog('QA', 'Executing automated audit...', 'status');
-        const results = await aiQaTestGenerationAndExecution({
-          code: currentCode?.files?.map((f: any) => f.content).join('\n') || currentCode?.content || '',
-          requirements: JSON.stringify(currentRequirements.requirements),
-          architecture: currentArchitecture.systemArchitectureDescription
-        });
-        currentQa = results;
-        setProject(prev => ({ ...prev, qa: results }));
-        updateDocumentNonBlocking(projectRef, { qa: results, updatedAt: serverTimestamp() });
-        addLog('QA', `Audit complete. ${results.identifiedIssues.length} points identified.`, 'success');
-        updateStatus(3, 'completed');
-        await delay(800);
-      } else {
-        updateStatus(3, 'completed');
-        addLog('QA', 'QA reports restored.', 'info');
-      }
+      const updatedState: ProjectState = {
+        ...project,
+        id: projectId,
+        idea: project.idea,
+        supportingDocument: supportingDoc,
+        supportingDocName: supportingDocName,
+        appSpec: result.appSpec,
+        codeFiles: result.codeFiles,
+        summary: result.summary,
+        status: 'completed',
+      };
 
-      setActiveStage(4);
-      if (!currentDevops) {
-        setSelectedTab('devops');
-        updateStatus(4, 'working');
-        addLog('OPS', 'Formulating infrastructure plan...', 'status');
-        const results = await aiDevOpsDeploymentSuggestions({
-          projectDescription: project.idea,
-          technologiesUsed: ['Next.js', 'TypeScript', 'TailwindCSS'],
-          targetEnvironments: ['Vercel', 'AWS Amplify'],
-          codeSummary: currentCode?.codeExplanation || ''
-        });
-        currentDevops = results;
-        setProject(prev => ({ ...prev, devops: results, status: 'completed' }));
-        updateDocumentNonBlocking(projectRef, { devops: results, status: 'completed', updatedAt: serverTimestamp() });
-        addLog('OPS', 'Infrastructure plan finalized.', 'success');
-        updateStatus(4, 'completed');
-      } else {
-        updateStatus(4, 'completed');
-        addLog('OPS', 'DevOps plan restored.', 'info');
-      }
+      setProject(updatedState);
+      setSelectedWorkspaceTab('app');
 
-      addLog('SYSTEM', 'Autonomous pipeline execution completed.', 'success');
-      toast({ title: "PIPELINE COMPLETE", description: "All artifacts verified." });
-
-    } catch (error: any) {
-      const errorMessage = error.message || 'Unknown error occurred.';
-      addLog('SYSTEM', `Pipeline Error: ${errorMessage}`, 'error');
-      updateStatus(activeStage, 'error');
-      if (projectId) {
+      if (user && db && projectId) {
         const pRef = doc(db, 'users', user.uid, 'projects', projectId);
-        updateDocumentNonBlocking(pRef, { status: 'error', updatedAt: serverTimestamp() });
+        updateDocumentNonBlocking(pRef, {
+          appSpec: result.appSpec,
+          codeFiles: result.codeFiles,
+          summary: result.summary,
+          status: 'completed',
+          updatedAt: serverTimestamp(),
+        });
       }
-      toast({ title: "PROCESS ERROR", description: errorMessage, variant: "destructive" });
+
+      toast({
+        title: "Application Ready",
+        description: `Generated ${result.appSpec.name} with live workflows and local storage.`,
+      });
+    } catch (err: any) {
+      toast({
+        title: "Generation Failed",
+        description: err.message || "Failed to generate application. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsProcessing(false);
     }
@@ -318,561 +245,469 @@ export default function AutoDevPodDashboard() {
 
   const handleLoadProject = (proj: ProjectState) => {
     setProject(proj);
-    const newStatuses: AgentStatus[] = [
-      proj.requirements ? 'completed' : 'idle',
-      proj.architecture ? 'completed' : 'idle',
-      proj.code ? 'completed' : 'idle',
-      proj.qa ? 'completed' : 'idle',
-      proj.devops ? 'completed' : 'idle',
-    ];
-    setStatuses(newStatuses);
-    setLogs([{ timestamp: 'SYSTEM', agent: 'ARCHIVE', message: `Restored session: ${proj.id}`, type: 'info' }]);
-    
-    const firstIncomplete = newStatuses.findIndex(s => s === 'idle');
-    const resumeAt = firstIncomplete === -1 ? 4 : firstIncomplete;
-    
-    setActiveStage(resumeAt);
-    setSelectedTab(stages[resumeAt].tab);
-    setIsProcessing(false);
-    
-    toast({ title: "PROJECT LOADED", description: "Archive restored successfully." });
+    setSupportingDoc(proj.supportingDocument || '');
+    setSupportingDocName(proj.supportingDocName);
+    setSelectedWorkspaceTab('app');
+    toast({
+      title: "Project Restored",
+      description: `Loaded session: ${proj.appSpec?.name || proj.idea.slice(0, 30)}...`,
+    });
   };
 
   const handleClearBuffer = () => {
     setProject({ idea: '' });
-    setStatuses(['idle', 'idle', 'idle', 'idle', 'idle']);
-    setActiveStage(0);
-    setSelectedTab('requirements');
-    setLogs([]);
+    setSupportingDoc('');
+    setSupportingDocName(undefined);
   };
 
-  const handleDownloadReport = () => {
-    if (!project.devops) return;
+  const handleCopyCode = () => {
+    if (!project.codeFiles || !project.codeFiles[selectedCodeFileIndex]) return;
+    navigator.clipboard.writeText(project.codeFiles[selectedCodeFileIndex].content);
+    setCopiedCode(true);
+    toast({ title: "Copied", description: "Source code copied to clipboard." });
+    setTimeout(() => setCopiedCode(false), 2000);
+  };
 
-    const reportContent = `
-# AUTODEV_POD FINAL REPORT
-Generated for: ${project.idea}
-Status: VERIFIED
-
-## 01. PRODUCT REQUIREMENTS
-### FEATURE SPECIFICATIONS
-${project.requirements?.featureSpecifications?.map((f: any) => `- **${f.name}**: ${f.description}`).join('\n')}
-
-### USER STORIES
-${project.requirements?.userStories?.map((s: any) => `- ${s}`).join('\n')}
-
-## 02. SYSTEM ARCHITECTURE
-### NARRATIVE
-${project.architecture?.systemArchitectureDescription}
-
-## 03. SOURCE CODE
-${project.code?.files?.map((f: any) => `### FILE: ${f.fileName}\n\`\`\`typescript\n${f.content}\n\`\`\``).join('\n\n')}
-
-## 04. QUALITY ASSURANCE
-### OVERALL ASSESSMENT
-${project.qa?.overallAssessment}
-
-## 05. DEVOPS
-### PIPELINE OUTLINE
-${project.devops?.ciCdPipelineOutline}
-    `.trim();
-
-    const blob = new Blob([reportContent], { type: 'text/markdown' });
+  const handleDownloadAllCode = () => {
+    if (!project.codeFiles || !project.codeFiles.length) return;
+    const combined = project.codeFiles.map(f => `// ==========================================\n// FILE: ${f.fileName}\n// ==========================================\n\n${f.content}`).join('\n\n');
+    const blob = new Blob([combined], { type: 'text/typescript' });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `autodev-report-${Date.now()}.md`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${(project.appSpec?.name || 'app').toLowerCase().replace(/\s+/g, '-')}-code.ts`;
+    a.click();
     URL.revokeObjectURL(url);
+    toast({ title: "Downloaded", description: "Source code archive downloaded." });
   };
 
   const getFriendlyTime = (timestamp: any) => {
-    if (!timestamp || !isClient) return '...';
+    if (!timestamp || !isClient) return 'Recently';
     try {
       const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
       return format(date, 'MMM dd, HH:mm');
-    } catch (e) {
-      return '...';
+    } catch {
+      return 'Recently';
     }
   };
 
   if (isUserLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="animate-spin text-foreground/20" size={32} />
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs text-muted-foreground font-medium">Loading workspace...</p>
+        </div>
       </div>
     );
   }
 
   if (!user) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background text-center technical-grid">
-        <div className="w-20 h-20 border border-primary flex items-center justify-center text-primary mb-16 relative z-10 bg-card shadow-xl">
-          <Cpu size={36} />
-        </div>
-        <h1 className="text-6xl md:text-9xl font-headline font-bold mb-10 tracking-tight leading-none relative z-10 text-foreground">
-          AUTO_DEV<br /><span className="text-foreground/10">SYSTEMS.</span>
-        </h1>
-        <p className="text-[10px] text-foreground/40 mb-16 max-w-xl leading-tight uppercase tracking-[0.8em] font-bold relative z-10">
-          Autonomous multi-agent engineering workflows
-        </p>
-        <div className="relative z-10">
-          <Link href="/auth">
-            <Button size="lg" className="h-16 px-16 text-[11px] font-bold rounded-none bg-primary text-primary-foreground hover:bg-primary/90 transition-all uppercase tracking-[0.3em] shadow-2xl">
-              Initialize System <ChevronRight className="ml-2" size={16} />
-            </Button>
-          </Link>
-        </div>
-      </div>
-    );
+    return <HeroLandingPage />;
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground selection:bg-primary selection:text-primary-foreground font-body technical-grid overflow-hidden">
-      <header className="h-20 border-b border-border bg-card flex items-center justify-between px-10 sticky top-0 z-50">
-        <div className="flex items-center gap-6">
-          <div className="w-10 h-10 border border-primary flex items-center justify-center text-primary bg-card">
-            <Cpu size={20} />
+    <div className="min-h-screen flex flex-col bg-background text-foreground font-sans antialiased">
+      {/* Top Quiet Chrome Header */}
+      <header className="h-16 border-b border-border bg-card/80 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-40">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+            <Boxes size={18} />
           </div>
-          <div className="flex flex-col">
-            <h1 className="text-xl font-headline font-bold tracking-tight text-foreground">AUTODEV_POD</h1>
-            <span className="text-[8px] font-bold tracking-[0.3em] text-foreground/30 uppercase">Enterprise Engineering Hub</span>
+          <div>
+            <h1 className="text-sm font-semibold tracking-tight text-foreground leading-none">
+              AutoDev Dynamic Studio
+            </h1>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              Instant Application Synthesis & Live Runtime
+            </p>
           </div>
         </div>
-        
-        <div className="flex items-center gap-8">
-          <div className="hidden md:flex flex-col items-end gap-1">
-            <span className="text-[10px] font-bold tracking-widest text-foreground/50 uppercase truncate max-w-[200px]">{user.email}</span>
-            <span className="text-[7px] font-bold tracking-[0.2em] text-foreground/20 uppercase">Operator Verified</span>
+
+        <div className="flex items-center gap-4">
+          <div className="hidden sm:flex flex-col items-end">
+            <span className="text-xs font-medium text-foreground">{user.email}</span>
+            <span className="text-[10px] text-muted-foreground">Authenticated Workspace</span>
           </div>
-          <Button variant="ghost" size="icon" className="hover:bg-foreground/5 rounded-none h-10 w-10 border border-border" onClick={() => auth.signOut()}>
-            <LogOut size={16} className="text-foreground/60" />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => auth.signOut()}
+            className="h-8 text-xs text-muted-foreground hover:text-foreground gap-1.5"
+          >
+            <LogOut size={14} /> Sign out
           </Button>
         </div>
       </header>
 
-      <main className="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-0">
-        <div className="lg:col-span-3 border-r border-border bg-card flex flex-col h-full overflow-hidden">
-          <ScrollArea className="flex-1">
-            <div className="p-8 space-y-10">
-              <div className="space-y-4">
-                <label className="text-[9px] font-bold text-foreground/30 uppercase tracking-[0.2em] flex items-center gap-2">
-                  <Zap size={10} className="text-primary" /> Project_Definition
-                </label>
-                <textarea
-                  placeholder="DESCRIBE_SYSTEM_REQUIREMENTS..."
-                  className="w-full h-48 bg-muted border border-border rounded-none p-5 text-[11px] font-code focus:border-primary outline-none resize-none transition-all placeholder:text-foreground/20 leading-relaxed uppercase text-foreground shadow-inner"
-                  value={project.idea}
-                  onChange={(e) => setProject(prev => ({ ...prev, idea: e.target.value }))}
-                  disabled={isProcessing}
-                />
-                <Button 
-                  className="w-full font-bold h-12 rounded-none bg-primary text-primary-foreground hover:bg-primary/90 text-[10px] tracking-[0.2em] uppercase transition-all shadow-lg"
-                  onClick={handleStartPipeline}
-                  disabled={isProcessing || !project.idea}
-                >
-                  {isProcessing ? <><Loader2 className="mr-3 animate-spin" size={16} /> Processing</> : <><Play className="mr-3 fill-current" size={14} /> Execute Pipeline</>}
-                </Button>
-                
-                {(isPipelineComplete || project.devops) && (
-                  <Button 
-                    variant="outline" 
-                    className="w-full h-12 rounded-none border-primary text-[10px] tracking-[0.2em] uppercase hover:bg-primary hover:text-primary-foreground transition-all"
-                    onClick={handleDownloadReport}
-                  >
-                    <Download size={14} className="mr-3" /> Download Report
-                  </Button>
-                )}
-
-                <Button 
-                  variant="outline" 
-                  className="w-full h-12 rounded-none border-primary text-[10px] tracking-[0.2em] uppercase hover:bg-muted transition-all"
-                  onClick={handleClearBuffer}
-                  disabled={isProcessing}
-                >
-                  <RotateCcw size={14} className="mr-3" /> Reset
-                </Button>
-              </div>
-
-              <div className="space-y-6">
-                <h3 className="text-[9px] font-bold text-foreground/30 uppercase tracking-[0.2em] flex items-center gap-2">
-                  <Activity size={12} className="text-primary" /> Node_Matrix
-                </h3>
-                <div className="space-y-2">
-                  {stages.map((stage, idx) => (
-                    <button 
-                      key={idx}
-                      onClick={() => setSelectedTab(stage.tab)}
-                      className={cn(
-                        "w-full h-14 px-5 transition-all flex items-center justify-between border text-left rounded-none",
-                        selectedTab === stage.tab 
-                          ? 'border-primary bg-primary/[0.03] ring-1 ring-primary' 
-                          : 'border-border hover:border-primary/20 bg-card'
-                      )}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={cn("w-5 h-5 flex items-center justify-center", selectedTab === stage.tab ? 'text-primary' : 'text-foreground/20')}>
-                          {statuses[idx] === 'completed' ? <CheckCircle2 size={14} className="text-primary" /> : statuses[idx] === 'working' ? <Loader2 size={14} className="animate-spin text-primary" /> : stage.icon}
-                        </div>
-                        <span className="text-[9px] font-bold tracking-wider uppercase">{stage.name}</span>
-                      </div>
-                      <span className={cn(
-                        "text-[7px] font-bold px-2 py-0.5 uppercase",
-                        statuses[idx] === 'working' ? 'bg-primary text-primary-foreground animate-pulse' : 'bg-muted text-foreground/40'
-                      )}>
-                        {statuses[idx]}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                <h3 className="text-[9px] font-bold text-foreground/30 uppercase tracking-[0.2em] flex items-center gap-2">
-                  <HistoryIcon size={12} className="text-primary" /> Archive_Logs
-                </h3>
-                <div className="space-y-3">
-                  {isProjectsLoading ? (
-                    <div className="flex justify-center p-4"><Loader2 size={16} className="animate-spin opacity-20" /></div>
-                  ) : projects?.map((proj) => (
-                    <div 
-                      key={proj.id}
-                      onClick={() => handleLoadProject(proj)}
-                      className={cn(
-                        "p-4 border group cursor-pointer transition-all space-y-3 rounded-none",
-                        project.id === proj.id ? 'border-primary bg-primary/[0.02]' : 'border-border hover:border-primary/20 bg-card'
-                      )}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex flex-col">
-                          <span className="text-[7px] font-bold text-foreground/30 uppercase tracking-tighter">
-                            ID: {proj.id?.substring(0, 8)}
-                          </span>
-                          <div className="flex items-center gap-1.5 mt-1">
-                            <CalendarDays size={8} className="text-foreground/30" />
-                            <span className="text-[7px] font-medium text-foreground/40">{getFriendlyTime(proj.createdAt)}</span>
-                          </div>
-                        </div>
-                        <Badge variant="outline" className={cn(
-                          "text-[6px] px-1 py-0 h-4 rounded-none uppercase",
-                          proj.status === 'completed' ? 'border-primary text-primary' : 'border-border text-foreground/40'
-                        )}>
-                          {proj.status}
-                        </Badge>
-                      </div>
-                      <p className="text-[9px] font-bold uppercase truncate text-foreground/70">{proj.idea}</p>
-                      <div className="flex justify-end pt-1">
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); setProjectToDelete(proj.id!); }} 
-                          className="opacity-0 group-hover:opacity-100 p-1 hover:text-destructive text-foreground/20 transition-all"
-                        >
-                          <Trash2 size={10} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+      {/* Main Workspace Grid */}
+      <main className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-0 overflow-hidden">
+        {/* Left Side: Requirement Input, Documents & Presets */}
+        <div className="lg:col-span-4 border-r border-border bg-card/50 flex flex-col h-full overflow-y-auto p-6 space-y-6">
+          <div className="space-y-4">
+            <div>
+              <label className="text-xs font-semibold text-foreground flex items-center gap-2 mb-2">
+                <Sparkles size={14} className="text-primary" /> Business Requirement
+              </label>
+              <textarea
+                placeholder="Describe your application requirements, workflow, data fields, and target users..."
+                className="w-full h-36 bg-background border border-border rounded-lg p-3 text-xs leading-relaxed focus:outline-none focus:ring-1 focus:ring-ring resize-none placeholder:text-muted-foreground"
+                value={project.idea}
+                onChange={(e) => setProject(prev => ({ ...prev, idea: e.target.value }))}
+                disabled={isProcessing}
+              />
             </div>
-          </ScrollArea>
-        </div>
 
-        <div className="lg:col-span-9 flex flex-col h-full overflow-hidden bg-background">
-          <div className="flex-1 overflow-hidden p-10 flex flex-col gap-10">
-            <Tabs value={selectedTab} onValueChange={setSelectedTab} className="flex-1 flex flex-col">
-              <div className="flex items-center justify-between border-b border-border pb-6 overflow-x-auto shrink-0">
-                <TabsList className="bg-transparent h-auto gap-10 p-0 flex flex-nowrap">
-                  {stages.map((stage, i) => (
-                    <TabsTrigger 
-                      key={stage.tab}
-                      value={stage.tab} 
-                      className="data-[state=active]:text-primary text-foreground/30 font-bold text-[9px] uppercase tracking-[0.4em] p-0 bg-transparent rounded-none shadow-none border-b-2 border-transparent data-[state=active]:border-primary pb-3 transition-all"
-                    >
-                      0{i+1}_{stage.name.split(' ')[0]}
-                    </TabsTrigger>
-                  ))}
-                  <TabsTrigger value="summary" className="data-[state=active]:text-primary text-foreground/30 font-bold text-[9px] uppercase tracking-[0.4em] p-0 bg-transparent rounded-none shadow-none border-b-2 border-transparent data-[state=active]:border-primary pb-3 transition-all">
-                    06_REPORT
-                  </TabsTrigger>
-                </TabsList>
-              </div>
+            {/* Supporting Document Uploader */}
+            <DocumentUploader
+              onDocumentChange={(content, name) => {
+                setSupportingDoc(content);
+                setSupportingDocName(name);
+              }}
+              documentContent={supportingDoc}
+              documentName={supportingDocName}
+              disabled={isProcessing}
+            />
 
-              <div className="flex-1 overflow-hidden mt-10">
-                <TabsContent value="requirements" className="m-0 h-full">
-                  {project.requirements ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 h-full">
-                      <AgentArtifact title="Feature Specifications" type="list" content={project.requirements.featureSpecifications.map((f: any) => `${f.name}: ${f.description}`)} icon={<FileText size={16} />} />
-                      <div className="space-y-8 h-full flex flex-col">
-                        <AgentArtifact title="User Stories" type="list" content={project.requirements.userStories} icon={<Lightbulb size={16} />} />
-                        <AgentArtifact title="Constraints" type="list" content={project.requirements.requirements} icon={<ShieldCheck size={16} />} />
-                      </div>
-                    </div>
-                  ) : <EmptyView name="Product Requirements" icon={<Users size={48} />} />}
-                </TabsContent>
-
-                <TabsContent value="architecture" className="m-0 h-full">
-                  {project.architecture ? (
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">
-                      <div className="lg:col-span-8 flex flex-col gap-8 h-full">
-                        <AgentArtifact title="System Blueprint" type="list" content={project.architecture.systemBlueprintPoints} icon={<Layers size={16} />} />
-                        <AgentArtifact title="Architecture Narrative" type="text" content={project.architecture.systemArchitectureDescription} />
-                      </div>
-                      <div className="lg:col-span-4 flex flex-col gap-8 h-full">
-                        <AgentArtifact title="Data Schema" type="code" content={project.architecture.databaseSchema} />
-                        <AgentArtifact title="APIs" type="text" content={project.architecture.apiDesigns} />
-                      </div>
-                    </div>
-                  ) : <EmptyView name="System Architecture" icon={<Layers size={48} />} />}
-                </TabsContent>
-
-                <TabsContent value="code" className="m-0 h-full">
-                  {project.code ? (
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">
-                      <div className="lg:col-span-9 h-full">
-                        <AgentArtifact 
-                          title="SOURCE_CODE_ASSETS" 
-                          type="code" 
-                          content={project.code} 
-                          icon={<Code size={16} />} 
-                        />
-                      </div>
-                      <div className="lg:col-span-3 h-full">
-                        <AgentArtifact title="Implementation Logic" type="text" content={project.code.codeExplanation} />
-                      </div>
-                    </div>
-                  ) : <EmptyView name="AI Developer" icon={<Terminal size={48} />} />}
-                </TabsContent>
-
-                <TabsContent value="qa" className="m-0 h-full">
-                  {project.qa ? (
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">
-                      <div className="lg:col-span-6 h-full">
-                        <AgentArtifact title="Audit Report" type="text" content={project.qa.overallAssessment} icon={<Activity size={16} />} />
-                      </div>
-                      <div className="lg:col-span-6 space-y-8 flex flex-col">
-                        <AgentArtifact title="Identified Issues" type="list" content={project.qa.identifiedIssues?.map((i: any) => `[${i.severity.toUpperCase()}] ${i.description}`)} />
-                        <AgentArtifact title="Validation Plan" type="list" content={project.qa.testPlan?.map((t: any) => `${t.type.toUpperCase()}: ${t.description}`)} />
-                      </div>
-                    </div>
-                  ) : <EmptyView name="Quality Assurance" icon={<ShieldCheck size={48} />} />}
-                </TabsContent>
-
-                <TabsContent value="devops" className="m-0 h-full">
-                  {project.devops ? (
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">
-                      <div className="lg:col-span-7 h-full">
-                        <AgentArtifact title="Delivery Pipeline" type="text" content={project.devops.ciCdPipelineOutline} icon={<Rocket size={16} />} />
-                      </div>
-                      <div className="lg:col-span-5 h-full">
-                        <AgentArtifact title="Strategy" type="list" content={project.devops.suggestedDeploymentStrategies} />
-                      </div>
-                    </div>
-                  ) : <EmptyView name="DevOps" icon={<Rocket size={48} />} />}
-                </TabsContent>
-
-                <TabsContent value="summary" className="m-0 h-full">
-                  {(isPipelineComplete || project.devops) ? (
-                    <div className="h-full border border-border bg-card p-12 space-y-12 overflow-y-auto custom-scroll">
-                      <div className="flex items-center justify-between border-b border-border pb-10">
-                        <div className="space-y-2">
-                          <h2 className="text-3xl font-bold tracking-tight uppercase">EXECUTIVE_ENGINEERING_REPORT</h2>
-                          <div className="flex items-center gap-4 text-foreground/40 font-bold text-[9px] uppercase tracking-widest">
-                            <span>ID: {project.id}</span>
-                            <span>•</span>
-                            <span>CREATED: {getFriendlyTime(project.createdAt)}</span>
-                          </div>
-                        </div>
-                        <Badge variant="outline" className="text-[10px] uppercase tracking-widest bg-primary text-primary-foreground py-2 px-6 rounded-none">STATUS: VERIFIED</Badge>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-                        <div className="space-y-6">
-                          <h4 className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary flex items-center gap-2">
-                            <Box size={14} /> 01_PROJECT_CORE
-                          </h4>
-                          <div className="p-6 border border-border bg-muted/20 space-y-4">
-                            <p className="text-[11px] uppercase leading-relaxed text-foreground/70 font-medium">
-                              {project.idea}
-                            </p>
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-6">
-                          <h4 className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary flex items-center gap-2">
-                            <Layers size={14} /> 02_ARCH_BLUEPRINT
-                          </h4>
-                          <div className="p-6 border border-border bg-muted/20 space-y-4">
-                            <p className="text-[10px] uppercase leading-relaxed text-foreground/50">
-                              System designed for scalability using enterprise-grade structural patterns.
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="space-y-6">
-                          <h4 className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary flex items-center gap-2">
-                            <ShieldCheck size={14} /> 03_QA_AUDIT
-                          </h4>
-                          <div className="p-6 border border-border bg-muted/20 space-y-4">
-                            <p className="text-[10px] uppercase leading-relaxed text-foreground/60 font-bold">
-                              {project.qa?.overallAssessment.substring(0, 180)}...
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <Separator className="opacity-10" />
-
-                      <div className="space-y-12">
-                         <div className="flex items-center gap-12 flex-wrap">
-                            <div className="space-y-6 flex-1 min-w-[300px]">
-                               <div className="flex items-center gap-4 text-primary">
-                                 <Search size={18} />
-                                 <h3 className="text-[12px] font-bold uppercase tracking-[0.5em]">Architecture_Intelligence: RAG & Similarity</h3>
-                               </div>
-                               <div className="grid grid-cols-1 gap-10">
-                                  <div className="space-y-4 border-l-2 border-primary/20 pl-6">
-                                     <h4 className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
-                                       <Activity size={12} /> Strategy: Context Chaining
-                                     </h4>
-                                     <p className="text-[10px] uppercase text-foreground/50 leading-loose">
-                                       Currently, AutoDev Pod operates on a sequential context-chaining model. Each agent receives the full output of previous nodes to maintain engineering coherence.
-                                     </p>
-                                  </div>
-                                  <div className="space-y-4 border-l-2 border-primary/20 pl-6">
-                                     <h4 className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
-                                       <Dna size={12} /> RAG Similarity Parameters
-                                     </h4>
-                                     <ul className="text-[9px] uppercase text-foreground/50 leading-loose space-y-2">
-                                       <li>• <strong>Metric</strong>: Cosine Similarity (Semantic Orientation).</li>
-                                       <li>• <strong>Embeddings</strong>: High-density text vectors via Google GenAI.</li>
-                                       <li>• <strong>Thresholding</strong>: Minimum relevance score (0.85).</li>
-                                     </ul>
-                                  </div>
-                               </div>
-                            </div>
-                         </div>
-                      </div>
-
-                      <Separator className="opacity-10" />
-
-                      <div className="space-y-8">
-                        <h4 className="text-[11px] font-bold uppercase tracking-[0.4em] flex items-center gap-3">
-                          <Info size={16} className="text-primary" /> SYSTEM_INTEL
-                        </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                          <div className="p-6 border border-border bg-card space-y-3">
-                            <div className="flex items-center gap-2 text-primary">
-                              <Users size={14} />
-                              <span className="text-[9px] font-bold uppercase tracking-widest">Product Manager</span>
-                            </div>
-                            <p className="text-[8px] text-foreground/50 leading-relaxed uppercase">Transforms vision into technical rigor. Distills ideas into requirements, user stories, and specs.</p>
-                          </div>
-                          <div className="p-6 border border-border bg-card space-y-3">
-                            <div className="flex items-center gap-2 text-primary">
-                              <Layers size={14} />
-                              <span className="text-[9px] font-bold uppercase tracking-widest">System Architect</span>
-                            </div>
-                            <p className="text-[8px] text-foreground/50 leading-relaxed uppercase">Designs scalable patterns. Defines data flow, schemas, and API contracts.</p>
-                          </div>
-                          <div className="p-6 border border-border bg-card space-y-3">
-                            <div className="flex items-center gap-2 text-primary">
-                              <Terminal size={14} />
-                              <span className="text-[9px] font-bold uppercase tracking-widest">Lead Developer</span>
-                            </div>
-                            <p className="text-[8px] text-foreground/50 leading-relaxed uppercase">Generates production-ready, strictly vertical stack form code optimized for workspace fit.</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="pt-10 border-t border-border flex flex-col md:flex-row justify-between items-center gap-6">
-                        <span className="text-[8px] font-bold text-foreground/20 tracking-[1em] uppercase">SECURE_ARCHIVE_NODE_V4_VERIFIED</span>
-                        <Button onClick={handleDownloadReport} className="rounded-none h-12 px-8 text-[10px] tracking-widest font-bold bg-primary hover:bg-primary/90 transition-all shadow-lg">
-                          EXPORT_FULL_REPORT <Download size={14} className="ml-3" />
-                        </Button>
-                      </div>
-                    </div>
-                  ) : <EmptyView name="Final Report" icon={<Activity size={48} />} description="Complete the full pipeline to generate the verified executive report." />}
-                </TabsContent>
-              </div>
-            </Tabs>
-
-            <div className="h-48 shrink-0 bg-black/95 border border-primary/20 flex flex-col shadow-2xl relative">
-              <div className="absolute inset-0 scanline opacity-10 pointer-events-none" />
-              <div className="h-8 border-b border-white/5 px-4 flex items-center justify-between bg-white/[0.02]">
-                <div className="flex items-center gap-3">
-                  <CpuIcon size={12} className="text-primary animate-pulse" />
-                  <span className="text-[9px] font-bold text-primary/70 tracking-[0.4em] uppercase">Subsystem_Logs</span>
-                </div>
-              </div>
-              <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 terminal-scroll font-code text-[10px] leading-relaxed custom-scroll">
-                {logs.length > 0 ? logs.map((log, i) => (
-                  <div key={i} className="flex gap-4 mb-1">
-                    <span className="text-white/20 whitespace-nowrap">[{log.timestamp}]</span>
-                    <span className={cn(
-                      "font-bold uppercase whitespace-nowrap w-16",
-                      log.agent === 'SYSTEM' ? "text-primary/70" : "text-foreground/40"
-                    )}>{log.agent}</span>
-                    <span className={cn(
-                      "flex-1",
-                      log.type === 'error' ? "text-destructive" :
-                      log.type === 'success' ? "text-primary" :
-                      log.type === 'status' ? "text-primary/60 italic" : "text-foreground/60"
-                    )}>{log.message}</span>
-                  </div>
-                )) : (
-                  <div className="flex items-center gap-2 text-foreground/20 italic uppercase tracking-widest">
-                    <span className="animate-pulse">_</span>
-                    <span>System idle. Awaiting instruction.</span>
-                  </div>
+            {/* Action Buttons */}
+            <div className="flex items-center gap-2 pt-2">
+              <Button
+                className="flex-1 h-10 text-xs font-semibold gap-2 shadow-sm"
+                onClick={handleStartGeneration}
+                disabled={isProcessing || !project.idea.trim()}
+              >
+                {isProcessing ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+                    Generating App...
+                  </>
+                ) : (
+                  <>
+                    <Play size={14} className="fill-current" />
+                    Generate & Launch App
+                  </>
                 )}
-              </div>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleClearBuffer}
+                disabled={isProcessing || (!project.idea && !supportingDoc)}
+                className="h-10 text-xs px-3 text-muted-foreground"
+              >
+                <RotateCcw size={14} />
+              </Button>
+            </div>
+          </div>
+
+          {/* Quick Start Presets */}
+          <div className="space-y-3 pt-2">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
+              Quick-Start Business Presets
+            </span>
+            <div className="space-y-2">
+              {PRESET_REQUIREMENTS.map((preset, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => !isProcessing && handleApplyPreset(preset)}
+                  className="p-3 bg-card border border-border rounded-lg hover:border-primary/40 cursor-pointer transition-all space-y-1.5 group"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
+                      {preset.title}
+                    </span>
+                    <Badge variant="secondary" className="text-[10px] font-normal py-0">
+                      {preset.category}
+                    </Badge>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground leading-normal line-clamp-2">
+                    {preset.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Saved History Drawer */}
+          <div className="space-y-3 pt-4 border-t border-border">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <HistoryIcon size={12} /> Saved Applications
+              </span>
+              <span className="text-[11px] text-muted-foreground font-mono">
+                {projects?.length || 0}
+              </span>
+            </div>
+
+            <div className="space-y-2">
+              {isProjectsLoading ? (
+                <div className="py-4 text-center text-xs text-muted-foreground">Loading archives...</div>
+              ) : projects && projects.length > 0 ? (
+                projects.slice(0, 5).map((proj) => (
+                  <div
+                    key={proj.id}
+                    onClick={() => handleLoadProject(proj)}
+                    className={cn(
+                      "p-3 rounded-lg border transition-all cursor-pointer flex items-center justify-between gap-3 group",
+                      project.id === proj.id ? "bg-primary/5 border-primary" : "bg-card border-border hover:border-primary/30"
+                    )}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-medium text-foreground truncate">
+                        {proj.appSpec?.name || proj.idea}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground flex items-center gap-1.5 mt-0.5">
+                        <CalendarDays size={10} /> {getFriendlyTime(proj.createdAt)}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setProjectToDelete(proj.id!);
+                        }}
+                        className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-destructive transition-opacity"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                      <ChevronRight size={14} className="text-muted-foreground" />
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-[11px] text-muted-foreground italic">No saved applications yet.</p>
+              )}
             </div>
           </div>
         </div>
+
+        {/* Right Side: Working Application Viewport & Workspace Tabs */}
+        <div className="lg:col-span-8 flex flex-col h-full overflow-hidden bg-background">
+          {project.appSpec ? (
+            <div className="flex-1 flex flex-col p-6 overflow-hidden space-y-4">
+              {/* Segmented Top View Mode Switcher */}
+              <div className="flex items-center justify-between border-b border-border pb-3 shrink-0">
+                <Tabs value={selectedWorkspaceTab} onValueChange={setSelectedWorkspaceTab}>
+                  <TabsList className="bg-muted/50 p-1 border border-border">
+                    <TabsTrigger value="app" className="text-xs font-medium gap-1.5">
+                      <Play size={12} className="text-primary fill-primary" /> Live Application
+                    </TabsTrigger>
+                    <TabsTrigger value="pipeline" className="text-xs font-medium gap-1.5">
+                      <Boxes size={12} className="text-primary" /> Multi-Agent Pipeline (5 Nodes)
+                    </TabsTrigger>
+                    <TabsTrigger value="code" className="text-xs font-medium gap-1.5">
+                      <FileCode size={12} /> Source Code
+                    </TabsTrigger>
+                    <TabsTrigger value="architecture" className="text-xs font-medium gap-1.5">
+                      <Layers size={12} /> Schema & Spec
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="text-xs font-mono py-0.5">
+                    {project.appSpec.entities[0]?.pluralName} store active
+                  </Badge>
+                </div>
+              </div>
+
+              {/* View 1: The Live Rendered Application */}
+              {selectedWorkspaceTab === 'app' && (
+                <div className="flex-1 overflow-auto">
+                  <DynamicAppRunner appSpec={project.appSpec} />
+                </div>
+              )}
+
+              {/* View 2: Multi-Agent Engineering Pipeline */}
+              {selectedWorkspaceTab === 'pipeline' && (
+                <div className="flex-1 overflow-auto">
+                  <MultiAgentPipelineSection
+                    initialIdea={project.idea}
+                    initialData={project.pipelineData}
+                    onPipelineDataChange={(data) => {
+                      setProject(prev => ({ ...prev, pipelineData: data }));
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* View 2: Generated TypeScript Source Code */}
+              {selectedWorkspaceTab === 'code' && (
+                <div className="flex-1 border border-border rounded-xl bg-card overflow-hidden flex flex-col">
+                  <div className="px-4 py-3 border-b border-border bg-muted/30 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {project.codeFiles?.map((file, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setSelectedCodeFileIndex(idx)}
+                          className={cn(
+                            "px-3 py-1.5 text-xs font-mono rounded-md transition-colors",
+                            selectedCodeFileIndex === idx
+                              ? "bg-background text-foreground font-semibold shadow-sm border border-border"
+                              : "text-muted-foreground hover:text-foreground"
+                          )}
+                        >
+                          {file.fileName}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCopyCode}
+                        className="h-8 text-xs gap-1.5"
+                      >
+                        {copiedCode ? <Check size={13} className="text-primary" /> : <Copy size={13} />}
+                        {copiedCode ? "Copied" : "Copy"}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleDownloadAllCode}
+                        className="h-8 text-xs gap-1.5"
+                      >
+                        <Download size={13} /> Export all
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="flex-1 p-4 overflow-auto font-mono text-xs bg-muted/10 leading-relaxed text-foreground">
+                    <pre className="whitespace-pre-wrap">
+                      <code>{project.codeFiles?.[selectedCodeFileIndex]?.content}</code>
+                    </pre>
+                  </div>
+                </div>
+              )}
+
+              {/* View 3: Architecture & Schema Breakdown */}
+              {selectedWorkspaceTab === 'architecture' && (
+                <div className="flex-1 overflow-auto space-y-6">
+                  <Card className="border-border shadow-none">
+                    <CardHeader>
+                      <CardTitle className="text-sm font-semibold">Entity Data Models</CardTitle>
+                      <CardDescription className="text-xs">
+                        Schema definitions, field types, and validation rules generated from your requirements.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {project.appSpec.entities.map(entity => (
+                        <div key={entity.name} className="border border-border rounded-lg overflow-hidden">
+                          <div className="px-4 py-2.5 bg-muted/40 border-b border-border font-medium text-xs flex items-center justify-between">
+                            <span className="font-mono text-foreground font-semibold">
+                              {entity.name} ({entity.pluralName})
+                            </span>
+                            <span className="text-muted-foreground text-[11px]">
+                              Primary key: {entity.primaryKey}
+                            </span>
+                          </div>
+                          <table className="w-full text-xs">
+                            <thead className="bg-muted/10 border-b border-border text-muted-foreground font-medium">
+                              <tr>
+                                <th className="px-4 py-2 text-left">Field</th>
+                                <th className="px-4 py-2 text-left">Type</th>
+                                <th className="px-4 py-2 text-left">Validation</th>
+                                <th className="px-4 py-2 text-left">Options</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border">
+                              {entity.fields.map(f => (
+                                <tr key={f.name}>
+                                  <td className="px-4 py-2 font-mono font-medium text-foreground">{f.name}</td>
+                                  <td className="px-4 py-2 text-muted-foreground">{f.type}</td>
+                                  <td className="px-4 py-2 text-muted-foreground">
+                                    {f.validation?.required ? (
+                                      <Badge variant="outline" className="text-[10px] font-normal py-0">Required</Badge>
+                                    ) : (
+                                      <span className="text-muted-foreground/60">Optional</span>
+                                    )}
+                                  </td>
+                                  <td className="px-4 py-2 text-muted-foreground">
+                                    {f.options?.join(', ') || '-'}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+            </div>
+          ) : (
+            /* Empty State: Ready to Generate */
+            <div className="flex-1 flex flex-col items-center justify-center p-12 text-center max-w-lg mx-auto space-y-6">
+              <div className="w-14 h-14 rounded-2xl bg-muted/60 border border-border flex items-center justify-center text-muted-foreground shadow-sm">
+                <Compass size={28} />
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-base font-semibold text-foreground">
+                  Ready to Generate Your Application
+                </h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Enter a business requirement in the panel on the left (or pick one of the quick-start presets), optionally attach a supporting document, and click <strong>Generate & Launch App</strong>.
+                </p>
+              </div>
+
+              <div className="p-4 bg-card border border-border rounded-xl text-left space-y-3 w-full">
+                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
+                  What your generated application includes:
+                </span>
+                <ul className="text-xs text-foreground/80 space-y-2">
+                  <li className="flex items-center gap-2">
+                    <Check size={14} className="text-primary" /> Multi-screen Navigation & Layout
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check size={14} className="text-primary" /> Dynamic Forms with Real-time Field Validation
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check size={14} className="text-primary" /> Filterable, Searchable Data Tables & Lists
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check size={14} className="text-primary" /> Working Local Storage CRUD (Add, Edit, Delete)
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check size={14} className="text-primary" /> Full Exportable TypeScript Next.js Code Stack
+                  </li>
+                </ul>
+              </div>
+            </div>
+          )}
+        </div>
       </main>
 
+      {/* Delete Project Archive Dialog */}
       <AlertDialog open={!!projectToDelete} onOpenChange={() => setProjectToDelete(null)}>
-        <AlertDialogContent className="rounded-none border-border">
+        <AlertDialogContent className="rounded-xl border-border">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-xs font-bold uppercase tracking-[0.2em]">Delete Project Archive?</AlertDialogTitle>
-            <AlertDialogDescription className="text-[10px] uppercase tracking-wider leading-relaxed">
-              This will permanently remove the project and all generated artifacts.
+            <AlertDialogTitle className="text-sm font-semibold">Delete Saved Project?</AlertDialogTitle>
+            <AlertDialogDescription className="text-xs">
+              This will remove this project from your workspace archives.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-none text-[10px] uppercase font-bold tracking-widest">Abort</AlertDialogCancel>
+            <AlertDialogCancel className="text-xs h-9">Cancel</AlertDialogCancel>
             <AlertDialogAction 
               onClick={() => {
                 if (projectToDelete && user && db) {
                   deleteDocumentNonBlocking(doc(db, 'users', user.uid, 'projects', projectToDelete));
                   if (project.id === projectToDelete) handleClearBuffer();
                   setProjectToDelete(null);
-                  toast({ title: "ARCHIVE REMOVED", description: "Project data purged." });
+                  toast({ title: "Removed", description: "Project archive deleted." });
                 }
-              }} 
-              className="rounded-none bg-destructive text-destructive-foreground text-[10px] uppercase font-bold tracking-widest"
+              }}
+              className="bg-destructive text-destructive-foreground text-xs h-9 hover:bg-destructive/90"
             >
-              Confirm Purge
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
-  );
-}
-
-function EmptyView({ name, icon, description = "Awaiting deployment parameters..." }: { name: string, icon: React.ReactNode, description?: string }) {
-  return (
-    <div className="h-full border border-border bg-card flex flex-col items-center justify-center text-center p-20 space-y-8 shadow-sm">
-      <div className="w-20 h-20 border border-border flex items-center justify-center text-foreground/5 bg-background shadow-inner">
-        {React.cloneElement(icon as React.ReactElement, { size: 40 })}
-      </div>
-      <div className="space-y-3">
-        <h3 className="text-xs font-bold uppercase tracking-[0.5em] text-foreground/40">{name}</h3>
-        <p className="text-[9px] uppercase tracking-[0.2em] text-foreground/20 font-bold max-w-sm mx-auto leading-relaxed">{description}</p>
-      </div>
     </div>
   );
 }

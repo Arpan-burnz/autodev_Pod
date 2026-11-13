@@ -23,7 +23,7 @@
     --border: 214 32% 91%;
     --input: 214 32% 91%;
     --ring: 222 47% 11%;
-    --radius: 0rem;
+    --radius: 0.5rem;
   }
 }
 
@@ -35,7 +35,7 @@
     @apply bg-background text-foreground font-body antialiased selection:bg-primary selection:text-primary-foreground;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-headline uppercase tracking-tight font-bold;
+    @apply font-headline tracking-tight font-bold;
   }
   code, pre {
     @apply font-code;
