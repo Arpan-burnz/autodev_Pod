@@ -1,40 +1,50 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  LayoutDashboard, 
-  List, 
-  PlusCircle, 
-  Search, 
-  RotateCcw, 
-  Download, 
-  Edit2, 
-  Trash2, 
-  CheckCircle2, 
-  AlertCircle, 
-  Clock, 
-  Activity, 
-  Filter, 
-  ArrowUpDown, 
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import {
+  LayoutDashboard,
+  List,
+  PlusCircle,
+  Search,
+  RotateCcw,
+  Download,
+  Upload,
+  Edit2,
+  Trash2,
+  CheckCircle2,
+  AlertCircle,
+  Clock,
+  Activity,
+  Filter,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
   ExternalLink,
   ChevronRight,
+  ChevronLeft,
   X,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Kanban as KanbanIcon,
+  Sparkles,
+  CheckSquare,
+  Square,
+  Eye
 } from 'lucide-react';
-import { 
-  DynamicAppSpec, 
-  ScreenSpec, 
-  EntitySpec, 
-  FieldSpec, 
-  TableConfig, 
-  FormConfig, 
-  DashboardConfig 
+import {
+  DynamicAppSpec,
+  ScreenSpec,
+  EntitySpec,
+  FieldSpec,
+  TableConfig,
+  FormConfig,
+  DashboardConfig
 } from '@/types/dynamic-app';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { 
+import { Checkbox } from '@/components/ui/checkbox';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -47,6 +57,16 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
+// Newly engineered modular studio components
+import { AnalyticsCharts } from './AnalyticsCharts';
+import { KanbanBoard } from './KanbanBoard';
+import { RecordDetailSheet } from './RecordDetailSheet';
+import {
+  exportRecordsToCsv,
+  parseCsvToRecords,
+  generateSampleRecord
+} from '@/lib/dynamic-app-helpers';
+
 interface DynamicAppRunnerProps {
   appSpec: DynamicAppSpec;
   className?: string;
@@ -54,6 +74,8 @@ interface DynamicAppRunnerProps {
 
 export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) {
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const primaryEntity = appSpec.entities[0] || {
     name: 'item',
     pluralName: 'items',
@@ -68,7 +90,7 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
   const [records, setRecords] = useState<Array<Record<string, any>>>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Active Screen Navigation
+  // Active Screen Navigation (dashboard, table, kanban, or form)
   const [activeScreenId, setActiveScreenId] = useState<string>(
     appSpec.navigation.defaultScreenId || appSpec.screens[0]?.id || 'dashboard'
   );
@@ -76,6 +98,20 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+
+  // Sorting State
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(5);
+
+  // Batch Selection State
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  // Inspecting Record for Slide-Out Drawer
+  const [inspectingRecord, setInspectingRecord] = useState<Record<string, any> | null>(null);
 
   // Form State
   const [formData, setFormData] = useState<Record<string, any>>({});
@@ -87,6 +123,15 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
 
   // Delete Dialog State
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Find status field for transitions and batch workflows
+  const statusField = useMemo(() => {
+    return primaryEntity.fields.find(f =>
+      f.name.toLowerCase().includes('status') ||
+      f.name.toLowerCase().includes('stage') ||
+      f.name.toLowerCase().includes('state')
+    );
+  }, [primaryEntity]);
 
   // Initialize or load from localStorage
   useEffect(() => {
@@ -115,13 +160,14 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
 
   const handleResetData = () => {
     updateStorage(primaryEntity.initialData || []);
+    setSelectedIds([]);
     toast({
       title: "Data Reset",
       description: "Restored baseline demo records.",
     });
   };
 
-  const handleExportData = () => {
+  const handleExportJson = () => {
     if (!records.length) return;
     const jsonStr = JSON.stringify(records, null, 2);
     const blob = new Blob([jsonStr], { type: 'application/json' });
@@ -132,9 +178,103 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
     a.click();
     URL.revokeObjectURL(a.href);
     toast({
-      title: "Data Exported",
-      description: "Downloaded JSON dataset.",
+      title: "JSON Exported",
+      description: `Downloaded ${records.length} records.`,
     });
+  };
+
+  const handleExportCsv = (recordsToExport?: Array<Record<string, any>>) => {
+    const data = recordsToExport || records;
+    if (!data.length) return;
+    exportRecordsToCsv(
+      data,
+      primaryEntity.fields,
+      `${appSpec.name.toLowerCase().replace(/\s+/g, '-')}-records.csv`
+    );
+    toast({
+      title: "CSV Exported",
+      description: `Exported ${data.length} records to CSV format.`,
+    });
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      if (!content) return;
+
+      try {
+        let imported: Array<Record<string, any>> = [];
+        if (file.name.endsWith('.json')) {
+          const parsed = JSON.parse(content);
+          imported = Array.isArray(parsed) ? parsed : [parsed];
+        } else {
+          imported = parseCsvToRecords(content, primaryEntity.fields);
+        }
+
+        if (imported.length > 0) {
+          const updated = [...imported, ...records];
+          updateStorage(updated);
+          toast({
+            title: "Data Imported",
+            description: `Successfully loaded ${imported.length} records from ${file.name}.`,
+          });
+        } else {
+          toast({
+            title: "Import Notice",
+            description: "No valid records could be extracted from file.",
+            variant: "destructive",
+          });
+        }
+      } catch (err: any) {
+        toast({
+          title: "Import Error",
+          description: err.message || "Failed to parse file.",
+          variant: "destructive",
+        });
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  // Status transition callback
+  const handleStatusChange = (recordId: string, newStatus: string) => {
+    if (!statusField) return;
+    const updated = records.map(r => {
+      if (r.id === recordId) {
+        return { ...r, [statusField.name]: newStatus };
+      }
+      return r;
+    });
+    updateStorage(updated);
+
+    if (inspectingRecord && inspectingRecord.id === recordId) {
+      setInspectingRecord(prev => prev ? { ...prev, [statusField.name]: newStatus } : null);
+    }
+
+    toast({
+      title: "Status Updated",
+      description: `Record ${recordId} transitioned to "${newStatus}".`,
+    });
+  };
+
+  // Sorting toggle
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      if (sortDirection === 'asc') {
+        setSortDirection('desc');
+      } else {
+        setSortField(null);
+        setSortDirection('asc');
+      }
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
   };
 
   // Validation function
@@ -178,7 +318,7 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
   // Handle Form Submission (Create Record)
   const handleFormSubmit = (e: React.FormEvent, formConfig?: FormConfig) => {
     e.preventDefault();
-    const fieldsToValidate = primaryEntity.fields.filter(f => 
+    const fieldsToValidate = primaryEntity.fields.filter(f =>
       !formConfig?.fields || formConfig.fields.includes(f.name)
     );
 
@@ -219,7 +359,22 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
     // Redirect to configured success screen or table
     if (formConfig?.successRedirectScreenId) {
       setActiveScreenId(formConfig.successRedirectScreenId);
+    } else {
+      const tableScreen = appSpec.screens.find(s => s.type === 'table');
+      if (tableScreen) setActiveScreenId(tableScreen.id);
     }
+  };
+
+  // Auto-Fill sample data inside create form
+  const handleAutoFillSample = () => {
+    const sample = generateSampleRecord(primaryEntity.fields, records.length);
+    const { id, ...dataFields } = sample;
+    setFormData(dataFields);
+    setFormErrors({});
+    toast({
+      title: "Sample Data Loaded",
+      description: "Filled fields with domain-realistic values.",
+    });
   };
 
   // Handle Edit Submission
@@ -256,18 +411,50 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
     if (!deletingId) return;
     const updated = records.filter(r => r.id !== deletingId);
     updateStorage(updated);
+    setSelectedIds(prev => prev.filter(id => id !== deletingId));
     setDeletingId(null);
+
     toast({
-      title: "Record Removed",
-      description: "The item has been deleted.",
+      title: "Record Deleted",
+      description: "Removed record from storage.",
     });
   };
 
-  // Filtered Records for Table View
+  // Batch action handlers
+  const handleBatchDelete = () => {
+    if (!selectedIds.length) return;
+    const toDeleteSet = new Set(selectedIds);
+    const updated = records.filter(r => !toDeleteSet.has(r.id));
+    updateStorage(updated);
+    setSelectedIds([]);
+    toast({
+      title: "Batch Deleted",
+      description: `Deleted ${toDeleteSet.size} records.`,
+    });
+  };
+
+  const handleBatchStatusUpdate = (newStatus: string) => {
+    if (!statusField || !selectedIds.length) return;
+    const selectedSet = new Set(selectedIds);
+    const updated = records.map(r => {
+      if (selectedSet.has(r.id)) {
+        return { ...r, [statusField.name]: newStatus };
+      }
+      return r;
+    });
+    updateStorage(updated);
+    setSelectedIds([]);
+    toast({
+      title: "Batch Status Updated",
+      description: `Updated ${selectedSet.size} records to "${newStatus}".`,
+    });
+  };
+
+  // Filter & Search logic
   const filteredRecords = useMemo(() => {
     return records.filter(record => {
-      // Search filter
-      const matchesSearch = !searchQuery.trim() || Object.values(record).some(val => 
+      // Free-text search
+      const matchesSearch = !searchQuery.trim() || Object.values(record).some(val =>
         String(val).toLowerCase().includes(searchQuery.toLowerCase())
       );
 
@@ -284,7 +471,54 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
     });
   }, [records, searchQuery, statusFilter, primaryEntity.fields]);
 
-  const activeScreen = appSpec.screens.find(s => s.id === activeScreenId) || appSpec.screens[0];
+  // Sort logic
+  const sortedRecords = useMemo(() => {
+    if (!sortField) return filteredRecords;
+    return [...filteredRecords].sort((a, b) => {
+      const valA = a[sortField];
+      const valB = b[sortField];
+
+      if (valA === valB) return 0;
+      if (valA === undefined || valA === null) return 1;
+      if (valB === undefined || valB === null) return -1;
+
+      const numA = Number(valA);
+      const numB = Number(valB);
+      if (!isNaN(numA) && !isNaN(numB)) {
+        return sortDirection === 'asc' ? numA - numB : numB - numA;
+      }
+
+      const strA = String(valA).toLowerCase();
+      const strB = String(valB).toLowerCase();
+      return sortDirection === 'asc'
+        ? strA.localeCompare(strB)
+        : strB.localeCompare(strA);
+    });
+  }, [filteredRecords, sortField, sortDirection]);
+
+  // Paginated records
+  const totalPages = Math.max(1, Math.ceil(sortedRecords.length / pageSize));
+  const paginatedRecords = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return sortedRecords.slice(start, start + pageSize);
+  }, [sortedRecords, currentPage, pageSize]);
+
+  // Reset page if filtered results change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter, pageSize]);
+
+  const activeScreen: ScreenSpec = useMemo(() => {
+    if (activeScreenId === 'kanban') {
+      return {
+        id: 'kanban',
+        title: `${primaryEntity.name} Kanban Board`,
+        subtitle: `Visual workflow stage management for ${primaryEntity.pluralName.toLowerCase()}`,
+        type: 'kanban',
+      };
+    }
+    return appSpec.screens.find(s => s.id === activeScreenId) || appSpec.screens[0];
+  }, [activeScreenId, appSpec.screens, primaryEntity]);
 
   const getBadgeVariant = (format?: string, value?: string, badgeColorMap?: Record<string, string>) => {
     if (badgeColorMap && value && badgeColorMap[value]) {
@@ -301,8 +535,35 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
     return 'secondary';
   };
 
+  // Checkbox toggle helpers
+  const isAllPageSelected = paginatedRecords.length > 0 && paginatedRecords.every(r => selectedIds.includes(r.id));
+  const toggleSelectAllPage = () => {
+    if (isAllPageSelected) {
+      const pageIds = new Set(paginatedRecords.map(r => r.id));
+      setSelectedIds(prev => prev.filter(id => !pageIds.has(id)));
+    } else {
+      const newIds = new Set([...selectedIds, ...paginatedRecords.map(r => r.id)]);
+      setSelectedIds(Array.from(newIds));
+    }
+  };
+
+  const toggleSelectOne = (id: string) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
   return (
     <div className={cn("w-full bg-card rounded-xl border border-border overflow-hidden shadow-sm flex flex-col min-h-[600px]", className)}>
+      {/* Hidden File Input for CSV/JSON Import */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        accept=".csv, .json, text/csv, application/json"
+        className="hidden"
+        onChange={handleFileUpload}
+      />
+
       {/* Dynamic App Header */}
       <header className="px-6 py-4 border-b border-border bg-background flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -323,22 +584,43 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
         </div>
 
         {/* Global Toolbar Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button
             variant="outline"
             size="sm"
-            onClick={handleExportData}
+            onClick={() => fileInputRef.current?.click()}
+            className="h-8 text-xs font-medium text-foreground gap-1.5"
+            title="Import CSV or JSON data"
+          >
+            <Upload size={13} /> Import
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleExportCsv()}
+            className="h-8 text-xs font-medium text-foreground gap-1.5"
+            title="Download records as CSV spreadsheet"
+          >
+            <FileSpreadsheet size={13} /> Export CSV
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportJson}
             className="h-8 text-xs font-medium text-foreground gap-1.5"
           >
             <Download size={13} /> Export JSON
           </Button>
+
           <Button
             variant="outline"
             size="sm"
             onClick={handleResetData}
             className="h-8 text-xs font-medium text-muted-foreground hover:text-foreground gap-1.5"
           >
-            <RotateCcw size={13} /> Reset data
+            <RotateCcw size={13} /> Reset
           </Button>
         </div>
       </header>
@@ -353,8 +635,8 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
               onClick={() => setActiveScreenId(navItem.id)}
               className={cn(
                 "flex items-center gap-2 px-3.5 py-2.5 text-xs font-medium transition-colors border-b-2 -mb-[1px] whitespace-nowrap",
-                isActive 
-                  ? "border-primary text-primary font-semibold bg-background/50" 
+                isActive
+                  ? "border-primary text-primary font-semibold bg-background/50"
                   : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
               )}
             >
@@ -370,10 +652,28 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
             </button>
           );
         })}
+
+        {/* Dynamic Kanban View Tab */}
+        <button
+          onClick={() => setActiveScreenId('kanban')}
+          className={cn(
+            "flex items-center gap-2 px-3.5 py-2.5 text-xs font-medium transition-colors border-b-2 -mb-[1px] whitespace-nowrap",
+            activeScreenId === 'kanban'
+              ? "border-primary text-primary font-semibold bg-background/50"
+              : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
+          )}
+        >
+          <KanbanIcon size={14} />
+          <span>Kanban Board</span>
+          <span className="text-[9px] px-1.5 py-0.2 rounded bg-primary/10 text-primary font-mono font-medium">
+            {records.length}
+          </span>
+        </button>
       </nav>
 
       {/* Main Dynamic Screen Content */}
       <main className="flex-1 p-6 overflow-auto bg-muted/10">
+        {/* VIEW 1: Overview Dashboard */}
         {activeScreen.type === 'dashboard' && (
           <div className="space-y-6 max-w-6xl mx-auto">
             {/* Screen Header */}
@@ -422,6 +722,9 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
               })}
             </div>
 
+            {/* Visual Analytics Component (Recharts Category Donut & SLA Velocity) */}
+            <AnalyticsCharts entity={primaryEntity} records={records} />
+
             {/* Quick Actions & Recent Data Table */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Quick Actions Card */}
@@ -445,12 +748,22 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
                     </Button>
                   ))}
                   <Button
-                    variant="ghost"
-                    className="w-full justify-between text-xs font-medium h-9 text-muted-foreground hover:text-foreground"
-                    onClick={handleExportData}
+                    variant="outline"
+                    className="w-full justify-between text-xs font-medium h-9"
+                    onClick={() => setActiveScreenId('kanban')}
                   >
                     <span className="flex items-center gap-2">
-                      <FileSpreadsheet size={14} /> Download Dataset
+                      <KanbanIcon size={14} className="text-primary" /> Open Kanban Board
+                    </span>
+                    <ChevronRight size={14} className="text-muted-foreground" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-between text-xs font-medium h-9 text-muted-foreground hover:text-foreground"
+                    onClick={() => handleExportCsv()}
+                  >
+                    <span className="flex items-center gap-2">
+                      <FileSpreadsheet size={14} /> Download CSV Dataset
                     </span>
                     <Download size={13} />
                   </Button>
@@ -462,7 +775,7 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
                 <CardHeader className="flex flex-row items-center justify-between pb-3">
                   <div>
                     <CardTitle className="text-sm font-semibold">Recent {primaryEntity.pluralName}</CardTitle>
-                    <CardDescription className="text-xs">Latest records in local store</CardDescription>
+                    <CardDescription className="text-xs">Click any row to inspect attributes</CardDescription>
                   </div>
                   <Button
                     variant="ghost"
@@ -489,7 +802,11 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
                       </thead>
                       <tbody className="divide-y divide-border">
                         {records.slice(0, 4).map(record => (
-                          <tr key={record.id} className="hover:bg-muted/20 transition-colors">
+                          <tr
+                            key={record.id}
+                            onClick={() => setInspectingRecord(record)}
+                            className="hover:bg-muted/30 transition-colors cursor-pointer group"
+                          >
                             {primaryEntity.fields.slice(0, 4).map(f => (
                               <td key={f.name} className="px-4 py-2.5 font-medium text-foreground">
                                 {f.type === 'badge' ? (
@@ -505,7 +822,10 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => setEditingRecord(record)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingRecord(record);
+                                }}
                                 className="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
                               >
                                 Edit
@@ -522,6 +842,7 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
           </div>
         )}
 
+        {/* VIEW 2: Interactive Records Table with Sorting, Batch Actions, & Pagination */}
         {activeScreen.type === 'table' && (
           <div className="space-y-4 max-w-6xl mx-auto">
             {/* Screen Header & Action */}
@@ -535,22 +856,33 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
                 )}
               </div>
 
-              {activeScreen.tableConfig?.allowCreate && (
+              <div className="flex items-center gap-2">
                 <Button
+                  variant="outline"
                   size="sm"
                   className="h-9 text-xs font-medium gap-1.5"
-                  onClick={() => {
-                    const formScreenId = activeScreen.tableConfig?.createScreenId || 
-                      appSpec.screens.find(s => s.type === 'form')?.id;
-                    if (formScreenId) setActiveScreenId(formScreenId);
-                  }}
+                  onClick={() => setActiveScreenId('kanban')}
                 >
-                  <PlusCircle size={14} /> Add new {primaryEntity.name}
+                  <KanbanIcon size={14} /> Kanban View
                 </Button>
-              )}
+
+                {activeScreen.tableConfig?.allowCreate && (
+                  <Button
+                    size="sm"
+                    className="h-9 text-xs font-medium gap-1.5"
+                    onClick={() => {
+                      const formScreenId = activeScreen.tableConfig?.createScreenId ||
+                        appSpec.screens.find(s => s.type === 'form')?.id;
+                      if (formScreenId) setActiveScreenId(formScreenId);
+                    }}
+                  >
+                    <PlusCircle size={14} /> Add new {primaryEntity.name}
+                  </Button>
+                )}
+              </div>
             </div>
 
-            {/* Filter & Search Bar */}
+            {/* Filter, Search & Batch Bar */}
             <div className="p-3 bg-card border border-border rounded-lg flex flex-col sm:flex-row items-center justify-between gap-3">
               <div className="relative w-full sm:w-72">
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -562,23 +894,100 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
                 />
               </div>
 
-              {activeScreen.tableConfig?.filterOptions && (
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <Filter size={13} className="text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">Filter:</span>
+              <div className="flex items-center gap-3 w-full sm:w-auto flex-wrap justify-between sm:justify-end">
+                {activeScreen.tableConfig?.filterOptions && (
+                  <div className="flex items-center gap-2">
+                    <Filter size={13} className="text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">Filter:</span>
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                      className="text-xs h-8 px-2.5 rounded-md border border-input bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                    >
+                      <option value="All">All Categories</option>
+                      {activeScreen.tableConfig.filterOptions.map((opt: string) => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Rows per page selector */}
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <span>Show:</span>
                   <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="text-xs h-8 px-2.5 rounded-md border border-input bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                    value={pageSize}
+                    onChange={(e) => setPageSize(Number(e.target.value))}
+                    className="text-xs h-8 px-2 rounded-md border border-input bg-background text-foreground focus:outline-none"
                   >
-                    <option value="All">All Categories</option>
-                    {activeScreen.tableConfig.filterOptions.map((opt: string) => (
-                      <option key={opt} value={opt}>{opt}</option>
-                    ))}
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={25}>25</option>
                   </select>
                 </div>
-              )}
+              </div>
             </div>
+
+            {/* Floating / Sticky Batch Actions Bar */}
+            {selectedIds.length > 0 && (
+              <div className="p-3 bg-primary/10 border border-primary/20 rounded-lg flex items-center justify-between gap-4 animate-in fade-in slide-in-from-top-1">
+                <div className="flex items-center gap-2">
+                  <Badge variant="default" className="text-xs font-mono py-0.5">
+                    {selectedIds.length} selected
+                  </Badge>
+                  <span className="text-xs font-medium text-foreground">
+                    Batch Actions:
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  {statusField && statusField.options && (
+                    <select
+                      onChange={(e) => {
+                        if (e.target.value) handleBatchStatusUpdate(e.target.value);
+                      }}
+                      defaultValue=""
+                      className="text-xs h-7 px-2 rounded-md border border-border bg-background text-foreground"
+                    >
+                      <option value="" disabled>Set Status...</option>
+                      {statusField.options.map(opt => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  )}
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const selectedRecords = records.filter(r => selectedIds.includes(r.id));
+                      handleExportCsv(selectedRecords);
+                    }}
+                    className="h-7 text-xs bg-background gap-1"
+                  >
+                    <FileSpreadsheet size={12} /> Export CSV
+                  </Button>
+
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleBatchDelete}
+                    className="h-7 text-xs gap-1"
+                  >
+                    <Trash2 size={12} /> Delete
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSelectedIds([])}
+                    className="h-7 text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
 
             {/* Records Table */}
             <Card className="bg-card border-border shadow-none overflow-hidden">
@@ -586,69 +995,128 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
                 <table className="w-full text-xs">
                   <thead className="bg-muted/40 border-b border-border text-muted-foreground font-semibold">
                     <tr>
-                      {activeScreen.tableConfig?.columns.map(col => (
-                        <th key={col.field} className="px-5 py-3 text-left">
-                          {col.header}
-                        </th>
-                      ))}
-                      <th className="px-5 py-3 text-right">Actions</th>
+                      {/* Checkbox All */}
+                      <th className="px-4 py-3 w-8">
+                        <Checkbox
+                          checked={isAllPageSelected}
+                          onCheckedChange={toggleSelectAllPage}
+                          aria-label="Select all on this page"
+                        />
+                      </th>
+                      {activeScreen.tableConfig?.columns.map(col => {
+                        const isSorted = sortField === col.field;
+                        return (
+                          <th
+                            key={col.field}
+                            onClick={() => handleSort(col.field)}
+                            className="px-4 py-3 text-left cursor-pointer hover:text-foreground transition-colors select-none"
+                          >
+                            <div className="flex items-center gap-1.5">
+                              <span>{col.header}</span>
+                              {isSorted ? (
+                                sortDirection === 'asc' ? (
+                                  <ArrowUp size={12} className="text-primary" />
+                                ) : (
+                                  <ArrowDown size={12} className="text-primary" />
+                                )
+                              ) : (
+                                <ArrowUpDown size={11} className="opacity-40" />
+                              )}
+                            </div>
+                          </th>
+                        );
+                      })}
+                      <th className="px-4 py-3 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {filteredRecords.length > 0 ? (
-                      filteredRecords.map(record => (
-                        <tr key={record.id} className="hover:bg-muted/20 transition-colors">
-                          {activeScreen.tableConfig?.columns.map(col => {
-                            const val = record[col.field];
-                            return (
-                              <td key={col.field} className="px-5 py-3 text-foreground font-medium">
-                                {col.format === 'badge' ? (
-                                  <Badge 
-                                    variant={getBadgeVariant(col.format, val, col.badgeColorMap)}
-                                    className="text-[10px] font-normal py-0"
-                                  >
-                                    {val ?? '-'}
-                                  </Badge>
-                                ) : col.format === 'currency' ? (
-                                  <span className="font-mono tabular-nums">
-                                    ${Number(val || 0).toLocaleString()}
-                                  </span>
-                                ) : col.format === 'number' ? (
-                                  <span className="font-mono tabular-nums">
-                                    {Number(val || 0).toLocaleString()}
-                                  </span>
-                                ) : (
-                                  String(val ?? '-')
-                                )}
-                              </td>
-                            );
-                          })}
-                          <td className="px-5 py-3 text-right">
-                            <div className="flex items-center justify-end gap-1">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setEditingRecord(record)}
-                                className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
-                              >
-                                <Edit2 size={13} />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setDeletingId(record.id)}
-                                className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
-                              >
-                                <Trash2 size={13} />
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
+                    {paginatedRecords.length > 0 ? (
+                      paginatedRecords.map(record => {
+                        const isSelected = selectedIds.includes(record.id);
+                        return (
+                          <tr
+                            key={record.id}
+                            onClick={() => setInspectingRecord(record)}
+                            className={cn(
+                              "hover:bg-muted/30 transition-colors cursor-pointer",
+                              isSelected && "bg-primary/5"
+                            )}
+                          >
+                            {/* Checkbox Row */}
+                            <td
+                              className="px-4 py-3 w-8"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Checkbox
+                                checked={isSelected}
+                                onCheckedChange={() => toggleSelectOne(record.id)}
+                                aria-label={`Select record ${record.id}`}
+                              />
+                            </td>
+
+                            {activeScreen.tableConfig?.columns.map(col => {
+                              const val = record[col.field];
+                              return (
+                                <td key={col.field} className="px-4 py-3 text-foreground font-medium">
+                                  {col.format === 'badge' ? (
+                                    <Badge
+                                      variant={getBadgeVariant(col.format, val, col.badgeColorMap)}
+                                      className="text-[10px] font-normal py-0"
+                                    >
+                                      {val ?? '-'}
+                                    </Badge>
+                                  ) : col.format === 'currency' ? (
+                                    <span className="font-mono tabular-nums">
+                                      ${Number(val || 0).toLocaleString()}
+                                    </span>
+                                  ) : col.format === 'number' ? (
+                                    <span className="font-mono tabular-nums">
+                                      {Number(val || 0).toLocaleString()}
+                                    </span>
+                                  ) : (
+                                    String(val ?? '-')
+                                  )}
+                                </td>
+                              );
+                            })}
+                            <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
+                              <div className="flex items-center justify-end gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setInspectingRecord(record)}
+                                  className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                                  title="Inspect Details"
+                                >
+                                  <Eye size={13} />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setEditingRecord(record)}
+                                  className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                                  title="Edit"
+                                >
+                                  <Edit2 size={13} />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setDeletingId(record.id)}
+                                  className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                                  title="Delete"
+                                >
+                                  <Trash2 size={13} />
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
                     ) : (
                       <tr>
-                        <td 
-                          colSpan={(activeScreen.tableConfig?.columns.length || 4) + 1}
+                        <td
+                          colSpan={(activeScreen.tableConfig?.columns.length || 4) + 2}
                           className="px-6 py-12 text-center text-muted-foreground"
                         >
                           <div className="flex flex-col items-center justify-center gap-2">
@@ -669,19 +1137,123 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
                   </tbody>
                 </table>
               </div>
+
+              {/* Pagination Footer */}
+              <div className="px-5 py-3 border-t border-border bg-muted/20 flex items-center justify-between gap-4">
+                <span className="text-xs text-muted-foreground">
+                  Showing <span className="font-mono tabular-nums text-foreground font-semibold">{sortedRecords.length ? (currentPage - 1) * pageSize + 1 : 0}</span> to <span className="font-mono tabular-nums text-foreground font-semibold">{Math.min(currentPage * pageSize, sortedRecords.length)}</span> of <span className="font-mono tabular-nums text-foreground font-semibold">{sortedRecords.length}</span> records
+                </span>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage <= 1}
+                    className="h-7 text-xs px-2 gap-1"
+                  >
+                    <ChevronLeft size={13} /> Previous
+                  </Button>
+
+                  <span className="text-xs font-mono font-medium text-foreground px-2">
+                    {currentPage} / {totalPages}
+                  </span>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage >= totalPages}
+                    className="h-7 text-xs px-2 gap-1"
+                  >
+                    Next <ChevronRight size={13} />
+                  </Button>
+                </div>
+              </div>
             </Card>
           </div>
         )}
 
+        {/* VIEW 3: Visual Kanban Workflow Board */}
+        {activeScreen.type === 'kanban' && (
+          <div className="space-y-4 max-w-6xl mx-auto">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-semibold tracking-tight text-foreground">
+                  {activeScreen.title}
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  Interactive stage board. Click any card to inspect full details or advance workflow status.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 text-xs font-medium gap-1.5"
+                  onClick={() => {
+                    const tableScreen = appSpec.screens.find(s => s.type === 'table');
+                    if (tableScreen) setActiveScreenId(tableScreen.id);
+                  }}
+                >
+                  <List size={14} /> Table View
+                </Button>
+
+                <Button
+                  size="sm"
+                  className="h-9 text-xs font-medium gap-1.5"
+                  onClick={() => {
+                    const formScreenId = appSpec.screens.find(s => s.type === 'form')?.id;
+                    if (formScreenId) setActiveScreenId(formScreenId);
+                  }}
+                >
+                  <PlusCircle size={14} /> Add new {primaryEntity.name}
+                </Button>
+              </div>
+            </div>
+
+            <KanbanBoard
+              entity={primaryEntity}
+              records={records}
+              onStatusChange={handleStatusChange}
+              onRecordClick={(record) => setInspectingRecord(record)}
+              onAddNewWithStatus={(status) => {
+                if (statusField) {
+                  setFormData({ [statusField.name]: status });
+                }
+                const formScreenId = appSpec.screens.find(s => s.type === 'form')?.id;
+                if (formScreenId) setActiveScreenId(formScreenId);
+              }}
+              onDeleteRecord={(id) => setDeletingId(id)}
+            />
+          </div>
+        )}
+
+        {/* VIEW 4: Dynamic Create Form */}
         {activeScreen.type === 'form' && (
           <div className="max-w-2xl mx-auto space-y-6">
-            <div>
-              <h3 className="text-lg font-semibold tracking-tight text-foreground">
-                {activeScreen.title}
-              </h3>
-              {activeScreen.subtitle && (
-                <p className="text-xs text-muted-foreground">{activeScreen.subtitle}</p>
-              )}
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold tracking-tight text-foreground">
+                  {activeScreen.title}
+                </h3>
+                {activeScreen.subtitle && (
+                  <p className="text-xs text-muted-foreground">{activeScreen.subtitle}</p>
+                )}
+              </div>
+
+              {/* Sample filler button */}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleAutoFillSample}
+                className="text-xs h-8 gap-1.5 text-muted-foreground hover:text-foreground"
+                title="Populate fields with domain-realistic dummy data"
+              >
+                <Sparkles size={13} className="text-primary" /> Auto-Fill Sample Data
+              </Button>
             </div>
 
             <Card className="bg-card border-border shadow-none p-6">
@@ -764,6 +1336,23 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
           </div>
         )}
       </main>
+
+      {/* Record Detail Slide-Out Sheet (Drawer) */}
+      <RecordDetailSheet
+        isOpen={!!inspectingRecord}
+        onClose={() => setInspectingRecord(null)}
+        record={inspectingRecord}
+        entity={primaryEntity}
+        onEdit={(rec) => {
+          setInspectingRecord(null);
+          setEditingRecord(rec);
+        }}
+        onDelete={(id) => {
+          setInspectingRecord(null);
+          setDeletingId(id);
+        }}
+        onStatusChange={handleStatusChange}
+      />
 
       {/* Edit Modal Dialog */}
       {editingRecord && (

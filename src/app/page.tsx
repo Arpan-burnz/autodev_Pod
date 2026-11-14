@@ -307,9 +307,9 @@ export default function AutoDevPodDashboard() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground font-sans antialiased">
+    <div className="h-screen max-h-screen flex flex-col overflow-hidden bg-background text-foreground font-sans antialiased">
       {/* Top Quiet Chrome Header */}
-      <header className="h-16 border-b border-border bg-card/80 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-40">
+      <header className="h-14 border-b border-border bg-card/90 backdrop-blur-md px-6 flex items-center justify-between shrink-0 z-40">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
             <Boxes size={18} />
@@ -485,28 +485,28 @@ export default function AutoDevPodDashboard() {
         {/* Right Side: Working Application Viewport & Workspace Tabs */}
         <div className="lg:col-span-8 flex flex-col h-full overflow-hidden bg-background">
           {project.appSpec ? (
-            <div className="flex-1 flex flex-col p-6 overflow-hidden space-y-4">
+            <div className="flex-1 flex flex-col h-full overflow-hidden">
               {/* Segmented Top View Mode Switcher */}
-              <div className="flex items-center justify-between border-b border-border pb-3 shrink-0">
+              <div className="px-6 py-3.5 border-b border-border bg-card/40 flex items-center justify-between shrink-0 z-20">
                 <Tabs value={selectedWorkspaceTab} onValueChange={setSelectedWorkspaceTab}>
-                  <TabsList className="bg-muted/50 p-1 border border-border">
-                    <TabsTrigger value="app" className="text-xs font-medium gap-1.5">
+                  <TabsList className="bg-muted/60 p-1 border border-border">
+                    <TabsTrigger value="app" className="text-xs font-medium gap-1.5 data-[state=active]:font-semibold data-[state=active]:text-foreground">
                       <Play size={12} className="text-primary fill-primary" /> Live Application
                     </TabsTrigger>
-                    <TabsTrigger value="pipeline" className="text-xs font-medium gap-1.5">
+                    <TabsTrigger value="pipeline" className="text-xs font-medium gap-1.5 data-[state=active]:font-semibold data-[state=active]:text-foreground">
                       <Boxes size={12} className="text-primary" /> Multi-Agent Pipeline (5 Nodes)
                     </TabsTrigger>
-                    <TabsTrigger value="code" className="text-xs font-medium gap-1.5">
+                    <TabsTrigger value="code" className="text-xs font-medium gap-1.5 data-[state=active]:font-semibold data-[state=active]:text-foreground">
                       <FileCode size={12} /> Source Code
                     </TabsTrigger>
-                    <TabsTrigger value="architecture" className="text-xs font-medium gap-1.5">
+                    <TabsTrigger value="architecture" className="text-xs font-medium gap-1.5 data-[state=active]:font-semibold data-[state=active]:text-foreground">
                       <Layers size={12} /> Schema & Spec
                     </TabsTrigger>
                   </TabsList>
                 </Tabs>
 
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-xs font-mono py-0.5">
+                  <Badge variant="outline" className="text-[11px] font-mono py-0.5">
                     {project.appSpec.entities[0]?.pluralName} store active
                   </Badge>
                 </div>
@@ -514,14 +514,14 @@ export default function AutoDevPodDashboard() {
 
               {/* View 1: The Live Rendered Application */}
               {selectedWorkspaceTab === 'app' && (
-                <div className="flex-1 overflow-auto">
+                <div className="flex-1 overflow-y-auto p-6">
                   <DynamicAppRunner appSpec={project.appSpec} />
                 </div>
               )}
 
               {/* View 2: Multi-Agent Engineering Pipeline */}
               {selectedWorkspaceTab === 'pipeline' && (
-                <div className="flex-1 overflow-auto">
+                <div className="flex-1 overflow-y-auto p-6">
                   <MultiAgentPipelineSection
                     initialIdea={project.idea}
                     initialData={project.pipelineData}
@@ -660,16 +660,22 @@ export default function AutoDevPodDashboard() {
                 </span>
                 <ul className="text-xs text-foreground/80 space-y-2">
                   <li className="flex items-center gap-2">
-                    <Check size={14} className="text-primary" /> Multi-screen Navigation & Layout
+                    <Check size={14} className="text-primary" /> Multi-screen Navigation & Layout (Dashboard, Table, Kanban, Forms)
                   </li>
                   <li className="flex items-center gap-2">
-                    <Check size={14} className="text-primary" /> Dynamic Forms with Real-time Field Validation
+                    <Check size={14} className="text-primary" /> Visual Analytics & KPI Lifecycle Distribution (Recharts)
                   </li>
                   <li className="flex items-center gap-2">
-                    <Check size={14} className="text-primary" /> Filterable, Searchable Data Tables & Lists
+                    <Check size={14} className="text-primary" /> Interactive Kanban Workflow Stage Management
                   </li>
                   <li className="flex items-center gap-2">
-                    <Check size={14} className="text-primary" /> Working Local Storage CRUD (Add, Edit, Delete)
+                    <Check size={14} className="text-primary" /> Slide-Out Record Detail Inspection Drawer (Sheet)
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check size={14} className="text-primary" /> Column Sorting, Checkbox Batch Actions & Pagination
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check size={14} className="text-primary" /> RFC-4180 CSV & JSON Two-Way Import & Export
                   </li>
                   <li className="flex items-center gap-2">
                     <Check size={14} className="text-primary" /> Full Exportable TypeScript Next.js Code Stack
