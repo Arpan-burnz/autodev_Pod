@@ -84,7 +84,7 @@ export interface FormConfig {
   subtitle?: string;
 }
 
-export type ScreenType = 'dashboard' | 'table' | 'form' | 'detail';
+export type ScreenType = 'dashboard' | 'table' | 'form' | 'detail' | 'kanban';
 
 export interface ScreenSpec {
   id: string;
