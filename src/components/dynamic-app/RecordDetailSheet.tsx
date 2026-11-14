@@ -238,3 +238,4 @@ export function RecordDetailSheet({
     </Sheet>
   );
 }
+

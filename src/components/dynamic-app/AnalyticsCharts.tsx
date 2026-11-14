@@ -342,3 +342,4 @@ export function AnalyticsCharts({ entity, records }: AnalyticsChartsProps) {
     </div>
   );
 }
+

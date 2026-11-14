@@ -1,22 +1,22 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import {
-  LayoutDashboard,
-  List,
-  PlusCircle,
-  Search,
-  RotateCcw,
-  Download,
+import { 
+  LayoutDashboard, 
+  List, 
+  PlusCircle, 
+  Search, 
+  RotateCcw, 
+  Download, 
   Upload,
-  Edit2,
-  Trash2,
-  CheckCircle2,
-  AlertCircle,
-  Clock,
-  Activity,
-  Filter,
-  ArrowUpDown,
+  Edit2, 
+  Trash2, 
+  CheckCircle2, 
+  AlertCircle, 
+  Clock, 
+  Activity, 
+  Filter, 
+  ArrowUpDown, 
   ArrowUp,
   ArrowDown,
   ExternalLink,
@@ -30,21 +30,21 @@ import {
   Square,
   Eye
 } from 'lucide-react';
-import {
-  DynamicAppSpec,
-  ScreenSpec,
-  EntitySpec,
-  FieldSpec,
-  TableConfig,
-  FormConfig,
-  DashboardConfig
+import { 
+  DynamicAppSpec, 
+  ScreenSpec, 
+  EntitySpec, 
+  FieldSpec, 
+  TableConfig, 
+  FormConfig, 
+  DashboardConfig 
 } from '@/types/dynamic-app';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
+import { 
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -61,10 +61,10 @@ import { cn } from '@/lib/utils';
 import { AnalyticsCharts } from './AnalyticsCharts';
 import { KanbanBoard } from './KanbanBoard';
 import { RecordDetailSheet } from './RecordDetailSheet';
-import {
-  exportRecordsToCsv,
-  parseCsvToRecords,
-  generateSampleRecord
+import { 
+  exportRecordsToCsv, 
+  parseCsvToRecords, 
+  generateSampleRecord 
 } from '@/lib/dynamic-app-helpers';
 
 interface DynamicAppRunnerProps {
@@ -126,8 +126,8 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
 
   // Find status field for transitions and batch workflows
   const statusField = useMemo(() => {
-    return primaryEntity.fields.find(f =>
-      f.name.toLowerCase().includes('status') ||
+    return primaryEntity.fields.find(f => 
+      f.name.toLowerCase().includes('status') || 
       f.name.toLowerCase().includes('stage') ||
       f.name.toLowerCase().includes('state')
     );
@@ -187,8 +187,8 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
     const data = recordsToExport || records;
     if (!data.length) return;
     exportRecordsToCsv(
-      data,
-      primaryEntity.fields,
+      data, 
+      primaryEntity.fields, 
       `${appSpec.name.toLowerCase().replace(/\s+/g, '-')}-records.csv`
     );
     toast({
@@ -318,7 +318,7 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
   // Handle Form Submission (Create Record)
   const handleFormSubmit = (e: React.FormEvent, formConfig?: FormConfig) => {
     e.preventDefault();
-    const fieldsToValidate = primaryEntity.fields.filter(f =>
+    const fieldsToValidate = primaryEntity.fields.filter(f => 
       !formConfig?.fields || formConfig.fields.includes(f.name)
     );
 
@@ -454,7 +454,7 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
   const filteredRecords = useMemo(() => {
     return records.filter(record => {
       // Free-text search
-      const matchesSearch = !searchQuery.trim() || Object.values(record).some(val =>
+      const matchesSearch = !searchQuery.trim() || Object.values(record).some(val => 
         String(val).toLowerCase().includes(searchQuery.toLowerCase())
       );
 
@@ -490,8 +490,8 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
 
       const strA = String(valA).toLowerCase();
       const strB = String(valB).toLowerCase();
-      return sortDirection === 'asc'
-        ? strA.localeCompare(strB)
+      return sortDirection === 'asc' 
+        ? strA.localeCompare(strB) 
         : strB.localeCompare(strA);
     });
   }, [filteredRecords, sortField, sortDirection]);
@@ -548,7 +548,7 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
   };
 
   const toggleSelectOne = (id: string) => {
-    setSelectedIds(prev =>
+    setSelectedIds(prev => 
       prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
     );
   };
@@ -635,8 +635,8 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
               onClick={() => setActiveScreenId(navItem.id)}
               className={cn(
                 "flex items-center gap-2 px-3.5 py-2.5 text-xs font-medium transition-colors border-b-2 -mb-[1px] whitespace-nowrap",
-                isActive
-                  ? "border-primary text-primary font-semibold bg-background/50"
+                isActive 
+                  ? "border-primary text-primary font-semibold bg-background/50" 
                   : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
               )}
             >
@@ -659,7 +659,7 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
           className={cn(
             "flex items-center gap-2 px-3.5 py-2.5 text-xs font-medium transition-colors border-b-2 -mb-[1px] whitespace-nowrap",
             activeScreenId === 'kanban'
-              ? "border-primary text-primary font-semibold bg-background/50"
+              ? "border-primary text-primary font-semibold bg-background/50" 
               : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
           )}
         >
@@ -802,8 +802,8 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
                       </thead>
                       <tbody className="divide-y divide-border">
                         {records.slice(0, 4).map(record => (
-                          <tr
-                            key={record.id}
+                          <tr 
+                            key={record.id} 
                             onClick={() => setInspectingRecord(record)}
                             className="hover:bg-muted/30 transition-colors cursor-pointer group"
                           >
@@ -871,7 +871,7 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
                     size="sm"
                     className="h-9 text-xs font-medium gap-1.5"
                     onClick={() => {
-                      const formScreenId = activeScreen.tableConfig?.createScreenId ||
+                      const formScreenId = activeScreen.tableConfig?.createScreenId || 
                         appSpec.screens.find(s => s.type === 'form')?.id;
                       if (formScreenId) setActiveScreenId(formScreenId);
                     }}
@@ -997,7 +997,7 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
                     <tr>
                       {/* Checkbox All */}
                       <th className="px-4 py-3 w-8">
-                        <Checkbox
+                        <Checkbox 
                           checked={isAllPageSelected}
                           onCheckedChange={toggleSelectAllPage}
                           aria-label="Select all on this page"
@@ -1006,8 +1006,8 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
                       {activeScreen.tableConfig?.columns.map(col => {
                         const isSorted = sortField === col.field;
                         return (
-                          <th
-                            key={col.field}
+                          <th 
+                            key={col.field} 
                             onClick={() => handleSort(col.field)}
                             className="px-4 py-3 text-left cursor-pointer hover:text-foreground transition-colors select-none"
                           >
@@ -1034,8 +1034,8 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
                       paginatedRecords.map(record => {
                         const isSelected = selectedIds.includes(record.id);
                         return (
-                          <tr
-                            key={record.id}
+                          <tr 
+                            key={record.id} 
                             onClick={() => setInspectingRecord(record)}
                             className={cn(
                               "hover:bg-muted/30 transition-colors cursor-pointer",
@@ -1043,11 +1043,11 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
                             )}
                           >
                             {/* Checkbox Row */}
-                            <td
+                            <td 
                               className="px-4 py-3 w-8"
                               onClick={(e) => e.stopPropagation()}
                             >
-                              <Checkbox
+                              <Checkbox 
                                 checked={isSelected}
                                 onCheckedChange={() => toggleSelectOne(record.id)}
                                 aria-label={`Select record ${record.id}`}
@@ -1059,7 +1059,7 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
                               return (
                                 <td key={col.field} className="px-4 py-3 text-foreground font-medium">
                                   {col.format === 'badge' ? (
-                                    <Badge
+                                    <Badge 
                                       variant={getBadgeVariant(col.format, val, col.badgeColorMap)}
                                       className="text-[10px] font-normal py-0"
                                     >
@@ -1115,7 +1115,7 @@ export function DynamicAppRunner({ appSpec, className }: DynamicAppRunnerProps) 
                       })
                     ) : (
                       <tr>
-                        <td
+                        <td 
                           colSpan={(activeScreen.tableConfig?.columns.length || 4) + 2}
                           className="px-6 py-12 text-center text-muted-foreground"
                         >
